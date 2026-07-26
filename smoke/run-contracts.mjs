@@ -74,6 +74,7 @@ const expectedSchemas = [
   'brisk-aitesting.result.v1',
   'brisk-aitesting.handover.v1',
   'brisk-aitesting.cli-result.v1',
+  'brisk-aitesting.benchmark.v1',
   'brisk-aitesting.api-evidence.v1',
   'brisk-aitesting.openapi-summary.v1',
   'brisk-aitesting.playwright-evidence.v1',
@@ -91,6 +92,7 @@ const expectedScripts = [
   'smoke:ci',
   'smoke:real-ai',
   'smoke:all',
+  'benchmark',
 ];
 
 const errors = [];

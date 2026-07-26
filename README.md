@@ -57,6 +57,14 @@ npm run smoke:ci
 
 `smoke:ci` includes contract, CLI, AI fixture, and full engine smoke coverage. `smoke:real-ai` is intentionally manual because it requires provider credentials and may depend on enterprise network trust settings.
 
+For adversarial failure-mode coverage, run:
+
+```bash
+npm run benchmark
+```
+
+The benchmark emits `brisk-aitesting.benchmark.v1` and covers ugly but realistic cases such as malformed OpenAPI, missing contracts, invalid AI output shapes, schema mismatches, undocumented statuses, blocked network policy, and CLI usage errors.
+
 ## Use As An SDK
 
 ```ts
@@ -252,6 +260,7 @@ brisk-aitesting.discovery.v1
 brisk-aitesting.result.v1
 brisk-aitesting.handover.v1
 brisk-aitesting.cli-result.v1
+brisk-aitesting.benchmark.v1
 brisk-aitesting.api-evidence.v1
 brisk-aitesting.openapi-summary.v1
 brisk-aitesting.playwright-evidence.v1

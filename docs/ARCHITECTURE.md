@@ -55,6 +55,10 @@ The product must hide complexity from host apps while keeping every internal bou
 8. CLI Boundary
    `brisk-aitesting run --json` returns `brisk-aitesting.cli-result.v1`.
    Exit codes are stable: 0 passed, 1 completed non-passed, 2 setup/usage error.
+
+9. Benchmark Boundary
+   `npm run benchmark` emits `brisk-aitesting.benchmark.v1`.
+   Benchmark cases are deterministic adversarial checks for failure-mode stability.
 ```
 
 ## Schema Registry
@@ -69,6 +73,7 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.result.v1` | handover | Full run result |
 | `brisk-aitesting.handover.v1` | handover | Host consumption contract |
 | `brisk-aitesting.cli-result.v1` | CLI | Machine-readable CLI run summary |
+| `brisk-aitesting.benchmark.v1` | benchmark | Deterministic adversarial benchmark report |
 | `brisk-aitesting.api-evidence.v1` | API engine | Request/response evidence |
 | `brisk-aitesting.openapi-summary.v1` | contract engine/discoverer | OpenAPI JSON/YAML operation summary |
 | `brisk-aitesting.playwright-evidence.v1` | UI engine | UI execution manifest |
@@ -127,6 +132,7 @@ npm run smoke:contracts
 npm run smoke:cli
 npm run smoke:ai-fixtures
 npm run smoke
+npm run benchmark
 ```
 
 `npm run smoke:ci` runs the deterministic gate used by GitHub Actions. It excludes real provider calls.
