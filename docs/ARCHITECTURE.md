@@ -51,6 +51,10 @@ The product must hide complexity from host apps while keeping every internal bou
 7. Evidence And Handover
    Engines produce schema-versioned evidence artifacts.
    buildResult returns `brisk-aitesting.result.v1` plus `brisk-aitesting.handover.v1`.
+
+8. CLI Boundary
+   `brisk-aitesting run --json` returns `brisk-aitesting.cli-result.v1`.
+   Exit codes are stable: 0 passed, 1 completed non-passed, 2 setup/usage error.
 ```
 
 ## Schema Registry
@@ -64,6 +68,7 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.discovery.v1` | discoverer | Discovered app surface |
 | `brisk-aitesting.result.v1` | handover | Full run result |
 | `brisk-aitesting.handover.v1` | handover | Host consumption contract |
+| `brisk-aitesting.cli-result.v1` | CLI | Machine-readable CLI run summary |
 | `brisk-aitesting.api-evidence.v1` | API engine | Request/response evidence |
 | `brisk-aitesting.openapi-summary.v1` | contract engine/discoverer | OpenAPI JSON/YAML operation summary |
 | `brisk-aitesting.playwright-evidence.v1` | UI engine | UI execution manifest |

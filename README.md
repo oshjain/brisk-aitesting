@@ -22,7 +22,26 @@ npx brisk-aitesting init
 ## Run
 
 ```bash
-npx brisk-aitesting run "Test login, dashboard, APIs, permissions, and billing"
+npx brisk-aitesting run --goal "Test login, dashboard, APIs, permissions, and billing"
+```
+
+CI-friendly JSON output is available:
+
+```bash
+npx brisk-aitesting run \
+  --config brisk-aitesting.config.ts \
+  --goal "Test OpenAPI contracts and critical API paths" \
+  --scenarios 10 \
+  --json \
+  --output .brisk-aitesting/latest-result.json
+```
+
+CLI exit codes:
+
+```text
+0  run completed with status passed
+1  run completed but status was failed, error, or skipped
+2  usage, config, provider, or runtime setup error
 ```
 
 ## Use As An SDK
@@ -219,6 +238,7 @@ brisk-aitesting.validation.v1
 brisk-aitesting.discovery.v1
 brisk-aitesting.result.v1
 brisk-aitesting.handover.v1
+brisk-aitesting.cli-result.v1
 brisk-aitesting.api-evidence.v1
 brisk-aitesting.openapi-summary.v1
 brisk-aitesting.playwright-evidence.v1

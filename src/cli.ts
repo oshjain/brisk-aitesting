@@ -1,25 +1,33 @@
 #!/usr/bin/env node
 import { mkdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { createBriskAiTesting } from './orchestrator.js';
 import { loadConfig } from './config.js';
 import { loadEnvFiles } from './env.js';
-import type { EngineType } from './types.js';
+import type { BriskAiTestingResult, EngineType } from './types.js';
+
+class UsageError extends Error {}
 
 const [, , command, ...args] = process.argv;
 
 try {
+  let exitCode = 0;
   if (command === 'init') {
     await init();
   } else if (command === 'run') {
-    await run(args);
+    exitCode = await run(args);
+  } else if (command === '--help' || command === '-h' || command === 'help') {
+    help();
   } else {
     help();
-    process.exit(command === undefined ? 0 : 1);
+    exitCode = command === undefined ? 0 : 2;
   }
+  process.exit(exitCode);
 } catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exit(1);
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(`brisk-aitesting: ${message}`);
+  process.exit(error instanceof UsageError ? 2 : 2);
 }
 
 async function init(): Promise<void> {
@@ -32,29 +40,42 @@ async function init(): Promise<void> {
   await mkdir('.brisk-aitesting/artifacts', { recursive: true });
   await writeFile(configPath, starterConfig(), 'utf8');
   console.log(`Created ${configPath}`);
-  console.log('Next: brisk-aitesting run "Test login, dashboard, APIs, and permissions"');
+  console.log('Next: brisk-aitesting run --goal "Test login, dashboard, APIs, and permissions"');
 }
 
-async function run(args: readonly string[]): Promise<void> {
+async function run(args: readonly string[]): Promise<number> {
   const options = parseRunArgs(args);
   const goal = options.goal;
-  if (goal.length === 0) throw new Error('Please provide a test goal.');
+  if (goal.length === 0) throw new UsageError('Please provide a test goal with --goal "<what to test>" or a positional goal.');
 
   await loadEnvFiles();
   const config = await loadConfig(options.configPath);
   const tester = createBriskAiTesting(config);
-  tester.onEvent((event) => {
-    if (event.type === 'run.started') console.log(`Run started: ${event.runId}`);
-    if (event.type === 'plan.repair.started') console.log(`Repairing plan: attempt ${event.attempt}`);
-    if (event.type === 'scenario.started') console.log(`- ${event.scenario.name}`);
-    if (event.type === 'scenario.completed') console.log(`  ${event.result.status.toUpperCase()} via ${event.result.engine}`);
-  });
+  if (!options.quiet && !options.json) {
+    tester.onEvent((event) => {
+      if (event.type === 'run.started') console.log(`Run started: ${event.runId}`);
+      if (event.type === 'discovery.completed') console.log(`Discovery: ${event.discovery.uiRoutes.length} UI routes, ${event.discovery.apiRoutes.length} API routes, ${event.discovery.contracts.length} contracts`);
+      if (event.type === 'plan.created') console.log(`Plan: ${event.plan.scenarios.length} scenarios`);
+      if (event.type === 'plan.repair.started') console.log(`Repairing plan: attempt ${event.attempt}`);
+      if (event.type === 'scenario.started') console.log(`- ${event.scenario.name}`);
+      if (event.type === 'scenario.completed') console.log(`  ${event.result.status.toUpperCase()} via ${event.result.engine}`);
+    });
+  }
 
-  const result = await tester.run({ goal, scenarios: options.scenarios, mode: options.mode });
-  console.log('');
-  console.log(`Status: ${result.status}`);
-  console.log(`Summary: ${result.summary.passed}/${result.summary.total} passed (${result.summary.passRate}%)`);
-  console.log(`Result: ${result.artifacts.find((artifact) => artifact.kind === 'json')?.path ?? result.handover.storage.artifactRoot}`);
+  const result = await tester.run({
+    goal,
+    scenarios: options.scenarios,
+    mode: options.mode,
+    ...(options.requiredTypes.length > 0 ? { requiredTypes: options.requiredTypes } : {}),
+    ...(options.uiActionFeedback !== undefined ? { uiActionFeedback: options.uiActionFeedback } : {}),
+  });
+  if (options.outputPath !== undefined) await writeResult(options.outputPath, result);
+  if (options.json) {
+    console.log(JSON.stringify(cliResult(result, options.outputPath), null, 2));
+  } else if (!options.quiet) {
+    printHumanSummary(result, options.outputPath);
+  }
+  return result.status === 'passed' ? 0 : 1;
 }
 
 function help(): void {
@@ -63,15 +84,21 @@ function help(): void {
     '',
     'Commands:',
     '  init                         create brisk-aitesting.config.ts',
-    '  run "<goal>"                 plan and run automated tests',
+    '  run --goal "<goal>"          plan and run automated tests',
     '',
     'Options for run:',
     '  --config <path>              config file path',
+    '  --goal <text>                test goal; positional goal is also supported',
     '  --scenarios <number>         number of scenarios to plan',
     '  --mode <automatic|ui|api|contract|schema|replay|custom>',
+    '  --required-type <type>       require a scenario type; can be repeated',
+    '  --ui-action-feedback <off|when-missing|always>',
+    '  --json                       print machine-readable run summary',
+    '  --output <path>              write final result JSON to this path',
+    '  --quiet                      suppress progress and human summary',
     '',
     'Example:',
-    '  brisk-aitesting run "Test login, billing, API contracts, and permissions" --scenarios 15',
+    '  brisk-aitesting run --goal "Test login, billing, API contracts, and permissions" --scenarios 15',
   ].join('\n'));
 }
 
@@ -80,23 +107,56 @@ function parseRunArgs(args: readonly string[]): {
   readonly scenarios: number;
   readonly mode: 'automatic' | EngineType;
   readonly configPath: string;
+  readonly requiredTypes: readonly EngineType[];
+  readonly uiActionFeedback?: 'off' | 'when-missing' | 'always';
+  readonly json: boolean;
+  readonly quiet: boolean;
+  readonly outputPath?: string;
 } {
   const goalParts: string[] = [];
   let scenarios = 5;
   let mode: 'automatic' | EngineType = 'automatic';
   let configPath = 'brisk-aitesting.config.ts';
+  const requiredTypes: EngineType[] = [];
+  let uiActionFeedback: 'off' | 'when-missing' | 'always' | undefined;
+  let json = false;
+  let quiet = false;
+  let outputPath: string | undefined;
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
     if (arg === '--scenarios') {
-      scenarios = Number(args[index + 1]);
+      scenarios = parsePositiveInteger(readOptionValue(args, index, arg), arg);
       index += 1;
     } else if (arg === '--mode') {
-      mode = parseMode(args[index + 1]);
+      mode = parseMode(readOptionValue(args, index, arg));
       index += 1;
     } else if (arg === '--config') {
-      configPath = args[index + 1] ?? configPath;
+      configPath = readOptionValue(args, index, arg);
       index += 1;
+    } else if (arg === '--goal') {
+      goalParts.push(readOptionValue(args, index, arg));
+      index += 1;
+    } else if (arg === '--required-type') {
+      const requiredType = parseMode(readOptionValue(args, index, arg));
+      if (requiredType === 'automatic') throw new UsageError('--required-type cannot be automatic.');
+      requiredTypes.push(requiredType);
+      index += 1;
+    } else if (arg === '--ui-action-feedback') {
+      uiActionFeedback = parseUiActionFeedback(readOptionValue(args, index, arg));
+      index += 1;
+    } else if (arg === '--json') {
+      json = true;
+    } else if (arg === '--quiet') {
+      quiet = true;
+    } else if (arg === '--output') {
+      outputPath = readOptionValue(args, index, arg);
+      index += 1;
+    } else if (arg === '--help' || arg === '-h') {
+      help();
+      process.exit(0);
+    } else if (arg?.startsWith('--') === true) {
+      throw new UsageError(`Unknown option ${arg}.`);
     } else if (arg !== undefined) {
       goalParts.push(arg);
     }
@@ -104,9 +164,14 @@ function parseRunArgs(args: readonly string[]): {
 
   return {
     goal: goalParts.join(' ').trim(),
-    scenarios: Number.isFinite(scenarios) ? scenarios : 5,
+    scenarios,
     mode,
     configPath,
+    requiredTypes,
+    ...(uiActionFeedback !== undefined ? { uiActionFeedback } : {}),
+    json,
+    quiet,
+    ...(outputPath !== undefined ? { outputPath } : {}),
   };
 }
 
@@ -116,6 +181,57 @@ function parseMode(value: string | undefined): 'automatic' | EngineType {
     return value as 'automatic' | EngineType;
   }
   throw new Error(`Invalid --mode. Expected one of: ${allowed.join(', ')}`);
+}
+
+function parseUiActionFeedback(value: string): 'off' | 'when-missing' | 'always' {
+  const allowed = ['off', 'when-missing', 'always'] as const;
+  if (allowed.includes(value as typeof allowed[number])) return value as 'off' | 'when-missing' | 'always';
+  throw new UsageError(`Invalid --ui-action-feedback. Expected one of: ${allowed.join(', ')}`);
+}
+
+function parsePositiveInteger(value: string, option: string): number {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) throw new UsageError(`${option} must be a positive integer.`);
+  return parsed;
+}
+
+function readOptionValue(args: readonly string[], index: number, option: string): string {
+  const value = args[index + 1];
+  if (value === undefined || value.startsWith('--')) throw new UsageError(`${option} requires a value.`);
+  return value;
+}
+
+async function writeResult(path: string, result: BriskAiTestingResult): Promise<void> {
+  const absolute = resolve(process.cwd(), path);
+  await mkdir(dirname(absolute), { recursive: true });
+  await writeFile(absolute, `${JSON.stringify(result, null, 2)}\n`, 'utf8');
+}
+
+function printHumanSummary(result: BriskAiTestingResult, outputPath: string | undefined): void {
+  const resultPath = result.artifacts.find((artifact) => artifact.kind === 'json' && artifact.label === 'Result JSON')?.path ?? result.handover.storage.artifactRoot;
+  console.log('');
+  console.log(`Status: ${result.status}`);
+  console.log(`Summary: ${result.summary.passed}/${result.summary.total} passed (${result.summary.passRate}%)`);
+  console.log(`Duration: ${Math.round(result.summary.durationMs / 100) / 10}s`);
+  console.log(`Result: ${outputPath ?? resultPath}`);
+  if (result.diagnosis.length > 0) {
+    console.log('Diagnosis:');
+    for (const diagnosis of result.diagnosis.slice(0, 5)) {
+      console.log(`- ${diagnosis.reason}`);
+    }
+  }
+}
+
+function cliResult(result: BriskAiTestingResult, outputPath: string | undefined): Record<string, unknown> {
+  return {
+    schemaVersion: 'brisk-aitesting.cli-result.v1',
+    runId: result.runId,
+    status: result.status,
+    summary: result.summary,
+    resultPath: outputPath ?? result.artifacts.find((artifact) => artifact.kind === 'json' && artifact.label === 'Result JSON')?.path,
+    artifactRoot: result.handover.storage.artifactRoot,
+    diagnosis: result.diagnosis,
+  };
 }
 
 function starterConfig(): string {
