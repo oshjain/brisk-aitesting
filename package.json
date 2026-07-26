@@ -21,7 +21,8 @@
     "smoke:cli": "node smoke/run-cli.mjs",
     "smoke:ai-fixtures": "node smoke/run-ai-fixtures.mjs",
     "smoke:real-ai": "node smoke/run-real-ai-smoke.mjs",
-    "smoke:all": "npm run smoke && npm run smoke:contracts && npm run smoke:cli && npm run smoke:ai-fixtures && npm run smoke:real-ai",
+    "smoke:ci": "npm run smoke:contracts && npm run smoke:cli && npm run smoke:ai-fixtures && npm run smoke",
+    "smoke:all": "npm run smoke:ci && npm run smoke:real-ai",
     "typecheck": "tsc --noEmit",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
   },

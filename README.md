@@ -44,6 +44,19 @@ CLI exit codes:
 2  usage, config, provider, or runtime setup error
 ```
 
+## Stability Gate
+
+The deterministic CI gate runs on push and pull request:
+
+```bash
+npm ci
+npm run typecheck
+npm run build
+npm run smoke:ci
+```
+
+`smoke:ci` includes contract, CLI, AI fixture, and full engine smoke coverage. `smoke:real-ai` is intentionally manual because it requires provider credentials and may depend on enterprise network trust settings.
+
 ## Use As An SDK
 
 ```ts

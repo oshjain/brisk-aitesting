@@ -123,13 +123,15 @@ Before a change is considered product-safe, run:
 ```bash
 npm run typecheck
 npm run build
-npm run smoke
 npm run smoke:contracts
+npm run smoke:cli
 npm run smoke:ai-fixtures
-npm run smoke:real-ai
+npm run smoke
 ```
 
-`smoke:real-ai` requires provider credentials and enterprise CA config when applicable. It proves the configured provider path works, but benchmark-level provider quality is a separate track.
+`npm run smoke:ci` runs the deterministic gate used by GitHub Actions. It excludes real provider calls.
+
+`smoke:real-ai` requires provider credentials and enterprise CA config when applicable. It is available through the manual `Real AI Smoke` workflow and proves the configured provider path works, but benchmark-level provider quality is a separate track.
 
 ## Current Boundaries
 
@@ -139,13 +141,13 @@ Built:
 - Plan validation and repair.
 - Route grounding feedback loop.
 - Grounded UI action execution.
+- OpenAPI JSON/YAML route discovery, schema extraction, generated API scenarios, and response schema validation.
 - Evidence-rich API/UI artifacts.
 - Host handover contract.
 
 Still intentionally incomplete:
 
 - Benchmark-level multi-provider scoring.
-- Deep API contract/schema execution.
 - JUnit/HTML CI report generation.
 - Publishing hardening and public package release checks.
 - Metrics/analytics module.

@@ -88,6 +88,7 @@ const expectedScripts = [
   'smoke:contracts',
   'smoke:cli',
   'smoke:ai-fixtures',
+  'smoke:ci',
   'smoke:real-ai',
   'smoke:all',
 ];
