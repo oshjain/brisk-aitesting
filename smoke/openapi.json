@@ -1,0 +1,72 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "brisk-aitesting smoke contract",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "Return service health",
+        "tags": ["system"],
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/secure": {
+      "get": {
+        "operationId": "getSecureResource",
+        "summary": "Reject anonymous secure requests",
+        "tags": ["auth"],
+        "responses": {
+          "401": {
+            "description": "Missing or invalid authorization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/messages": {
+      "post": {
+        "operationId": "publishMessage",
+        "summary": "Publish a message",
+        "tags": ["messaging"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Message accepted"
+          },
+          "400": {
+            "description": "Invalid message"
+          }
+        }
+      }
+    }
+  }
+}

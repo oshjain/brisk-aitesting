@@ -1,0 +1,42 @@
+{
+  "name": "brisk-aitesting",
+  "version": "0.1.0",
+  "description": "AI-native modular testing engine for SaaS, APIs, UI workflows, and contracts.",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "brisk-aitesting": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "docs"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "smoke": "node smoke/run-smoke.mjs",
+    "smoke:contracts": "node smoke/run-contracts.mjs",
+    "smoke:ai-fixtures": "node smoke/run-ai-fixtures.mjs",
+    "smoke:real-ai": "node smoke/run-real-ai-smoke.mjs",
+    "smoke:all": "npm run smoke && npm run smoke:contracts && npm run smoke:ai-fixtures && npm run smoke:real-ai",
+    "typecheck": "tsc --noEmit",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "peerDependencies": {
+    "@playwright/test": ">=1.52.0"
+  },
+  "peerDependenciesMeta": {
+    "@playwright/test": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  }
+}

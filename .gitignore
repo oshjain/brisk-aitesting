@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+.brisk-aitesting/
+.brisk-aitesting-*/
+playwright-work/
+test-results/
+playwright-report/
+*.log
+.env
+.env.*
+!.env.example

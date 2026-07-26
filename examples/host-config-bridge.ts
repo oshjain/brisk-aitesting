@@ -1,0 +1,71 @@
+import { defineConfigFromHost, mergeConfig } from '../src/index.js';
+
+const hostAiCaCertPath = optionalEnv('HOST_AI_CA_CERT_PATH');
+
+type HostSaaSConfig = {
+  readonly appName: string;
+  readonly publicBaseUrl: string;
+  readonly repoRoot: string;
+  readonly ai: {
+    readonly provider: 'deepseek' | 'minimax';
+    readonly apiKey: string;
+    readonly model: string;
+    readonly caCertPath?: string;
+  };
+};
+
+const hostConfig: HostSaaSConfig = {
+  appName: requiredEnv('HOST_APP_NAME'),
+  publicBaseUrl: requiredEnv('HOST_PUBLIC_BASE_URL'),
+  repoRoot: process.env.HOST_REPO_ROOT ?? '.',
+  ai: {
+    provider: parseProvider(requiredEnv('HOST_AI_PROVIDER')),
+    apiKey: requiredEnv('HOST_AI_API_KEY'),
+    model: requiredEnv('HOST_AI_MODEL'),
+    ...(hostAiCaCertPath !== undefined ? { caCertPath: hostAiCaCertPath } : {}),
+  },
+};
+
+const baseTestingConfig = defineConfigFromHost(hostConfig, (host) => ({
+  app: {
+    name: host.appName,
+    baseUrl: host.publicBaseUrl,
+    repoPath: host.repoRoot,
+    env: 'local',
+  },
+  auth: { type: 'none' },
+  ai: {
+    provider: host.ai.provider,
+    model: host.ai.model,
+    apiKey: host.ai.apiKey,
+    ...(host.ai.caCertPath !== undefined ? { caCertPath: host.ai.caCertPath } : {}),
+  },
+}));
+
+export default mergeConfig(baseTestingConfig, {
+  runtime: {
+    artifactsDir: '.brisk-aitesting/artifacts',
+    timeoutMs: 120000,
+    retries: 1,
+    headless: true,
+    dryRun: false,
+  },
+});
+
+function requiredEnv(name: string): string {
+  const value = process.env[name];
+  if (value === undefined || value.trim().length === 0) {
+    throw new Error(`${name} is required for the host config bridge example.`);
+  }
+  return value;
+}
+
+function parseProvider(value: string): 'deepseek' | 'minimax' {
+  if (value === 'deepseek' || value === 'minimax') return value;
+  throw new Error('HOST_AI_PROVIDER must be deepseek or minimax.');
+}
+
+function optionalEnv(name: string): string | undefined {
+  const value = process.env[name];
+  return value !== undefined && value.trim().length > 0 ? value : undefined;
+}

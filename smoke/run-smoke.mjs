@@ -1,0 +1,517 @@
+import { createServer } from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createBriskAiTesting, defineConfig, normalizeConfig } from '../dist/index.js';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const appRoot = join(here, 'site');
+
+const server = createServer(async (request, response) => {
+  try {
+    if (request.url === '/api/health') {
+      response.writeHead(200, { 'content-type': 'application/json' });
+      response.end(JSON.stringify({ ok: true, service: 'smoke-api' }));
+      return;
+    }
+    if (request.url === '/api/secure') {
+      response.writeHead(401, { 'content-type': 'application/json' });
+      response.end(JSON.stringify({ error: { code: 'UNAUTHORIZED', message: 'Missing token' } }));
+      return;
+    }
+    const html = await readFile(join(appRoot, 'index.html'), 'utf8');
+    response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+    response.end(html.replaceAll('__PATH__', request.url ?? '/'));
+  } catch (error) {
+    response.writeHead(500, { 'content-type': 'text/plain; charset=utf-8' });
+    response.end(error instanceof Error ? error.message : String(error));
+  }
+});
+
+await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+const address = server.address();
+if (address === null || typeof address === 'string') {
+  throw new Error('Smoke server did not expose a TCP port');
+}
+
+try {
+  const config = defineConfig({
+    app: {
+      name: 'brisk-aitesting smoke app',
+      baseUrl: `http://127.0.0.1:${address.port}`,
+      repoPath: process.cwd(),
+      env: 'local',
+    },
+    auth: { type: 'none' },
+    contracts: {
+      openApiPath: join(here, 'openapi.json'),
+    },
+    runtime: {
+      artifactsDir: '.brisk-aitesting-smoke/artifacts',
+      timeoutMs: 30000,
+      retries: 0,
+      headless: true,
+      dryRun: false,
+    },
+    discovery: {
+      includeRepo: true,
+      includeUi: true,
+      includeApi: false,
+      includeContracts: true,
+    },
+    security: {
+      networkPolicy: 'localhost-only',
+      allowedHosts: ['localhost', '127.0.0.1'],
+      redactSecrets: true,
+    },
+  });
+
+  const planner = {
+    name: 'smoke-planner',
+    async plan(context) {
+      return {
+        schemaVersion: 'brisk-aitesting.plan.v1',
+        runId: context.runId,
+        goal: context.input.goal,
+        mode: 'automatic',
+        createdAt: new Date().toISOString(),
+        warnings: [],
+        scenarios: [
+          {
+            id: 'smoke_ui_home',
+            name: 'Smoke app homepage renders',
+            type: 'ui',
+            objective: 'Real browser can load homepage.',
+            target: { route: '/' },
+            assertions: ['body is visible', 'body is not blank'],
+            evidenceRequired: ['ui'],
+          },
+          {
+            id: 'smoke_ui_login',
+            name: 'Smoke app login page renders',
+            type: 'ui',
+            objective: 'Real browser can load login route.',
+            target: { route: '/login' },
+            assertions: ['body is visible', 'body is not blank'],
+            uiActions: [
+              { action: 'fill', evidenceId: 'ui_el_003', value: 'user@example.com', description: 'Fill grounded email input' },
+              { action: 'fill', evidenceId: 'ui_el_005', value: 'secret-password', description: 'Fill grounded password input' },
+              { action: 'click', evidenceId: 'ui_el_006', description: 'Click grounded sign in button' },
+            ],
+            evidenceRequired: ['ui'],
+          },
+          {
+            id: 'smoke_api_health',
+            name: 'Health API returns ok',
+            type: 'api',
+            objective: 'API engine checks status and JSON shape.',
+            target: { method: 'GET', path: '/api/health' },
+            expect: { status: 200, json: { ok: true, service: 'smoke-api' } },
+            assertions: ['status is 200', 'json.ok is true'],
+            evidenceRequired: ['api'],
+          },
+          {
+            id: 'smoke_api_secure',
+            name: 'Secure API rejects anonymous access',
+            type: 'api',
+            objective: 'API engine checks auth boundary.',
+            target: { method: 'GET', path: '/api/secure' },
+            expect: { status: 401, json: { 'error.code': 'UNAUTHORIZED' } },
+            assertions: ['status is 401', 'error.code is UNAUTHORIZED'],
+            evidenceRequired: ['api', 'auth'],
+          },
+          {
+            id: 'smoke_contract_openapi',
+            name: 'OpenAPI contract exposes operations',
+            type: 'contract',
+            objective: 'Contract engine summarizes OpenAPI operations for host consumption.',
+            target: { schema: join(here, 'openapi.json') },
+            assertions: ['contract parses', 'operations are discovered'],
+            evidenceRequired: ['schema', 'api'],
+          },
+        ],
+      };
+    },
+  };
+  const tester = createBriskAiTesting(config, { planner });
+  const result = await tester.run({
+    goal: 'Test UI and API execution through real engines',
+    scenarios: 5,
+    mode: 'automatic',
+  });
+
+  const errors = [];
+  if (result.schemaVersion !== 'brisk-aitesting.result.v1') errors.push('wrong result schema');
+  if (result.handover.schemaVersion !== 'brisk-aitesting.handover.v1') errors.push('wrong handover schema');
+  if (result.discovery.schemaVersion !== 'brisk-aitesting.discovery.v1') errors.push('wrong discovery schema');
+  if (result.plan.discovery.schemaVersion !== 'brisk-aitesting.discovery.v1') errors.push('plan missing discovery');
+  if (!result.discovery.uiRoutes.some((route) => route.path === '/')) errors.push('discovery missing root UI route');
+  if (!result.discovery.apiRoutes.some((route) => route.path === '/api/health')) errors.push('discovery missing health API route');
+  if (!result.discovery.apiRoutes.some((route) => route.source === 'contract' && route.method === 'POST' && route.path === '/api/messages' && route.operationId === 'publishMessage')) {
+    errors.push('discovery missing OpenAPI contract route');
+  }
+  if (!result.discovery.contracts.some((contract) => contract.kind === 'openapi' && contract.exists === true && contract.operations >= 3)) {
+    errors.push('discovery missing OpenAPI operation count');
+  }
+  if (result.summary.total !== 5) errors.push(`expected 5 tests, got ${result.summary.total}`);
+  if (result.summary.passed !== 5) errors.push(`expected 5 passed, got ${result.summary.passed}`);
+  if (!result.artifacts.some((artifact) => artifact.kind === 'json')) errors.push('missing JSON artifact');
+  if (!result.artifacts.some((artifact) => artifact.kind === 'test-file')) errors.push('missing generated test artifact');
+  if (!result.artifacts.some((artifact) => artifact.label === 'API request/response')) errors.push('missing API request/response artifact');
+  if (!result.artifacts.some((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.api-evidence.v1')) errors.push('missing API evidence metadata');
+  if (!result.artifacts.some((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.openapi-summary.v1')) errors.push('missing OpenAPI summary metadata');
+  if (!result.artifacts.some((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.playwright-evidence.v1')) errors.push('missing Playwright evidence manifest metadata');
+  if (!result.artifacts.some((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.ui-grounding.v1')) errors.push('missing UI grounding metadata');
+  if (!result.artifacts.some((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.ui-actions.v1')) errors.push('missing grounded UI action metadata');
+  if (!result.artifacts.some((artifact) => artifact.kind === 'trace')) errors.push('missing Playwright trace artifact');
+  if (!result.artifacts.some((artifact) => artifact.kind === 'screenshot')) errors.push('missing Playwright screenshot artifact');
+  const apiEvidenceArtifact = result.artifacts.find((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.api-evidence.v1');
+  const openApiSummaryArtifact = result.artifacts.find((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.openapi-summary.v1');
+  const uiEvidenceArtifact = result.artifacts.find((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.playwright-evidence.v1');
+  const groundingArtifact = result.artifacts.find((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.ui-grounding.v1');
+  const actionArtifact = result.artifacts.find((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.ui-actions.v1' && artifact.metadata?.actions === 3);
+  if (apiEvidenceArtifact?.path !== undefined) {
+    const apiEvidence = JSON.parse(await readFile(apiEvidenceArtifact.path, 'utf8'));
+    if (apiEvidence.schemaVersion !== 'brisk-aitesting.api-evidence.v1') errors.push('wrong API evidence schema');
+    if (apiEvidence.scenario?.id === undefined) errors.push('API evidence missing scenario id');
+    if (!Array.isArray(apiEvidence.assertions)) errors.push('API evidence missing assertions');
+    if (apiEvidence.contract?.operationId !== 'getHealth') errors.push('API evidence missing OpenAPI contract linkage');
+  }
+  if (openApiSummaryArtifact?.path !== undefined) {
+    const openApiSummary = JSON.parse(await readFile(openApiSummaryArtifact.path, 'utf8'));
+    if (openApiSummary.schemaVersion !== 'brisk-aitesting.openapi-summary.v1') errors.push('wrong OpenAPI summary schema');
+    if (!Array.isArray(openApiSummary.operations) || openApiSummary.operations.length < 3) errors.push('OpenAPI summary missing operations');
+    if (!openApiSummary.operations.some((operation) => operation.method === 'POST' && operation.path === '/api/messages' && operation.requestBodyRequired === true)) {
+      errors.push('OpenAPI summary missing POST /api/messages request body signal');
+    }
+  } else {
+    errors.push('missing OpenAPI summary artifact');
+  }
+  if (uiEvidenceArtifact?.path !== undefined) {
+    const uiEvidence = JSON.parse(await readFile(uiEvidenceArtifact.path, 'utf8'));
+    if (uiEvidence.schemaVersion !== 'brisk-aitesting.playwright-evidence.v1') errors.push('wrong Playwright evidence schema');
+    if (uiEvidence.scenario?.id === undefined) errors.push('Playwright evidence missing scenario id');
+    if (!Array.isArray(uiEvidence.artifacts) || uiEvidence.artifacts.length === 0) errors.push('Playwright evidence missing artifact list');
+    if (uiEvidence.report?.total < 1) errors.push('Playwright evidence missing report summary');
+    if (uiEvidence.grounding?.summary?.total < 1) errors.push('Playwright evidence missing grounding summary');
+  }
+  if (groundingArtifact?.path !== undefined) {
+    const grounding = JSON.parse(await readFile(groundingArtifact.path, 'utf8'));
+    if (grounding.schemaVersion !== 'brisk-aitesting.ui-grounding.v1') errors.push('wrong UI grounding schema');
+    if (grounding.scenario?.id === undefined) errors.push('UI grounding missing scenario id');
+    if (!Array.isArray(grounding.elements) || grounding.elements.length === 0) errors.push('UI grounding missing elements');
+    if (grounding.summary?.actionable < 1) errors.push('UI grounding missing actionable elements');
+    if (!grounding.elements.some((element) => element.role === 'button' && /sign in/i.test(element.text ?? element.label ?? ''))) errors.push('UI grounding missing Sign in button evidence');
+    if (!grounding.elements.some((element) => element.kind === 'label' && /email/i.test(element.label ?? ''))) errors.push('UI grounding missing Email label evidence');
+  }
+  if (actionArtifact?.path !== undefined) {
+    const actionEvidence = JSON.parse(await readFile(actionArtifact.path, 'utf8'));
+    if (actionEvidence.schemaVersion !== 'brisk-aitesting.ui-actions.v1') errors.push('wrong UI action evidence schema');
+    if (!Array.isArray(actionEvidence.actions) || actionEvidence.actions.length !== 3) errors.push('UI action evidence missing executed actions');
+    if (!actionEvidence.actions.every((action) => action.status === 'passed')) errors.push('not all grounded UI actions passed');
+  } else {
+    errors.push('missing executed grounded UI action artifact');
+  }
+  const uiResults = result.tests.filter((test) => test.type === 'ui');
+  if (!uiResults.every((test) => test.assertions.length > 0 && test.assertions.every((assertion) => assertion.status === 'passed'))) {
+    errors.push('UI results missing passed report-derived assertions');
+  }
+
+  if (errors.length > 0) {
+    console.error(JSON.stringify({ status: result.status, summary: result.summary, errors, diagnosis: result.diagnosis }, null, 2));
+    process.exitCode = 1;
+  } else {
+    console.log(JSON.stringify({
+      status: result.status,
+      summary: result.summary,
+      resultSchema: result.schemaVersion,
+      discoverySchema: result.discovery.schemaVersion,
+      handoverSchema: result.handover.schemaVersion,
+      discoveredUiRoutes: result.discovery.uiRoutes.length,
+      discoveredApiRoutes: result.discovery.apiRoutes.length,
+      artifacts: result.artifacts.length,
+    }, null, 2));
+  }
+
+  const repairEvents = [];
+  const repairablePlanner = {
+    name: 'repairable-smoke-planner',
+    async plan(context) {
+      return {
+        schemaVersion: 'brisk-aitesting.plan.v1',
+        runId: context.runId,
+        goal: context.input.goal,
+        mode: 'automatic',
+        discovery: context.discovery,
+        createdAt: new Date().toISOString(),
+        warnings: [],
+        scenarios: [
+          {
+            id: 'repairable_api_missing_path',
+            name: 'Repairable API missing path',
+            type: 'api',
+            objective: 'This plan should be repaired before execution.',
+            target: { method: 'GET' },
+            assertions: ['status is 200'],
+            evidenceRequired: ['api'],
+          },
+        ],
+      };
+    },
+    async repair(context) {
+      repairEvents.push({
+        attempt: context.attempt,
+        issues: context.validation.issues.map((issue) => issue.code),
+      });
+      return {
+        ...context.invalidPlan,
+        warnings: ['smoke repair applied'],
+        scenarios: [
+          {
+            ...context.invalidPlan.scenarios[0],
+            target: { method: 'GET', path: '/api/health' },
+            expect: { status: 200, json: { ok: true } },
+          },
+        ],
+      };
+    },
+  };
+  const repairableTester = createBriskAiTesting({
+    ...config,
+    ai: {
+      provider: 'minimax',
+      model: 'MiniMax-M3',
+      apiKeyEnv: 'BRISK_AITESTING_AI_API_KEY',
+      repairAttempts: 1,
+    },
+  }, { planner: repairablePlanner });
+  const repairableResult = await repairableTester.run({
+    goal: 'Repair invalid API plan before execution',
+    scenarios: 1,
+    mode: 'automatic',
+  });
+  const repairErrors = [];
+  if (repairEvents.length !== 1) repairErrors.push(`expected one repair event, got ${repairEvents.length}`);
+  if (!repairEvents[0]?.issues.includes('REQUIRED_API_PATH')) repairErrors.push('repair did not receive REQUIRED_API_PATH issue');
+  if (repairableResult.summary.total !== 1) repairErrors.push(`expected repaired total 1, got ${repairableResult.summary.total}`);
+  if (repairableResult.summary.passed !== 1) repairErrors.push(`expected repaired passed 1, got ${repairableResult.summary.passed}`);
+  if (repairableResult.plan.warnings[0] !== 'smoke repair applied') repairErrors.push('repaired plan warning was not preserved');
+  if (repairErrors.length > 0) {
+    console.error(JSON.stringify({ repairErrors, repairEvents, status: repairableResult.status, summary: repairableResult.summary, plan: repairableResult.plan }, null, 2));
+    process.exitCode = 1;
+  }
+
+  const missingEvidencePlanner = {
+    name: 'missing-ui-evidence-planner',
+    async plan(context) {
+      return {
+        schemaVersion: 'brisk-aitesting.plan.v1',
+        runId: context.runId,
+        goal: context.input.goal,
+        mode: 'automatic',
+        discovery: context.discovery,
+        createdAt: new Date().toISOString(),
+        warnings: [],
+        scenarios: [
+          {
+            id: 'missing_ui_evidence',
+            name: 'Missing UI evidence is rejected',
+            type: 'ui',
+            objective: 'A grounded action with a missing evidence id must fail without selector guessing.',
+            target: { route: '/login' },
+            assertions: ['missing evidence is rejected'],
+            uiActions: [{ action: 'click', evidenceId: 'ui_el_999' }],
+            evidenceRequired: ['ui'],
+          },
+        ],
+      };
+    },
+  };
+  const missingEvidenceTester = createBriskAiTesting(config, { planner: missingEvidencePlanner });
+  const missingEvidenceResult = await missingEvidenceTester.run({
+    goal: 'Reject missing grounded UI evidence',
+    scenarios: 1,
+    mode: 'automatic',
+  });
+  if (missingEvidenceResult.status !== 'failed') {
+    console.error(JSON.stringify({ missingEvidenceError: 'expected missing evidence run to fail', status: missingEvidenceResult.status, summary: missingEvidenceResult.summary, tests: missingEvidenceResult.tests }, null, 2));
+    process.exitCode = 1;
+  }
+  if (!missingEvidenceResult.tests[0]?.artifacts.some((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.ui-grounding.v1')) {
+    console.error('Missing evidence failure did not preserve UI grounding artifact.');
+    process.exitCode = 1;
+  }
+
+  const feedbackEvents = [];
+  const feedbackPlanner = {
+    name: 'feedback-loop-planner',
+    async plan(context) {
+      return {
+        schemaVersion: 'brisk-aitesting.plan.v1',
+        runId: context.runId,
+        goal: context.input.goal,
+        mode: 'automatic',
+        discovery: context.discovery,
+        createdAt: new Date().toISOString(),
+        warnings: [],
+        scenarios: [
+          {
+            id: 'feedback_ui_login',
+            name: 'Feedback loop enriches login actions',
+            type: 'ui',
+            objective: 'Route grounding evidence should drive action selection.',
+            target: { route: '/login' },
+            assertions: ['feedback loop chooses grounded actions'],
+            evidenceRequired: ['ui'],
+          },
+        ],
+      };
+    },
+    async enrichUiActions(context) {
+      const email = context.grounding.elements.find((element) => /email/i.test(element.label ?? ''));
+      const password = context.grounding.elements.find((element) => /password/i.test(element.label ?? ''));
+      const signIn = context.grounding.elements.find((element) => element.role === 'button' && /sign in/i.test(element.text ?? element.label ?? ''));
+      feedbackEvents.push({
+        elements: context.grounding.summary.total,
+        email: email?.id,
+        password: password?.id,
+        signIn: signIn?.id,
+      });
+      return [
+        ...(email !== undefined ? [{ action: 'fill', evidenceId: email.id, value: 'feedback@example.com' }] : []),
+        ...(password !== undefined ? [{ action: 'fill', evidenceId: password.id, value: 'feedback-secret' }] : []),
+        ...(signIn !== undefined ? [{ action: 'click', evidenceId: signIn.id }] : []),
+      ];
+    },
+  };
+  const feedbackTester = createBriskAiTesting(config, { planner: feedbackPlanner });
+  const feedbackResult = await feedbackTester.run({
+    goal: 'Use route grounding feedback to choose login actions',
+    scenarios: 1,
+    mode: 'automatic',
+    uiActionFeedback: 'when-missing',
+  });
+  const feedbackErrors = [];
+  if (feedbackResult.summary.passed !== 1) feedbackErrors.push(`expected feedback run to pass, got ${feedbackResult.status}`);
+  if (feedbackEvents.length !== 1) feedbackErrors.push(`expected one feedback enrichment event, got ${feedbackEvents.length}`);
+  if (feedbackEvents[0]?.email === undefined) feedbackErrors.push('feedback loop did not see email evidence');
+  if (feedbackEvents[0]?.password === undefined) feedbackErrors.push('feedback loop did not see password evidence');
+  if (feedbackEvents[0]?.signIn === undefined) feedbackErrors.push('feedback loop did not see sign-in evidence');
+  if (!feedbackResult.plan.scenarios[0]?.uiActions || feedbackResult.plan.scenarios[0].uiActions.length !== 3) feedbackErrors.push('feedback plan was not enriched with three uiActions');
+  if (!feedbackResult.artifacts.some((artifact) => artifact.metadata?.phase === 'pre-execution' && artifact.metadata?.schemaVersion === 'brisk-aitesting.ui-grounding.v1')) feedbackErrors.push('feedback run missing pre-execution grounding artifact');
+  if (!feedbackResult.artifacts.some((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.ui-actions.v1' && artifact.metadata?.actions === 3)) feedbackErrors.push('feedback run missing executed action evidence');
+  if (feedbackErrors.length > 0) {
+    console.error(JSON.stringify({ feedbackErrors, feedbackEvents, status: feedbackResult.status, summary: feedbackResult.summary, plan: feedbackResult.plan }, null, 2));
+    process.exitCode = 1;
+  }
+
+  const invalidPlanner = {
+    name: 'invalid-smoke-planner',
+    async plan(context) {
+      return {
+        schemaVersion: 'brisk-aitesting.plan.v1',
+        runId: context.runId,
+        goal: context.input.goal,
+        mode: 'automatic',
+        discovery: context.discovery,
+        createdAt: new Date().toISOString(),
+        warnings: [],
+        scenarios: [
+          {
+            id: 'invalid_ui_missing_route',
+            name: 'Invalid UI missing route',
+            type: 'ui',
+            objective: 'This should be rejected before engines run.',
+            assertions: ['should never execute'],
+            evidenceRequired: ['ui'],
+          },
+        ],
+      };
+    },
+  };
+  const invalidTester = createBriskAiTesting(config, { planner: invalidPlanner });
+  let validationFailed = false;
+  try {
+    await invalidTester.run({
+      goal: 'Invalid plan must fail validation',
+      scenarios: 1,
+      mode: 'automatic',
+    });
+  } catch (error) {
+    validationFailed = error instanceof Error && error.message.includes('Plan validation failed') && error.message.includes('target.route');
+  }
+  if (!validationFailed) {
+    console.error('Invalid plan smoke did not fail at validation boundary.');
+    process.exitCode = 1;
+  }
+
+  const fakeAiProvider = {
+    name: 'fake-ai-provider',
+    async complete() {
+      return {
+        content: `Here is the plan:
+{
+  "mode": "automatic",
+  "warnings": ["normalized by smoke"],
+  "scenarios": [
+    {
+      "name": "AI planned homepage",
+      "type": "browser",
+      "objective": "Homepage loads from AI plan",
+      "target": { "route": "/" },
+      "assertions": ["body is visible"],
+      "evidenceRequired": ["ui"],
+    },
+    {
+      "name": "AI planned health API",
+      "type": "backend",
+      "objective": "Health API responds from AI plan",
+      "target": { "method": "GET", "path": "/api/health" },
+      "expect": { "status": 200, "json": { "ok": true } },
+      "assertions": ["status is 200"],
+      "evidenceRequired": ["api"],
+    }
+  ]
+}`,
+      };
+    },
+  };
+  const aiTester = createBriskAiTesting({
+    ...config,
+    aiProvider: fakeAiProvider,
+  });
+  const aiResult = await aiTester.run({
+    goal: 'AI should plan homepage and health API tests',
+    scenarios: 2,
+    mode: 'automatic',
+  });
+  const aiErrors = [];
+  if (aiResult.summary.total !== 2) aiErrors.push(`expected AI total 2, got ${aiResult.summary.total}`);
+  if (aiResult.summary.passed !== 2) aiErrors.push(`expected AI passed 2, got ${aiResult.summary.passed}`);
+  if (!aiResult.plan.scenarios.some((scenario) => scenario.type === 'ui')) aiErrors.push('AI browser alias was not normalized to ui');
+  if (!aiResult.plan.scenarios.some((scenario) => scenario.type === 'api')) aiErrors.push('AI backend alias was not normalized to api');
+  if (aiErrors.length > 0) {
+    console.error(JSON.stringify({ aiErrors, status: aiResult.status, summary: aiResult.summary, plan: aiResult.plan }, null, 2));
+    process.exitCode = 1;
+  }
+
+  let configGuardPassed = false;
+  try {
+    normalizeConfig(defineConfig({
+      app: { name: 'bad config', baseUrl: 'http://localhost' },
+      ai: {
+        provider: 'minimax',
+        model: 'MiniMax-M3',
+        apiKeyEnv: 'sk-test-secret',
+      },
+    }));
+  } catch (error) {
+    configGuardPassed = error instanceof Error && error.message.includes('ai.apiKeyEnv must be an environment variable name');
+  }
+  if (!configGuardPassed) {
+    console.error('Config guard smoke did not reject secret-looking ai.apiKeyEnv.');
+    process.exitCode = 1;
+  }
+} finally {
+  await new Promise((resolve) => server.close(resolve));
+}
