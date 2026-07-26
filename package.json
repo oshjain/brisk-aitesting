@@ -4,6 +4,18 @@
   "description": "AI-native modular testing engine for SaaS, APIs, UI workflows, and contracts.",
   "type": "module",
   "license": "MIT",
+  "author": "Hasmukh Jain",
+  "contributors": [
+    "Hasmukh Jain"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oshjain/brisk-aitesting.git"
+  },
+  "bugs": {
+    "url": "https://github.com/oshjain/brisk-aitesting/issues"
+  },
+  "homepage": "https://github.com/oshjain/brisk-aitesting#readme",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
@@ -16,6 +28,7 @@
     "examples"
   ],
   "scripts": {
+    "prepare": "npm run build",
     "build": "tsc",
     "smoke": "node smoke/run-smoke.mjs",
     "smoke:contracts": "node smoke/run-contracts.mjs",
