@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { parseDocument } from 'yaml';
 import type { DiscoveryApiRoute, OpenApiDocumentSummary, OpenApiOperationSummary } from './types.js';
 
 const HTTP_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace']);
@@ -7,16 +8,17 @@ type JsonRecord = Record<string, unknown>;
 
 export async function loadOpenApiSummary(path: string): Promise<OpenApiDocumentSummary> {
   const raw = await readFile(path, 'utf8');
-  const document = JSON.parse(raw) as unknown;
-  return summarizeOpenApiDocument(path, document);
+  const parsed = parseOpenApiSource(path, raw);
+  return summarizeOpenApiDocument(path, parsed.document, parsed.format);
 }
 
-export function summarizeOpenApiDocument(path: string, document: unknown): OpenApiDocumentSummary {
+export function summarizeOpenApiDocument(path: string, document: unknown, format: 'json' | 'yaml' = 'json'): OpenApiDocumentSummary {
   const diagnostics: string[] = [];
   if (!isRecord(document)) {
     return {
       schemaVersion: 'brisk-aitesting.openapi-summary.v1',
       path,
+      format,
       operations: [],
       diagnostics: ['OpenAPI document must be a JSON object.'],
     };
@@ -51,6 +53,7 @@ export function summarizeOpenApiDocument(path: string, document: unknown): OpenA
   return {
     schemaVersion: 'brisk-aitesting.openapi-summary.v1',
     path,
+    format,
     ...(typeof info?.title === 'string' ? { title: info.title } : {}),
     ...(typeof info?.version === 'string' ? { version: info.version } : {}),
     ...(typeof document.openapi === 'string'
@@ -75,6 +78,17 @@ export function openApiOperationsToDiscoveryRoutes(summary: OpenApiDocumentSumma
     contractPath: summary.path,
     ...(operation.statusCodes.length > 0 ? { statusCodes: operation.statusCodes } : {}),
   }));
+}
+
+function parseOpenApiSource(path: string, raw: string): { readonly document: unknown; readonly format: 'json' | 'yaml' } {
+  if (/\.ya?ml$/i.test(path)) {
+    const parsed = parseDocument(raw, { prettyErrors: false });
+    if (parsed.errors.length > 0) {
+      throw parsed.errors[0] ?? new Error('YAML parse failed.');
+    }
+    return { document: parsed.toJSON(), format: 'yaml' };
+  }
+  return { document: JSON.parse(raw) as unknown, format: 'json' };
 }
 
 function summarizeOperation(path: string, method: string, operation: JsonRecord): OpenApiOperationSummary {

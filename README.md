@@ -67,7 +67,7 @@ Current built-in engines:
 
 - `BuiltinPlaywrightEngine`: generates and executes real Playwright browser tests.
 - `BuiltinApiEngine`: executes HTTP requests, checks status/body expectations, and writes request-response artifacts.
-- `BuiltinContractEngine`: parses configured OpenAPI/AsyncAPI contract files.
+- `BuiltinContractEngine`: parses configured OpenAPI JSON/YAML contract files.
 
 Current built-in control-plane modules:
 
@@ -257,12 +257,13 @@ API request-response artifacts use this shape:
 }
 ```
 
-OpenAPI contract artifacts summarize operations in a host-consumable shape:
+OpenAPI JSON and YAML contract artifacts summarize operations in a host-consumable shape:
 
 ```json
 {
   "schemaVersion": "brisk-aitesting.openapi-summary.v1",
-  "path": "./openapi.json",
+  "path": "./openapi.yaml",
+  "format": "yaml",
   "title": "Host API",
   "version": "1.0.0",
   "openapiVersion": "3.0.3",

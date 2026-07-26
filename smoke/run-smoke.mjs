@@ -44,7 +44,7 @@ try {
     },
     auth: { type: 'none' },
     contracts: {
-      openApiPath: join(here, 'openapi.json'),
+      openApiPath: join(here, 'openapi.yaml'),
     },
     runtime: {
       artifactsDir: '.brisk-aitesting-smoke/artifacts',
@@ -121,10 +121,19 @@ try {
             evidenceRequired: ['api', 'auth'],
           },
           {
-            id: 'smoke_contract_openapi',
-            name: 'OpenAPI contract exposes operations',
+            id: 'smoke_contract_openapi_yaml',
+            name: 'YAML OpenAPI contract exposes operations',
             type: 'contract',
-            objective: 'Contract engine summarizes OpenAPI operations for host consumption.',
+            objective: 'Contract engine summarizes YAML OpenAPI operations for host consumption.',
+            target: { schema: join(here, 'openapi.yaml') },
+            assertions: ['contract parses', 'operations are discovered'],
+            evidenceRequired: ['schema', 'api'],
+          },
+          {
+            id: 'smoke_contract_openapi_json',
+            name: 'JSON OpenAPI contract exposes equivalent operations',
+            type: 'contract',
+            objective: 'JSON and YAML OpenAPI inputs produce equivalent operation summaries.',
             target: { schema: join(here, 'openapi.json') },
             assertions: ['contract parses', 'operations are discovered'],
             evidenceRequired: ['schema', 'api'],
@@ -136,7 +145,7 @@ try {
   const tester = createBriskAiTesting(config, { planner });
   const result = await tester.run({
     goal: 'Test UI and API execution through real engines',
-    scenarios: 5,
+    scenarios: 6,
     mode: 'automatic',
   });
 
@@ -153,8 +162,8 @@ try {
   if (!result.discovery.contracts.some((contract) => contract.kind === 'openapi' && contract.exists === true && contract.operations >= 3)) {
     errors.push('discovery missing OpenAPI operation count');
   }
-  if (result.summary.total !== 5) errors.push(`expected 5 tests, got ${result.summary.total}`);
-  if (result.summary.passed !== 5) errors.push(`expected 5 passed, got ${result.summary.passed}`);
+  if (result.summary.total !== 6) errors.push(`expected 6 tests, got ${result.summary.total}`);
+  if (result.summary.passed !== 6) errors.push(`expected 6 passed, got ${result.summary.passed}`);
   if (!result.artifacts.some((artifact) => artifact.kind === 'json')) errors.push('missing JSON artifact');
   if (!result.artifacts.some((artifact) => artifact.kind === 'test-file')) errors.push('missing generated test artifact');
   if (!result.artifacts.some((artifact) => artifact.label === 'API request/response')) errors.push('missing API request/response artifact');
@@ -166,7 +175,7 @@ try {
   if (!result.artifacts.some((artifact) => artifact.kind === 'trace')) errors.push('missing Playwright trace artifact');
   if (!result.artifacts.some((artifact) => artifact.kind === 'screenshot')) errors.push('missing Playwright screenshot artifact');
   const apiEvidenceArtifact = result.artifacts.find((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.api-evidence.v1');
-  const openApiSummaryArtifact = result.artifacts.find((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.openapi-summary.v1');
+  const openApiSummaryArtifacts = result.artifacts.filter((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.openapi-summary.v1');
   const uiEvidenceArtifact = result.artifacts.find((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.playwright-evidence.v1');
   const groundingArtifact = result.artifacts.find((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.ui-grounding.v1');
   const actionArtifact = result.artifacts.find((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.ui-actions.v1' && artifact.metadata?.actions === 3);
@@ -177,15 +186,24 @@ try {
     if (!Array.isArray(apiEvidence.assertions)) errors.push('API evidence missing assertions');
     if (apiEvidence.contract?.operationId !== 'getHealth') errors.push('API evidence missing OpenAPI contract linkage');
   }
-  if (openApiSummaryArtifact?.path !== undefined) {
-    const openApiSummary = JSON.parse(await readFile(openApiSummaryArtifact.path, 'utf8'));
-    if (openApiSummary.schemaVersion !== 'brisk-aitesting.openapi-summary.v1') errors.push('wrong OpenAPI summary schema');
-    if (!Array.isArray(openApiSummary.operations) || openApiSummary.operations.length < 3) errors.push('OpenAPI summary missing operations');
-    if (!openApiSummary.operations.some((operation) => operation.method === 'POST' && operation.path === '/api/messages' && operation.requestBodyRequired === true)) {
-      errors.push('OpenAPI summary missing POST /api/messages request body signal');
+  if (openApiSummaryArtifacts.length >= 2 && openApiSummaryArtifacts.every((artifact) => artifact.path !== undefined)) {
+    const openApiSummaries = await Promise.all(openApiSummaryArtifacts.map(async (artifact) => JSON.parse(await readFile(artifact.path, 'utf8'))));
+    const yamlSummary = openApiSummaries.find((summary) => summary.format === 'yaml');
+    const jsonSummary = openApiSummaries.find((summary) => summary.format === 'json');
+    for (const openApiSummary of openApiSummaries) {
+      if (openApiSummary.schemaVersion !== 'brisk-aitesting.openapi-summary.v1') errors.push('wrong OpenAPI summary schema');
+      if (!Array.isArray(openApiSummary.operations) || openApiSummary.operations.length < 3) errors.push('OpenAPI summary missing operations');
+      if (!openApiSummary.operations.some((operation) => operation.method === 'POST' && operation.path === '/api/messages' && operation.requestBodyRequired === true)) {
+        errors.push('OpenAPI summary missing POST /api/messages request body signal');
+      }
+    }
+    if (yamlSummary === undefined) errors.push('missing YAML OpenAPI summary');
+    if (jsonSummary === undefined) errors.push('missing JSON OpenAPI summary');
+    if (yamlSummary !== undefined && jsonSummary !== undefined && operationSignature(yamlSummary.operations) !== operationSignature(jsonSummary.operations)) {
+      errors.push('YAML and JSON OpenAPI summaries are not equivalent');
     }
   } else {
-    errors.push('missing OpenAPI summary artifact');
+    errors.push('missing OpenAPI summary artifacts');
   }
   if (uiEvidenceArtifact?.path !== undefined) {
     const uiEvidence = JSON.parse(await readFile(uiEvidenceArtifact.path, 'utf8'));
@@ -514,4 +532,17 @@ try {
   }
 } finally {
   await new Promise((resolve) => server.close(resolve));
+}
+
+function operationSignature(operations) {
+  return operations
+    .map((operation) => [
+      operation.method,
+      operation.path,
+      operation.operationId ?? '',
+      (operation.statusCodes ?? []).join(','),
+      operation.requestBodyRequired === true ? 'body-required' : 'body-optional',
+    ].join(' '))
+    .sort()
+    .join('|');
 }

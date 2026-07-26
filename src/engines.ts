@@ -454,9 +454,9 @@ export class BuiltinContractEngine implements Engine {
     } else {
       try {
         await access(contractPath);
-        if (contractPath === context.config.contracts?.openApiPath || /\.json$/i.test(contractPath)) {
+        if (isOpenApiContractPath(contractPath, context)) {
           const summary = await loadOpenApiSummary(contractPath);
-          assertions.push({ name: 'OpenAPI contract is valid JSON', status: 'passed' });
+          assertions.push({ name: `OpenAPI contract is valid ${summary.format.toUpperCase()}`, status: 'passed' });
           assertions.push({
             name: 'OpenAPI contract exposes operations',
             status: summary.operations.length > 0 ? 'passed' : 'failed',
@@ -543,6 +543,12 @@ function scenarioEvidence(context: EngineContext): Record<string, unknown> {
     type: context.scenario.type,
     objective: context.scenario.objective,
   };
+}
+
+function isOpenApiContractPath(contractPath: string, context: EngineContext): boolean {
+  if (contractPath === context.config.contracts?.openApiPath) return true;
+  if (contractPath === context.config.contracts?.asyncApiPath) return false;
+  return /\.(json|ya?ml)$/i.test(contractPath);
 }
 
 function authHeaders(auth: EngineContext['config']['auth']): HeaderRecord {

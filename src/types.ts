@@ -204,6 +204,7 @@ export interface OpenApiOperationSummary {
 export interface OpenApiDocumentSummary {
   readonly schemaVersion: 'brisk-aitesting.openapi-summary.v1';
   readonly path: string;
+  readonly format: 'json' | 'yaml';
   readonly title?: string;
   readonly version?: string;
   readonly openapiVersion?: string;
