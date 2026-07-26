@@ -14,6 +14,8 @@ const required = [
   'package/docs/STATUS.md',
   'package/examples/brisk-aitesting.config.ts',
   'package/examples/host-config-bridge.ts',
+  'package/assets/logo_transparent.png',
+  'package/assets/logo_transparent.ico',
 ];
 const forbiddenPatterns = [
   /^package\/\.env/i,

@@ -1,4 +1,8 @@
-# brisk-aitesting
+<p align="center">
+  <img src="./assets/logo_transparent.png" alt="brisk-aitesting logo" width="180" />
+</p>
+
+<h1 align="center">brisk-aitesting</h1>
 
 **AI testing for a world where software is being built faster than humans can manually verify it.**
 
