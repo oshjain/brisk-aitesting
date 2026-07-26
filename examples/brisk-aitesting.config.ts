@@ -1,6 +1,19 @@
-import { defineConfig } from 'brisk-aitesting';
+import { defineConfig, type AiProviderConfig } from 'brisk-aitesting';
 
-const aiCaCertPath = optionalEnv('BRISK_AITESTING_AI_CA_CERT_PATH') ?? optionalEnv('MINIMAX_CA_CERT_PATH');
+type SupportedProvider = AiProviderConfig['provider'];
+
+const supportedProviders: readonly SupportedProvider[] = [
+  'openai',
+  'openai-compatible',
+  'deepseek',
+  'minimax',
+  'azure-openai',
+  'anthropic',
+  'local',
+  'custom',
+];
+
+const aiCaCertPath = optionalEnv('BRISK_AITESTING_AI_CA_CERT_PATH');
 
 export default defineConfig({
   app: {
@@ -16,7 +29,7 @@ export default defineConfig({
     password: requiredEnv('TEST_PASSWORD'),
   },
   ai: {
-    provider: parseProvider(optionalEnv('BRISK_AITESTING_AI_PROVIDER') ?? 'minimax'),
+    provider: parseProvider(requiredEnv('BRISK_AITESTING_AI_PROVIDER')),
     model: requiredEnv('BRISK_AITESTING_AI_MODEL'),
     apiKeyEnv: 'BRISK_AITESTING_AI_API_KEY',
     ...(aiCaCertPath !== undefined ? { caCertPath: aiCaCertPath } : {}),
@@ -59,7 +72,7 @@ function optionalEnv(name: string): string | undefined {
   return value !== undefined && value.trim().length > 0 ? value : undefined;
 }
 
-function parseProvider(value: string): 'deepseek' | 'minimax' {
-  if (value === 'deepseek' || value === 'minimax') return value;
-  throw new Error('BRISK_AITESTING_AI_PROVIDER must be deepseek or minimax for this example.');
+function parseProvider(value: string): SupportedProvider {
+  if (supportedProviders.includes(value as SupportedProvider)) return value as SupportedProvider;
+  throw new Error(`BRISK_AITESTING_AI_PROVIDER must be one of: ${supportedProviders.join(', ')}.`);
 }

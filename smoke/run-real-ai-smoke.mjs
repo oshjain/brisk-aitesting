@@ -8,22 +8,23 @@ await loadEnvFiles({
   packageDir: dirname(dirname(fileURLToPath(import.meta.url))),
 });
 
-const provider = process.env.BRISK_AITESTING_AI_PROVIDER ?? 'minimax';
-const providerApiKeyEnv = provider === 'deepseek' ? 'DEEPSEEK_API_KEY' : 'MINIMAX_API_KEY';
+const provider = process.env.BRISK_AITESTING_AI_PROVIDER ?? inferProviderFromCompatibilityEnv();
+const providerApiKeyEnv = compatibilityApiKeyEnv(provider);
 const apiKeyEnv = process.env.BRISK_AITESTING_AI_API_KEY !== undefined
   ? 'BRISK_AITESTING_AI_API_KEY'
-  : providerApiKeyEnv;
+  : providerApiKeyEnv ?? 'BRISK_AITESTING_AI_API_KEY';
 const apiKey = process.env[apiKeyEnv];
 const caCertPath = process.env.BRISK_AITESTING_AI_CA_CERT_PATH
   ?? process.env.BRISK_AITESTING_CA_CERT_PATH
-  ?? (provider === 'deepseek' ? process.env.DEEPSEEK_CA_CERT_PATH : process.env.MINIMAX_CA_CERT_PATH);
+  ?? compatibilityCaCertPath(provider);
 const model = process.env.BRISK_AITESTING_AI_MODEL
-  ?? (provider === 'deepseek' ? process.env.DEEPSEEK_MODEL : process.env.MINIMAX_MODEL);
+  ?? compatibilityModel(provider);
 if (apiKey === undefined || apiKey.trim().length === 0) {
-  throw new Error(`BRISK_AITESTING_AI_API_KEY or ${providerApiKeyEnv} is required for real AI smoke.`);
+  throw new Error(`BRISK_AITESTING_AI_API_KEY${providerApiKeyEnv !== undefined ? ` or ${providerApiKeyEnv}` : ''} is required for real AI smoke.`);
 }
 if (model === undefined || model.trim().length === 0) {
-  throw new Error(`BRISK_AITESTING_AI_MODEL or ${provider === 'deepseek' ? 'DEEPSEEK_MODEL' : 'MINIMAX_MODEL'} is required for real AI smoke.`);
+  const providerModelEnv = compatibilityModelEnv(provider);
+  throw new Error(`BRISK_AITESTING_AI_MODEL${providerModelEnv !== undefined ? ` or ${providerModelEnv}` : ''} is required for real AI smoke.`);
 }
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -53,7 +54,7 @@ try {
     },
     auth: { type: 'none' },
     ai: {
-      provider: provider === 'deepseek' ? 'deepseek' : 'minimax',
+      provider,
       model,
       apiKeyEnv,
       ...(caCertPath !== undefined && caCertPath.trim().length > 0 ? { caCertPath } : {}),
@@ -129,4 +130,35 @@ try {
   }
 } finally {
   await new Promise((resolve) => server.close(resolve));
+}
+
+function inferProviderFromCompatibilityEnv() {
+  if (process.env.MINIMAX_API_KEY !== undefined || process.env.MINIMAX_MODEL !== undefined) return 'minimax';
+  if (process.env.DEEPSEEK_API_KEY !== undefined || process.env.DEEPSEEK_MODEL !== undefined) return 'deepseek';
+  if (process.env.OPENAI_API_KEY !== undefined) return 'openai';
+  return 'openai-compatible';
+}
+
+function compatibilityApiKeyEnv(currentProvider) {
+  if (currentProvider === 'deepseek') return 'DEEPSEEK_API_KEY';
+  if (currentProvider === 'minimax') return 'MINIMAX_API_KEY';
+  if (currentProvider === 'openai') return 'OPENAI_API_KEY';
+  return undefined;
+}
+
+function compatibilityModelEnv(currentProvider) {
+  if (currentProvider === 'deepseek') return 'DEEPSEEK_MODEL';
+  if (currentProvider === 'minimax') return 'MINIMAX_MODEL';
+  return undefined;
+}
+
+function compatibilityModel(currentProvider) {
+  const envName = compatibilityModelEnv(currentProvider);
+  return envName !== undefined ? process.env[envName] : undefined;
+}
+
+function compatibilityCaCertPath(currentProvider) {
+  if (currentProvider === 'deepseek') return process.env.DEEPSEEK_CA_CERT_PATH;
+  if (currentProvider === 'minimax') return process.env.MINIMAX_CA_CERT_PATH;
+  return undefined;
 }

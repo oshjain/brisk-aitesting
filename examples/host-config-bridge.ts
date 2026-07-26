@@ -1,13 +1,24 @@
-import { defineConfigFromHost, mergeConfig } from 'brisk-aitesting';
+import { defineConfigFromHost, mergeConfig, type AiProviderConfig } from 'brisk-aitesting';
 
 const hostAiCaCertPath = optionalEnv('HOST_AI_CA_CERT_PATH');
+type SupportedProvider = AiProviderConfig['provider'];
+const supportedProviders: readonly SupportedProvider[] = [
+  'openai',
+  'openai-compatible',
+  'deepseek',
+  'minimax',
+  'azure-openai',
+  'anthropic',
+  'local',
+  'custom',
+];
 
 type HostSaaSConfig = {
   readonly appName: string;
   readonly publicBaseUrl: string;
   readonly repoRoot: string;
   readonly ai: {
-    readonly provider: 'deepseek' | 'minimax';
+    readonly provider: SupportedProvider;
     readonly apiKey: string;
     readonly model: string;
     readonly caCertPath?: string;
@@ -60,9 +71,9 @@ function requiredEnv(name: string): string {
   return value;
 }
 
-function parseProvider(value: string): 'deepseek' | 'minimax' {
-  if (value === 'deepseek' || value === 'minimax') return value;
-  throw new Error('HOST_AI_PROVIDER must be deepseek or minimax.');
+function parseProvider(value: string): SupportedProvider {
+  if (supportedProviders.includes(value as SupportedProvider)) return value as SupportedProvider;
+  throw new Error(`HOST_AI_PROVIDER must be one of: ${supportedProviders.join(', ')}.`);
 }
 
 function optionalEnv(name: string): string | undefined {
