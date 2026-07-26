@@ -16,7 +16,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "required": ["ok", "service"],
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "service": { "type": "string" }
+                  }
                 }
               }
             }
@@ -35,7 +40,18 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": ["code", "message"],
+                      "properties": {
+                        "code": { "type": "string" },
+                        "message": { "type": "string" }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -53,14 +69,30 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object"
+                "type": "object",
+                "required": ["text"],
+                "properties": {
+                  "text": { "type": "string" }
+                }
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Message accepted"
+            "description": "Message accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["accepted", "id"],
+                  "properties": {
+                    "accepted": { "type": "boolean" },
+                    "id": { "type": "string" }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid message"

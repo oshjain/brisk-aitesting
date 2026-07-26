@@ -3,7 +3,8 @@ import { createRequire } from 'node:module';
 import { mkdir, writeFile, access, readFile, readdir, rm } from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
 import { loadOpenApiSummary } from './openapi.js';
-import type { ArtifactRef, DiscoveryApiRoute, Engine, EngineContext, EngineRunResult, ScenarioPlan, ScenarioResult, UiGroundingEvidence, UiRouteGrounder, UiRouteGrounderContext, UiRouteGrounderResult } from './types.js';
+import { validateJsonSchema } from './schema.js';
+import type { ArtifactRef, DiscoveryApiRoute, Engine, EngineContext, EngineRunResult, OpenApiOperationSummary, ScenarioPlan, ScenarioResult, UiGroundingEvidence, UiRouteGrounder, UiRouteGrounderContext, UiRouteGrounderResult } from './types.js';
 
 type HeaderRecord = Record<string, string>;
 type StatusExpectation = NonNullable<NonNullable<ScenarioPlan['expect']>['status']>;
@@ -106,6 +107,7 @@ export class BuiltinApiEngine implements Engine {
     const artifactPath = join(dir, `${context.scenario.id}.request-response.json`);
     const url = apiUrl(context);
     const contractRoute = findContractRoute(context);
+    const contractOperation = contractRoute === undefined ? undefined : await findContractOperation(contractRoute);
     const headers: HeaderRecord = {
       ...authHeaders(context.config.auth),
       ...context.scenario.request?.headers,
@@ -155,6 +157,8 @@ export class BuiltinApiEngine implements Engine {
             ...(responseText.includes(context.scenario.expect.contains) ? {} : { message: 'Expected text was not found in response body.' }),
           });
         }
+        const responseSchemaAssertion = assertResponseSchema(response.status, response.headers, responseJson, contractOperation);
+        if (responseSchemaAssertion !== undefined) assertions.push(responseSchemaAssertion);
         if (assertions.length === 0) {
           assertions.push({ name: 'response status is below 500', status: response.status < 500 ? 'passed' : 'failed' });
         }
@@ -179,7 +183,7 @@ export class BuiltinApiEngine implements Engine {
             headers: headersToRecord(response.headers),
             body: responseJson ?? responseText,
           },
-          ...(contractRoute !== undefined ? { contract: contractRouteEvidence(contractRoute) } : {}),
+          ...(contractRoute !== undefined ? { contract: contractRouteEvidence(contractRoute, contractOperation) } : {}),
           assertions,
           diagnostics,
         };
@@ -578,7 +582,20 @@ function findContractRoute(context: EngineContext): DiscoveryApiRoute | undefine
   ));
 }
 
-function contractRouteEvidence(route: DiscoveryApiRoute): Record<string, unknown> {
+async function findContractOperation(route: DiscoveryApiRoute): Promise<OpenApiOperationSummary | undefined> {
+  if (route.contractPath === undefined) return undefined;
+  try {
+    const summary = await loadOpenApiSummary(route.contractPath);
+    return summary.operations.find((operation) => (
+      operation.method.toUpperCase() === route.method.toUpperCase()
+      && operation.path === route.path
+    ));
+  } catch {
+    return undefined;
+  }
+}
+
+function contractRouteEvidence(route: DiscoveryApiRoute, operation: OpenApiOperationSummary | undefined): Record<string, unknown> {
   return {
     method: route.method,
     path: route.path,
@@ -587,6 +604,7 @@ function contractRouteEvidence(route: DiscoveryApiRoute): Record<string, unknown
     ...(route.tags !== undefined ? { tags: route.tags } : {}),
     ...(route.contractPath !== undefined ? { contractPath: route.contractPath } : {}),
     ...(route.statusCodes !== undefined ? { statusCodes: route.statusCodes } : {}),
+    ...(operation?.responseSchemas !== undefined ? { responseSchemas: operation.responseSchemas } : {}),
   };
 }
 
@@ -638,6 +656,28 @@ function assertContractStatus(
       : `explicit status is backed by contract: ${route.statusCodes.join(', ')}`,
     status: passed ? 'passed' : 'failed',
     ...(passed ? {} : { message: `Contract for ${route.method} ${route.path} documents ${route.statusCodes.join(', ')}, got ${actual}.` }),
+  };
+}
+
+function assertResponseSchema(
+  status: number,
+  headers: Headers,
+  body: unknown,
+  operation: OpenApiOperationSummary | undefined,
+): ScenarioResult['assertions'][number] | undefined {
+  if (body === null || operation === undefined) return undefined;
+  const contentType = headers.get('content-type') ?? '';
+  const responseSchema = operation.responseSchemas.find((entry) => (
+    entry.statusCode === status
+    && entry.schema !== undefined
+    && (entry.contentType === undefined || contentType.toLowerCase().includes(entry.contentType.toLowerCase()))
+  ));
+  if (responseSchema?.schema === undefined) return undefined;
+  const validation = validateJsonSchema(responseSchema.schema, body);
+  return {
+    name: `response body matches OpenAPI schema for ${status}`,
+    status: validation.valid ? 'passed' : 'failed',
+    ...(validation.valid ? {} : { message: validation.errors.join('; ') }),
   };
 }
 

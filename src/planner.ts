@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import type { Planner, PlannerContext, ScenarioPlan, TestPlan } from './types.js';
+import { loadOpenApiSummary } from './openapi.js';
+import type { OpenApiOperationSummary, Planner, PlannerContext, ScenarioPlan, TestPlan } from './types.js';
 
 const DEFAULT_SCENARIOS: readonly Omit<ScenarioPlan, 'id'>[] = [
   {
@@ -40,7 +41,7 @@ export class BuiltinPlanner implements Planner {
 
   async plan(context: PlannerContext): Promise<TestPlan> {
     const mode = context.input.mode ?? 'automatic';
-    const selected = expandGoalIntoScenarios(context);
+    const selected = await expandGoalIntoScenarios(context);
 
     return {
       schemaVersion: 'brisk-aitesting.plan.v1',
@@ -60,7 +61,7 @@ function clampScenarioCount(value: number): number {
   return Math.max(1, Math.min(50, Math.round(value)));
 }
 
-function expandGoalIntoScenarios(context: PlannerContext): readonly Omit<ScenarioPlan, 'id'>[] {
+async function expandGoalIntoScenarios(context: PlannerContext): Promise<readonly Omit<ScenarioPlan, 'id'>[]> {
   const goal = context.input.goal;
   const desired = clampScenarioCount(context.input.scenarios ?? 5);
   const mode = context.input.mode ?? 'automatic';
@@ -109,6 +110,10 @@ function expandGoalIntoScenarios(context: PlannerContext): readonly Omit<Scenari
     });
   }
 
+  if (/\b(api|backend|route|endpoint|contract|openapi|schema)\b/.test(lower)) {
+    scenarios.push(...await openApiScenariosFromContract(context, desired - scenarios.length));
+  }
+
   while (scenarios.length < desired) {
     const next = DEFAULT_SCENARIOS[scenarios.length % DEFAULT_SCENARIOS.length]!;
     scenarios.push({
@@ -121,6 +126,68 @@ function expandGoalIntoScenarios(context: PlannerContext): readonly Omit<Scenari
     ...scenario,
     type: mode === 'automatic' ? scenario.type : mode,
   }));
+}
+
+async function openApiScenariosFromContract(context: PlannerContext, limit: number): Promise<readonly Omit<ScenarioPlan, 'id'>[]> {
+  if (limit <= 0 || context.config.contracts?.openApiPath === undefined) return [];
+  try {
+    const summary = await loadOpenApiSummary(context.config.contracts.openApiPath);
+    const scenarios: Omit<ScenarioPlan, 'id'>[] = [];
+    for (const operation of [...summary.operations].sort((left, right) => Number(right.requestBodyRequired) - Number(left.requestBodyRequired))) {
+      if (scenarios.length >= limit) break;
+      const positive = positiveScenarioFromOperation(operation, summary.path);
+      if (positive !== undefined) scenarios.push(positive);
+      if (scenarios.length >= limit) break;
+      const negative = negativeScenarioFromOperation(operation, summary.path);
+      if (negative !== undefined) scenarios.push(negative);
+    }
+    return scenarios;
+  } catch {
+    return [];
+  }
+}
+
+function positiveScenarioFromOperation(operation: OpenApiOperationSummary, contractPath: string): Omit<ScenarioPlan, 'id'> | undefined {
+  const successStatus = operation.statusCodes.find((status) => status >= 200 && status < 300);
+  const method = operation.method.toUpperCase();
+  if (['POST', 'PUT', 'PATCH'].includes(method) && operation.requestBodyRequired && operation.requestExample === undefined) return undefined;
+  return {
+    name: `${method} ${operation.path} matches OpenAPI success contract`,
+    type: 'api',
+    objective: `Execute ${method} ${operation.path} using the OpenAPI contract as the source of truth.`,
+    target: { method, path: operation.path },
+    ...(operation.requestExample !== undefined ? { request: { body: operation.requestExample } } : {}),
+    expect: { status: successStatus ?? { min: 200, max: 499 } },
+    assertions: ['status is documented by OpenAPI', 'response body matches documented schema when available'],
+    evidenceRequired: ['api', 'schema'],
+    metadata: {
+      generatedBy: 'openapi',
+      polarity: 'positive',
+      contractPath,
+      ...(operation.operationId !== undefined ? { operationId: operation.operationId } : {}),
+    },
+  };
+}
+
+function negativeScenarioFromOperation(operation: OpenApiOperationSummary, contractPath: string): Omit<ScenarioPlan, 'id'> | undefined {
+  const method = operation.method.toUpperCase();
+  if (!['POST', 'PUT', 'PATCH'].includes(method) || operation.invalidRequestExample === undefined) return undefined;
+  return {
+    name: `${method} ${operation.path} rejects invalid OpenAPI request body`,
+    type: 'api',
+    objective: `Send an invalid ${method} ${operation.path} request generated from the OpenAPI request schema.`,
+    target: { method, path: operation.path },
+    request: { body: operation.invalidRequestExample },
+    expect: { status: { min: 400, max: 499 } },
+    assertions: ['invalid request receives controlled 4xx response'],
+    evidenceRequired: ['api', 'schema'],
+    metadata: {
+      generatedBy: 'openapi',
+      polarity: 'negative',
+      contractPath,
+      ...(operation.operationId !== undefined ? { operationId: operation.operationId } : {}),
+    },
+  };
 }
 
 function defaultScenariosFromDiscovery(context: PlannerContext): Omit<ScenarioPlan, 'id'>[] {

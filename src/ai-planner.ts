@@ -284,7 +284,7 @@ function parseAiPlan(content: string): {
   readonly warnings?: unknown;
   readonly scenarios?: unknown;
 } {
-  const json = extractJsonObject(content);
+  const json = extractJsonObject(content, isPlanLikeObject);
   const parsed = unwrapPlanObject(JSON.parse(repairJson(json)) as unknown);
   if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error('AI planner returned JSON that is not an object.');
@@ -341,16 +341,71 @@ function normalizeScenarioCollection(parsed: ReturnType<typeof parseAiPlan>): un
 }
 
 function repairJson(value: string): string {
-  return value.replace(/,\s*([}\]])/g, '$1');
+  return value
+    .replace(/,\s*([}\]])/g, '$1')
+    .replace(/([{,]\s*)([A-Za-z_$][A-Za-z0-9_$-]*)(\s*:)/g, '$1"$2"$3');
 }
 
-function extractJsonObject(content: string): string {
+function extractJsonObject(content: string, accepts: (value: unknown) => boolean = () => true): string {
   const trimmed = content.trim();
-  if (trimmed.startsWith('{') && trimmed.endsWith('}')) return trimmed;
-  const start = trimmed.indexOf('{');
-  const end = trimmed.lastIndexOf('}');
-  if (start >= 0 && end > start) return trimmed.slice(start, end + 1);
+  const candidates = jsonCandidates(trimmed);
+  for (const candidate of candidates.sort((left, right) => right.length - left.length)) {
+    try {
+      const parsed = JSON.parse(repairJson(candidate)) as unknown;
+      if (accepts(parsed)) return candidate;
+    } catch {
+      // Try the next balanced JSON-looking candidate.
+    }
+  }
+  if (candidates.length > 0) return candidates[0]!;
   throw new Error('AI planner did not return a JSON object.');
+}
+
+function isPlanLikeObject(value: unknown): boolean {
+  const unwrapped = unwrapPlanObject(value);
+  return isRecord(unwrapped)
+    && (Array.isArray(unwrapped.scenarios) || Array.isArray(unwrapped.tests) || Array.isArray(unwrapped.testCases));
+}
+
+function jsonCandidates(content: string): string[] {
+  const candidates: string[] = [];
+  for (const match of content.matchAll(/```(?:json)?\s*([\s\S]*?)```/gi)) {
+    const fenced = match[1]?.trim();
+    if (fenced?.startsWith('{') === true) candidates.push(fenced);
+  }
+  for (let index = 0; index < content.length; index += 1) {
+    if (content[index] !== '{') continue;
+    const end = findBalancedJsonEnd(content, index);
+    if (end > index) candidates.push(content.slice(index, end + 1));
+  }
+  if (content.startsWith('{') && content.endsWith('}')) candidates.push(content);
+  return [...new Set(candidates)];
+}
+
+function findBalancedJsonEnd(content: string, start: number): number {
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let index = start; index < content.length; index += 1) {
+    const char = content[index]!;
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === '\\') {
+        escaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+    if (char === '"') inString = true;
+    if (char === '{') depth += 1;
+    if (char === '}') {
+      depth -= 1;
+      if (depth === 0) return index;
+    }
+  }
+  return -1;
 }
 
 function normalizeAiScenarios(value: unknown, context: PlannerContext): readonly ScenarioPlan[] {

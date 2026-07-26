@@ -16,6 +16,14 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - ok
+                  - service
+                properties:
+                  ok:
+                    type: boolean
+                  service:
+                    type: string
   /api/secure:
     get:
       operationId: getSecureResource
@@ -29,6 +37,19 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: object
+                    required:
+                      - code
+                      - message
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
   /api/messages:
     post:
       operationId: publishMessage
@@ -41,8 +62,25 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
       responses:
         "201":
           description: Message accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - accepted
+                  - id
+                properties:
+                  accepted:
+                    type: boolean
+                  id:
+                    type: string
         "400":
           description: Invalid message

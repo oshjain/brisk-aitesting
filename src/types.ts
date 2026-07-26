@@ -198,7 +198,17 @@ export interface OpenApiOperationSummary {
   readonly statusCodes: readonly number[];
   readonly requestBodyRequired: boolean;
   readonly requestContentTypes: readonly string[];
+  readonly requestSchema?: unknown;
+  readonly requestExample?: unknown;
+  readonly invalidRequestExample?: unknown;
   readonly responseContentTypes: readonly string[];
+  readonly responseSchemas: readonly OpenApiResponseSummary[];
+}
+
+export interface OpenApiResponseSummary {
+  readonly statusCode: number;
+  readonly contentType?: string;
+  readonly schema?: unknown;
 }
 
 export interface OpenApiDocumentSummary {

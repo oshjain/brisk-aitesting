@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { parseDocument } from 'yaml';
+import { createInvalidSchemaExample, createSchemaExample } from './schema.js';
 import type { DiscoveryApiRoute, OpenApiDocumentSummary, OpenApiOperationSummary } from './types.js';
 
 const HTTP_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace']);
@@ -43,7 +44,7 @@ export function summarizeOpenApiDocument(path: string, document: unknown, format
           diagnostics.push(`${rawMethod.toUpperCase()} ${operationPath} operation is not an object.`);
           continue;
         }
-        operations.push(summarizeOperation(operationPath, method.toUpperCase(), operation));
+        operations.push(summarizeOperation(operationPath, method.toUpperCase(), operation, document));
       }
     }
   }
@@ -91,9 +92,12 @@ function parseOpenApiSource(path: string, raw: string): { readonly document: unk
   return { document: JSON.parse(raw) as unknown, format: 'json' };
 }
 
-function summarizeOperation(path: string, method: string, operation: JsonRecord): OpenApiOperationSummary {
+function summarizeOperation(path: string, method: string, operation: JsonRecord, document: JsonRecord): OpenApiOperationSummary {
   const requestBody = isRecord(operation.requestBody) ? operation.requestBody : undefined;
   const responses = isRecord(operation.responses) ? operation.responses : undefined;
+  const requestSchema = resolveSchema(firstContentSchema(requestBody), document);
+  const requestExample = requestSchema === undefined ? undefined : createSchemaExample(requestSchema);
+  const invalidRequestExample = requestSchema === undefined ? undefined : createInvalidSchemaExample(requestSchema);
 
   return {
     method,
@@ -104,7 +108,11 @@ function summarizeOperation(path: string, method: string, operation: JsonRecord)
     statusCodes: summarizeStatusCodes(responses),
     requestBodyRequired: requestBody?.required === true,
     requestContentTypes: summarizeContentTypes(requestBody),
+    ...(requestSchema !== undefined ? { requestSchema } : {}),
+    ...(requestExample !== undefined ? { requestExample } : {}),
+    ...(invalidRequestExample !== undefined ? { invalidRequestExample } : {}),
     responseContentTypes: summarizeResponseContentTypes(responses),
+    responseSchemas: summarizeResponseSchemas(responses, document),
   };
 }
 
@@ -131,6 +139,93 @@ function summarizeResponseContentTypes(responses: JsonRecord | undefined): reado
     }
   }
   return [...contentTypes].sort();
+}
+
+function summarizeResponseSchemas(responses: JsonRecord | undefined, document: JsonRecord): readonly {
+  readonly statusCode: number;
+  readonly contentType?: string;
+  readonly schema?: unknown;
+}[] {
+  if (responses === undefined) return [];
+  const result: {
+    readonly statusCode: number;
+    readonly contentType?: string;
+    readonly schema?: unknown;
+  }[] = [];
+  for (const [status, response] of Object.entries(responses)) {
+    const statusCode = Number(status);
+    if (!Number.isInteger(statusCode) || statusCode < 100 || statusCode > 599 || !isRecord(response)) continue;
+    const content = isRecord(response.content) ? response.content : {};
+    for (const [contentType, mediaType] of Object.entries(content)) {
+      const schema = resolveSchema(isRecord(mediaType) ? mediaType.schema : undefined, document);
+      result.push({
+        statusCode,
+        contentType,
+        ...(schema !== undefined ? { schema } : {}),
+      });
+    }
+    if (Object.keys(content).length === 0) result.push({ statusCode });
+  }
+  return result.sort((left, right) => left.statusCode - right.statusCode || (left.contentType ?? '').localeCompare(right.contentType ?? ''));
+}
+
+function firstContentSchema(value: JsonRecord | undefined): unknown {
+  const content = isRecord(value?.content) ? value.content : undefined;
+  if (content === undefined) return undefined;
+  const jsonEntry = content['application/json'];
+  if (isRecord(jsonEntry) && jsonEntry.schema !== undefined) return jsonEntry.schema;
+  for (const mediaType of Object.values(content)) {
+    if (isRecord(mediaType) && mediaType.schema !== undefined) return mediaType.schema;
+  }
+  return undefined;
+}
+
+function resolveSchema(schema: unknown, document: JsonRecord): unknown {
+  if (!isRecord(schema)) return schema;
+  if (typeof schema.$ref === 'string') {
+    const resolved = resolveLocalRef(schema.$ref, document);
+    return resolved === undefined ? schema : resolved;
+  }
+  if (schema.allOf !== undefined && Array.isArray(schema.allOf)) {
+    return {
+      ...schema,
+      allOf: schema.allOf.map((entry) => resolveSchema(entry, document)),
+    };
+  }
+  if (schema.oneOf !== undefined && Array.isArray(schema.oneOf)) {
+    return {
+      ...schema,
+      oneOf: schema.oneOf.map((entry) => resolveSchema(entry, document)),
+    };
+  }
+  if (schema.anyOf !== undefined && Array.isArray(schema.anyOf)) {
+    return {
+      ...schema,
+      anyOf: schema.anyOf.map((entry) => resolveSchema(entry, document)),
+    };
+  }
+  if (isRecord(schema.items)) {
+    return {
+      ...schema,
+      items: resolveSchema(schema.items, document),
+    };
+  }
+  if (isRecord(schema.properties)) {
+    return {
+      ...schema,
+      properties: Object.fromEntries(Object.entries(schema.properties).map(([key, value]) => [key, resolveSchema(value, document)])),
+    };
+  }
+  return schema;
+}
+
+function resolveLocalRef(ref: string, document: JsonRecord): unknown {
+  if (!ref.startsWith('#/')) return undefined;
+  return ref
+    .slice(2)
+    .split('/')
+    .map((segment) => segment.replace(/~1/g, '/').replace(/~0/g, '~'))
+    .reduce<unknown>((current, segment) => (isRecord(current) ? current[segment] : undefined), document);
 }
 
 function isRecord(value: unknown): value is JsonRecord {

@@ -74,6 +74,13 @@ try {
       },
     },
     {
+      name: 'json-ish object with unquoted keys',
+      content: '{ mode: "automatic", scenarios: [{ name: "Home", type: "browser", target: { route: "/" }, assertions: ["visible"], evidenceRequired: ["ui"] }] }',
+      assert(plan) {
+        assertHasType(plan, 'ui');
+      },
+    },
+    {
       name: 'top-level testPlan wrapper and tests alias',
       content: JSON.stringify({
         testPlan: {

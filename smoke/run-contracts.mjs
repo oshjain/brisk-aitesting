@@ -9,6 +9,7 @@ const packageJson = JSON.parse(await readFile(join(packageDir, 'package.json'), 
 const readme = await readFile(join(packageDir, 'README.md'), 'utf8');
 const architecture = await readFile(join(packageDir, 'docs', 'ARCHITECTURE.md'), 'utf8');
 const types = await readFile(join(packageDir, 'dist', 'types.d.ts'), 'utf8');
+const indexTypes = await readFile(join(packageDir, 'dist', 'index.d.ts'), 'utf8');
 
 const expectedRuntimeExports = [
   'AiPlanner',
@@ -22,8 +23,10 @@ const expectedRuntimeExports = [
   'BuiltinPlaywrightEngine',
   'BuiltinPlaywrightRouteGrounder',
   'OpenAiCompatibleProvider',
+  'createInvalidSchemaExample',
   'createAiProviderFromConfig',
   'createBriskAiTesting',
+  'createSchemaExample',
   'defineConfig',
   'defineConfigFromHost',
   'loadConfig',
@@ -34,6 +37,7 @@ const expectedRuntimeExports = [
   'normalizeConfig',
   'parseAiPlanForTesting',
   'summarizeOpenApiDocument',
+  'validateJsonSchema',
 ];
 
 const expectedTypeExports = [
@@ -46,6 +50,7 @@ const expectedTypeExports = [
   'Engine',
   'OpenApiDocumentSummary',
   'OpenApiOperationSummary',
+  'OpenApiResponseSummary',
   'Planner',
   'PlanValidator',
   'ScenarioPlan',
@@ -59,6 +64,7 @@ const expectedTypeExports = [
   'UiRouteGrounderContext',
   'UiRouteGrounderResult',
   'ValidationResult',
+  'SchemaValidationResult',
 ];
 
 const expectedSchemas = [
@@ -91,7 +97,7 @@ for (const name of expectedRuntimeExports) {
 }
 
 for (const name of expectedTypeExports) {
-  if (!types.includes(`export interface ${name}`) && !types.includes(`export type ${name}`)) {
+  if (!types.includes(`export interface ${name}`) && !types.includes(`export type ${name}`) && !indexTypes.includes(name)) {
     errors.push(`missing type declaration export ${name}`);
   }
 }

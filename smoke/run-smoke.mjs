@@ -19,6 +19,20 @@ const server = createServer(async (request, response) => {
       response.end(JSON.stringify({ error: { code: 'UNAUTHORIZED', message: 'Missing token' } }));
       return;
     }
+    if (request.url === '/api/messages' && request.method === 'POST') {
+      const chunks = [];
+      for await (const chunk of request) chunks.push(chunk);
+      const rawBody = Buffer.concat(chunks).toString('utf8');
+      const body = rawBody.trim().length === 0 ? null : JSON.parse(rawBody);
+      if (body !== null && typeof body === 'object' && !Array.isArray(body) && typeof body.text === 'string') {
+        response.writeHead(201, { 'content-type': 'application/json' });
+        response.end(JSON.stringify({ accepted: true, id: 'msg_001' }));
+        return;
+      }
+      response.writeHead(400, { 'content-type': 'application/json' });
+      response.end(JSON.stringify({ error: { code: 'INVALID_MESSAGE', message: 'text is required' } }));
+      return;
+    }
     const html = await readFile(join(appRoot, 'index.html'), 'utf8');
     response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
     response.end(html.replaceAll('__PATH__', request.url ?? '/'));
@@ -196,6 +210,12 @@ try {
       if (!openApiSummary.operations.some((operation) => operation.method === 'POST' && operation.path === '/api/messages' && operation.requestBodyRequired === true)) {
         errors.push('OpenAPI summary missing POST /api/messages request body signal');
       }
+      const messageOperation = openApiSummary.operations.find((operation) => operation.method === 'POST' && operation.path === '/api/messages');
+      if (messageOperation?.requestExample?.text !== 'example') errors.push('OpenAPI summary missing generated valid request example');
+      if (messageOperation?.invalidRequestExample === undefined) errors.push('OpenAPI summary missing generated invalid request example');
+      if (!messageOperation?.responseSchemas?.some((entry) => entry.statusCode === 201 && entry.schema !== undefined)) {
+        errors.push('OpenAPI summary missing response schema');
+      }
     }
     if (yamlSummary === undefined) errors.push('missing YAML OpenAPI summary');
     if (jsonSummary === undefined) errors.push('missing JSON OpenAPI summary');
@@ -249,6 +269,31 @@ try {
       discoveredApiRoutes: result.discovery.apiRoutes.length,
       artifacts: result.artifacts.length,
     }, null, 2));
+  }
+
+  const generatedTester = createBriskAiTesting(config);
+  const generatedResult = await generatedTester.run({
+    goal: 'Generate OpenAPI schema API contract scenarios',
+    scenarios: 8,
+    mode: 'automatic',
+  });
+  const generatedErrors = [];
+  const generatedScenarios = generatedResult.plan.scenarios.filter((scenario) => scenario.metadata?.generatedBy === 'openapi');
+  if (!generatedScenarios.some((scenario) => scenario.metadata?.operationId === 'publishMessage' && scenario.metadata?.polarity === 'positive')) {
+    generatedErrors.push('built-in planner missing positive OpenAPI publishMessage scenario');
+  }
+  if (!generatedScenarios.some((scenario) => scenario.metadata?.operationId === 'publishMessage' && scenario.metadata?.polarity === 'negative')) {
+    generatedErrors.push('built-in planner missing negative OpenAPI publishMessage scenario');
+  }
+  const generatedPublishResults = generatedResult.tests.filter((test) => /POST \/api\/messages/.test(test.name));
+  if (generatedPublishResults.length < 2) generatedErrors.push('generated OpenAPI publishMessage scenarios did not execute');
+  if (!generatedPublishResults.every((test) => test.status === 'passed')) generatedErrors.push('generated OpenAPI publishMessage scenarios did not pass');
+  if (!generatedPublishResults.some((test) => test.assertions.some((assertion) => /response body matches OpenAPI schema/.test(assertion.name) && assertion.status === 'passed'))) {
+    generatedErrors.push('generated positive scenario did not validate response schema');
+  }
+  if (generatedErrors.length > 0) {
+    console.error(JSON.stringify({ generatedErrors, status: generatedResult.status, summary: generatedResult.summary, plan: generatedResult.plan }, null, 2));
+    process.exitCode = 1;
   }
 
   const repairEvents = [];

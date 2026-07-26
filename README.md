@@ -66,7 +66,7 @@ console.log(result.summary);
 Current built-in engines:
 
 - `BuiltinPlaywrightEngine`: generates and executes real Playwright browser tests.
-- `BuiltinApiEngine`: executes HTTP requests, checks status/body expectations, and writes request-response artifacts.
+- `BuiltinApiEngine`: executes HTTP requests, checks status/body/schema expectations, and writes request-response artifacts.
 - `BuiltinContractEngine`: parses configured OpenAPI JSON/YAML contract files.
 
 Current built-in control-plane modules:
@@ -276,12 +276,23 @@ OpenAPI JSON and YAML contract artifacts summarize operations in a host-consumab
       "statusCodes": [200],
       "requestBodyRequired": false,
       "requestContentTypes": [],
-      "responseContentTypes": ["application/json"]
+      "responseContentTypes": ["application/json"],
+      "responseSchemas": [
+        {
+          "statusCode": 200,
+          "contentType": "application/json",
+          "schema": {
+            "type": "object"
+          }
+        }
+      ]
     }
   ],
   "diagnostics": []
 }
 ```
+
+When OpenAPI request schemas are present, the built-in planner can generate positive and negative API scenarios from the contract. When OpenAPI response schemas are present, the API engine validates JSON responses with AJV and records the assertion in `brisk-aitesting.api-evidence.v1`.
 
 Playwright UI runs also produce a schema-versioned evidence manifest:
 

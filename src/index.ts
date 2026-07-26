@@ -35,6 +35,12 @@ export {
 } from './openapi.js';
 
 export {
+  createInvalidSchemaExample,
+  createSchemaExample,
+  validateJsonSchema,
+} from './schema.js';
+
+export {
   BriskAiTestingProviderError,
   createAiProviderFromConfig,
   OpenAiCompatibleProvider,
@@ -73,6 +79,7 @@ export type {
   HandoverEnvelope,
   OpenApiDocumentSummary,
   OpenApiOperationSummary,
+  OpenApiResponseSummary,
   Planner,
   PlannerContext,
   PlannerRepairContext,
@@ -91,3 +98,7 @@ export type {
   ValidationIssue,
   ValidationResult,
 } from './types.js';
+
+export type {
+  SchemaValidationResult,
+} from './schema.js';

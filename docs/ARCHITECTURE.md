@@ -30,8 +30,9 @@ The product must hide complexity from host apps while keeping every internal bou
    BuiltinDiscoverer finds UI routes, API routes, contracts, and repo signals.
 
 3. Planning
-   Planner returns `brisk-aitesting.plan.v1`.
-   AiPlanner requests JSON only from an AiPlannerProvider.
+    Planner returns `brisk-aitesting.plan.v1`.
+    AiPlanner requests JSON only from an AiPlannerProvider.
+    BuiltinPlanner can generate API scenarios from OpenAPI operations.
 
 4. Validation And Repair
    BuiltinPlanValidator checks structural executability.
@@ -43,6 +44,7 @@ The product must hide complexity from host apps while keeping every internal bou
 
 6. Execution
     BuiltinApiEngine executes API scenarios.
+    BuiltinApiEngine validates JSON responses against OpenAPI response schemas when available.
     BuiltinPlaywrightEngine executes UI scenarios and grounded UI actions.
     BuiltinContractEngine parses OpenAPI JSON/YAML contracts and emits operation summaries.
 
