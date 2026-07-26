@@ -1,6 +1,7 @@
 <div align="center">
   <img src="./assets/logo_transparent.png" alt="brisk-aitesting logo" width="160" />
   <h1>brisk-aitesting</h1>
+  <p><strong>Fast, No-nonsense and Effective</strong></p>
 
   <!-- Badges -->
   <p>
