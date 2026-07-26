@@ -1,4 +1,4 @@
-import { defineConfigFromHost, mergeConfig } from '../src/index.js';
+import { defineConfigFromHost, mergeConfig } from 'brisk-aitesting';
 
 const hostAiCaCertPath = optionalEnv('HOST_AI_CA_CERT_PATH');
 

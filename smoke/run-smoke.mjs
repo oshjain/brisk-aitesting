@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createBriskAiTesting, defineConfig, normalizeConfig } from '../dist/index.js';
+import { createBriskAiTesting, defineConfig, normalizeConfig, parseAiPlanForTesting } from '../dist/index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const appRoot = join(here, 'site');
@@ -508,11 +508,7 @@ try {
     process.exitCode = 1;
   }
 
-  const fakeAiProvider = {
-    name: 'fake-ai-provider',
-    async complete() {
-      return {
-        content: `Here is the plan:
+  const normalizedAiPlan = parseAiPlanForTesting(`Here is the plan:
 {
   "mode": "automatic",
   "warnings": ["normalized by smoke"],
@@ -535,26 +531,18 @@ try {
       "evidenceRequired": ["api"],
     }
   ]
-}`,
-      };
-    },
-  };
-  const aiTester = createBriskAiTesting({
-    ...config,
-    aiProvider: fakeAiProvider,
-  });
-  const aiResult = await aiTester.run({
-    goal: 'AI should plan homepage and health API tests',
-    scenarios: 2,
-    mode: 'automatic',
+}`, {
+    config,
+    input: { goal: 'AI should plan homepage and health API tests', scenarios: 2, mode: 'automatic' },
+    runId: 'smoke_ai_normalization',
+    discovery: result.discovery,
   });
   const aiErrors = [];
-  if (aiResult.summary.total !== 2) aiErrors.push(`expected AI total 2, got ${aiResult.summary.total}`);
-  if (aiResult.summary.passed !== 2) aiErrors.push(`expected AI passed 2, got ${aiResult.summary.passed}`);
-  if (!aiResult.plan.scenarios.some((scenario) => scenario.type === 'ui')) aiErrors.push('AI browser alias was not normalized to ui');
-  if (!aiResult.plan.scenarios.some((scenario) => scenario.type === 'api')) aiErrors.push('AI backend alias was not normalized to api');
+  if (normalizedAiPlan.scenarios.length !== 2) aiErrors.push(`expected AI total 2, got ${normalizedAiPlan.scenarios.length}`);
+  if (!normalizedAiPlan.scenarios.some((scenario) => scenario.type === 'ui')) aiErrors.push('AI browser alias was not normalized to ui');
+  if (!normalizedAiPlan.scenarios.some((scenario) => scenario.type === 'api')) aiErrors.push('AI backend alias was not normalized to api');
   if (aiErrors.length > 0) {
-    console.error(JSON.stringify({ aiErrors, status: aiResult.status, summary: aiResult.summary, plan: aiResult.plan }, null, 2));
+    console.error(JSON.stringify({ aiErrors, plan: normalizedAiPlan }, null, 2));
     process.exitCode = 1;
   }
 

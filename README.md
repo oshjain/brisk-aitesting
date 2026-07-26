@@ -55,7 +55,7 @@ npm run build
 npm run smoke:ci
 ```
 
-`smoke:ci` includes contract, CLI, AI fixture, and full engine smoke coverage. `smoke:real-ai` is intentionally manual because it requires provider credentials and may depend on enterprise network trust settings.
+`smoke:ci` includes contract, CLI, AI fixture, full engine smoke, and pack-check coverage. `smoke:real-ai` is intentionally manual because it requires provider credentials and may depend on enterprise network trust settings.
 
 For adversarial failure-mode coverage, run:
 
@@ -64,6 +64,14 @@ npm run benchmark
 ```
 
 The benchmark emits `brisk-aitesting.benchmark.v1` and covers ugly but realistic cases such as malformed OpenAPI, missing contracts, invalid AI output shapes, schema mismatches, undocumented statuses, blocked network policy, and CLI usage errors.
+
+Before publishing or tagging a release, run:
+
+```bash
+npm run pack:check
+```
+
+The pack check emits `brisk-aitesting.pack-check.v1` and verifies the npm tarball includes `dist`, README, docs, examples, and CLI files while excluding secrets, source internals, smoke fixtures, and generated artifacts.
 
 ## Use As An SDK
 
@@ -261,6 +269,7 @@ brisk-aitesting.result.v1
 brisk-aitesting.handover.v1
 brisk-aitesting.cli-result.v1
 brisk-aitesting.benchmark.v1
+brisk-aitesting.pack-check.v1
 brisk-aitesting.api-evidence.v1
 brisk-aitesting.openapi-summary.v1
 brisk-aitesting.playwright-evidence.v1

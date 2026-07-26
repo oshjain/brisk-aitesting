@@ -1,4 +1,4 @@
-import { defineConfig } from '../src/index.js';
+import { defineConfig } from 'brisk-aitesting';
 
 const aiCaCertPath = optionalEnv('BRISK_AITESTING_AI_CA_CERT_PATH') ?? optionalEnv('MINIMAX_CA_CERT_PATH');
 

@@ -12,7 +12,8 @@
   "files": [
     "dist",
     "README.md",
-    "docs"
+    "docs",
+    "examples"
   ],
   "scripts": {
     "build": "tsc",
@@ -21,9 +22,10 @@
     "smoke:cli": "node smoke/run-cli.mjs",
     "smoke:ai-fixtures": "node smoke/run-ai-fixtures.mjs",
     "smoke:real-ai": "node smoke/run-real-ai-smoke.mjs",
-    "smoke:ci": "npm run smoke:contracts && npm run smoke:cli && npm run smoke:ai-fixtures && npm run smoke",
+    "smoke:ci": "npm run smoke:contracts && npm run smoke:cli && npm run smoke:ai-fixtures && npm run smoke && npm run pack:check",
     "smoke:all": "npm run smoke:ci && npm run smoke:real-ai",
     "benchmark": "node smoke/run-benchmark.mjs",
+    "pack:check": "npm run build && node smoke/run-pack-check.mjs",
     "typecheck": "tsc --noEmit",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
   },

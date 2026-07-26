@@ -59,6 +59,10 @@ The product must hide complexity from host apps while keeping every internal bou
 9. Benchmark Boundary
    `npm run benchmark` emits `brisk-aitesting.benchmark.v1`.
    Benchmark cases are deterministic adversarial checks for failure-mode stability.
+
+10. Release Pack Boundary
+   `npm run pack:check` emits `brisk-aitesting.pack-check.v1`.
+   Pack check verifies distributable files and blocks secrets, smoke fixtures, and generated artifacts from the npm tarball.
 ```
 
 ## Schema Registry
@@ -74,6 +78,7 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.handover.v1` | handover | Host consumption contract |
 | `brisk-aitesting.cli-result.v1` | CLI | Machine-readable CLI run summary |
 | `brisk-aitesting.benchmark.v1` | benchmark | Deterministic adversarial benchmark report |
+| `brisk-aitesting.pack-check.v1` | release | npm package tarball verification report |
 | `brisk-aitesting.api-evidence.v1` | API engine | Request/response evidence |
 | `brisk-aitesting.openapi-summary.v1` | contract engine/discoverer | OpenAPI JSON/YAML operation summary |
 | `brisk-aitesting.playwright-evidence.v1` | UI engine | UI execution manifest |
@@ -133,9 +138,10 @@ npm run smoke:cli
 npm run smoke:ai-fixtures
 npm run smoke
 npm run benchmark
+npm run pack:check
 ```
 
-`npm run smoke:ci` runs the deterministic gate used by GitHub Actions. It excludes real provider calls.
+`npm run smoke:ci` runs the deterministic gate used by GitHub Actions. It includes pack-check and excludes real provider calls.
 
 `smoke:real-ai` requires provider credentials and enterprise CA config when applicable. It is available through the manual `Real AI Smoke` workflow and proves the configured provider path works, but benchmark-level provider quality is a separate track.
 
@@ -155,5 +161,5 @@ Still intentionally incomplete:
 
 - Benchmark-level multi-provider scoring.
 - JUnit/HTML CI report generation.
-- Publishing hardening and public package release checks.
+- Public npm publishing automation.
 - Metrics/analytics module.

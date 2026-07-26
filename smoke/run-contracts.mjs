@@ -8,6 +8,7 @@ const packageDir = dirname(here);
 const packageJson = JSON.parse(await readFile(join(packageDir, 'package.json'), 'utf8'));
 const readme = await readFile(join(packageDir, 'README.md'), 'utf8');
 const architecture = await readFile(join(packageDir, 'docs', 'ARCHITECTURE.md'), 'utf8');
+const statusDoc = await readFile(join(packageDir, 'docs', 'STATUS.md'), 'utf8');
 const types = await readFile(join(packageDir, 'dist', 'types.d.ts'), 'utf8');
 const indexTypes = await readFile(join(packageDir, 'dist', 'index.d.ts'), 'utf8');
 
@@ -75,6 +76,7 @@ const expectedSchemas = [
   'brisk-aitesting.handover.v1',
   'brisk-aitesting.cli-result.v1',
   'brisk-aitesting.benchmark.v1',
+  'brisk-aitesting.pack-check.v1',
   'brisk-aitesting.api-evidence.v1',
   'brisk-aitesting.openapi-summary.v1',
   'brisk-aitesting.playwright-evidence.v1',
@@ -93,6 +95,7 @@ const expectedScripts = [
   'smoke:real-ai',
   'smoke:all',
   'benchmark',
+  'pack:check',
 ];
 
 const errors = [];
@@ -110,14 +113,15 @@ for (const name of expectedTypeExports) {
 for (const schema of expectedSchemas) {
   if (!readme.includes(schema)) errors.push(`README missing schema ${schema}`);
   if (!architecture.includes(schema)) errors.push(`ARCHITECTURE missing schema ${schema}`);
+  if (!statusDoc.includes(schema) && schema === 'brisk-aitesting.pack-check.v1') errors.push(`STATUS missing schema ${schema}`);
 }
 
 for (const script of expectedScripts) {
   if (typeof packageJson.scripts?.[script] !== 'string') errors.push(`package.json missing script ${script}`);
 }
 
-if (!Array.isArray(packageJson.files) || !packageJson.files.includes('dist') || !packageJson.files.includes('README.md') || !packageJson.files.includes('docs')) {
-  errors.push('package.json files must include dist, README.md, and docs');
+if (!Array.isArray(packageJson.files) || !packageJson.files.includes('dist') || !packageJson.files.includes('README.md') || !packageJson.files.includes('docs') || !packageJson.files.includes('examples')) {
+  errors.push('package.json files must include dist, README.md, docs, and examples');
 }
 
 if (errors.length > 0) {
