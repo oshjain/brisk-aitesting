@@ -76,6 +76,72 @@ The engine is designed for:
 - CI pipelines
 - custom test engines
 
+## What It Can Do
+
+`brisk-aitesting` is designed to be the testing brain and execution layer that a product team can plug into its own SaaS, repo, CI, or internal platform.
+
+It can:
+
+- inspect the repository itself
+- identify backend frameworks and application structure
+- discover backend routes from source code
+- discover UI routes separately
+- locate OpenAPI contract files in JSON or YAML
+- correlate contracts with implemented routes
+- detect routes that exist in code but are missing from contracts
+- detect contract operations that do not appear to have matching implementation signals
+- generate positive API scenarios from OpenAPI request schemas
+- generate negative API scenarios from OpenAPI request schemas
+- validate runtime API responses against OpenAPI response schemas
+- check HTTP status codes, response bodies, headers, and schema expectations
+- route different scenarios into UI, API, contract, schema, replay, or custom engines
+- run browser workflows through Playwright
+- ground UI actions in observed page evidence such as roles, labels, text, test IDs, and stable selectors
+- prevent unsafe test execution by validating every plan before engines run
+- repair invalid structured plans through a validation feedback loop
+- produce unified, versioned, machine-consumable result JSON
+- produce evidence artifacts for API calls, browser runs, contracts, logs, traces, screenshots, and generated specs
+- work as a local SDK
+- work as a CLI
+- run without a proprietary hosted platform
+- let host products own their own database, dashboard, CI, and observability flow
+- accept host-app configuration through a bridge instead of forcing duplicate setup
+- support provider-agnostic AI configuration through environment variables or custom providers
+- support custom engines for systems outside the built-in UI/API/contract scope
+
+In simple words:
+
+```text
+It does not only click screens.
+It understands app surfaces, plans tests, chooses engines, runs checks, and returns evidence.
+```
+
+## What It Cannot Do Yet
+
+`brisk-aitesting` is powerful, but it is not pretending to be every testing product in the world on day one.
+
+Current product boundaries:
+
+- It does not replace all specialized performance testing tools yet.
+- It does not replace full security penetration testing platforms yet.
+- It does not provide a hosted dashboard yet.
+- It does not provide built-in long-term test history storage yet.
+- It does not publish JUnit or HTML reports yet, although the result contract is ready for those outputs.
+- It does not run native mobile app tests without a custom mobile engine.
+- It does not run desktop app tests without a custom desktop engine.
+- It does not deeply validate databases, queues, streams, or non-HTTP systems without custom engines.
+- It does not automatically create safe test data for every enterprise system yet.
+- It does not guarantee good UI grounding for apps with no accessible labels, roles, text, test IDs, or stable selectors.
+- It does not bypass network, auth, firewall, VPN, or environment restrictions.
+- It does not remove the need for product owners to describe high-value workflows and expected business behavior.
+
+Compared with single-purpose tools:
+
+- Playwright is excellent for browser automation; `brisk-aitesting` uses it as one engine inside a larger testing pipeline.
+- API clients are excellent for sending requests; `brisk-aitesting` connects API testing with discovery, contracts, schemas, and unified results.
+- Contract tools are excellent for contract checks; `brisk-aitesting` connects contracts to runtime execution and scenario generation.
+- Test management tools are excellent for tracking work; `brisk-aitesting` focuses on generating, executing, and handing over evidence that those systems can consume.
+
 ## Where It Works Best
 
 `brisk-aitesting` is strongest when the app exposes one or more of these surfaces:
