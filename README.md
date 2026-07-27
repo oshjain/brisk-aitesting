@@ -8,7 +8,7 @@
     <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" />
     <img src="https://img.shields.io/badge/status-alpha-orange" alt="Status: Alpha" />
     <img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs Welcome" />
-    <img src="https://img.shields.io/badge/ai--native-yes-8A2BE2" alt="AI-Native" />
+    <img src="https://img.shields.io/badge/local-first-yes-8A2BE2" alt="Local First" />
     <img src="https://img.shields.io/badge/engine-Playwright_|_API_|_Contract-blue" alt="Engines" />
   </p>
 </div>
@@ -17,117 +17,45 @@
 
 <!-- Hero -->
 <div align="center">
-  <blockquote>
-    <strong>AI testing for a world where software is being built faster than humans can manually verify it.</strong>
-  </blockquote>
-</div>
-
-<br />
-
-`brisk-aitesting` helps teams turn a plain testing goal into real, runnable checks for SaaS products, APIs, UI flows, OpenAPI contracts, and custom systems.
-
-<div align="center">
-  <h3>A local AI testing layer developers can actually embed</h3>
+  <h2>The world's most unique locally embeddable software testing layer, powered by AI and precise engineering.</h2>
   <p>
-    It studies your app, asks AI for a structured test plan, checks that plan, runs the right tools, and returns evidence your product can use.
+    Embed it inside your product, run it from the CLI, or wire it into CI.
+    Tell it what to test in human language. Brisk discovers the app, plans the checks, runs the right engines, and returns clean evidence.
+    No hosted meter. No forced dashboard. Your software owns the workflow and the result.
   </p>
 </div>
 
 <br />
 
+`brisk-aitesting` helps teams turn a human testing goal into real, runnable checks for SaaS products, APIs, UI flows, OpenAPI contracts, and custom systems.
+
+It is built for two audiences at once:
+
+| Audience | Why they should care |
+|:---------|:---------------------|
+| Business leaders | Software is being created faster than manual verification can keep up. Testing is expensive, fragmented, and full of repeated work. |
+| Developers | Use a local SDK and CLI that can inspect your app, produce a safe test plan, run browser/API/contract checks, and hand back one result object. |
+
 <!-- The Promise Card -->
 <table>
   <tr>
     <td align="center">
-      <h3>🎯 The Promise</h3>
+      <h3>The Promise</h3>
       <blockquote>
-        <em>Tell it what to test.<br />
-        It discovers what exists.<br />
-        It chooses the right test type.<br />
-        It generates a safe test plan.<br />
+        <em>Say what should be tested.<br />
+        Brisk discovers what exists.<br />
+        It chooses the right test path.<br />
+        It creates a checked plan.<br />
         It runs the right engines.<br />
-        It returns clean evidence your product can use.</em>
+        It returns evidence your product can use.</em>
       </blockquote>
       <br />
-      <sub>This is <strong>not</strong> just a wrapper around Playwright. Playwright is one built-in engine. API checks, OpenAPI contract checks, schema validation, route discovery, AI planning, validation, repair, evidence capture, and result handover are also part of the product.</sub>
+      <sub>This is <strong>not</strong> just a Playwright wrapper. Playwright is one built-in engine. API checks, OpenAPI contract checks, schema validation, route discovery, AI planning, validation, repair, evidence capture, and result handover are also part of the product.</sub>
     </td>
   </tr>
 </table>
 
-## Plain English
-
-`brisk-aitesting` is not "AI writes random Playwright code and runs it."
-
-It is closer to a careful testing assistant with a factory line behind it:
-
-| Step | What happens |
-|:----:|:-------------|
-| 1 | It looks at your repo, routes, UI pages, and OpenAPI files. |
-| 2 | It asks AI to create a structured test plan in JSON. |
-| 3 | It checks and repairs that plan before anything is allowed to run. |
-| 4 | It sends each test to the right built-in engine: browser, API, or OpenAPI contract. |
-| 5 | It collects screenshots, traces, request/response data, logs, and final results. |
-| 6 | It gives your app one stable JSON result that you can store, show, or send to CI. |
-
-The most important idea is simple:
-
-```text
-AI suggests the plan.
-Brisk checks the plan.
-Engines run the tests.
-Evidence shows what actually happened.
-```
-
-## Built Now vs Not Built Yet
-
-This section exists so there is no confusion.
-
-| Area | Status today | What users get |
-|:-----|:-------------|:---------------|
-| UI testing | Built | Browser tests through Playwright with grounded page evidence. |
-| API testing | Built | HTTP checks, status checks, body checks, headers, and schema-backed response checks. |
-| OpenAPI testing | Built | JSON/YAML contract parsing, route discovery, positive and negative API scenarios, response schema validation. |
-| AI planning | Built | AI returns JSON plans. Plans are normalized, validated, and repaired before execution. |
-| Result handover | Built | One versioned JSON result for CI, dashboards, databases, and internal tools. |
-| Local SDK/CLI | Built | Use it inside your app or from the command line. No hosted platform required. |
-| Schemathesis OpenAPI deep API checker | Built | Optional Python/Schemathesis engine that attacks OpenAPI routes with many real request variations. |
-| JS-native schema fuzz engine | Not built-in yet | Planned: lighter built-in negative API testing from schemas, without Python. |
-| Replay engine | Not built-in yet | Planned: rerun captured traffic to catch regressions quickly. |
-| AsyncAPI/Pact/message testing | Not built-in yet | Planned: event and message contract testing. |
-| Specmatic/Keploy adapters | Not built-in yet | Planned as optional adapters, not core promises today. |
-| UI healing | Not built-in yet | Planned: if a button or field moves, retry with fresh page evidence and show exactly what changed. |
-| Serious SaaS proof app | Built | A real sample product used to prove auth, roles, UI, API, OpenAPI, negative cases, state changes, and saved evidence. |
-| Full proof app collection | Not built yet | Planned: Todo, e-commerce, API-only, multi-tenant, and event/messaging apps. |
-| Built-in engine quality check | Built | Built-in engines must prove they can run, return the expected result shape, and save evidence. |
-| External engine quality check | Built for engines | Third-party engines must prove routing, result shape, artifact shape, timeout handling, and secret safety before being trusted. |
-| Non-engine extension checks | Not built yet | Planned: quality checks for custom discovery, planning, validation, UI grounding, and AI provider extensions. |
-
-### What Is Ready Now
-
-These are not future promises anymore:
-
-| Ready now | Why it matters |
-|:----------|:---------------|
-| Serious SaaS proof app | We test against a real product shape, not only tiny examples. |
-| Golden expected outputs | We keep known-good plans and results so future changes cannot quietly weaken behavior. |
-| External engine quality check | A custom engine must prove it behaves safely before teams trust it. |
-| Schemathesis OpenAPI deep API checker | Brisk can run a real third-party OpenAPI testing tool and fold the results into the same evidence format. |
-| Adapter readiness gate | If we call an adapter "built", automation checks code, docs, packaging, CI wiring, proof app coverage, and result evidence. |
-
-### Still Expanding
-
-These are the next product areas, and they are listed separately so nobody confuses them with completed work:
-
-| Still expanding | User impact |
-|:----------------|:------------|
-| More proof apps | More confidence across common product shapes like e-commerce, API-only, and event-driven systems. |
-| JS-native schema fuzz engine | Faster schema-based negative API checks without needing Python. |
-| Replay engine | Faster regression checks from traffic the app has already seen. |
-| Message adapters | Coverage beyond browser screens and HTTP APIs. |
-| UI healing | Fewer fragile browser failures, with a clear before/after explanation. |
-| Non-engine extension checks | Safer custom discovery, planning, validation, UI grounding, and AI provider extensions. |
-
-## 🌍 Why This Exists
+## Why This Exists
 
 Software testing is now a **global problem**.
 
@@ -197,7 +125,7 @@ Yet testing remains **expensive and fragmented**.
 
 <br />
 
-### ❌ The Old Workflow
+### The Old Workflow
 
 | Step | Who | Pain |
 |:----:|:---:|:----:|
@@ -208,11 +136,11 @@ Yet testing remains **expensive and fragmented**.
 | 5 | Developers | Spend time finding what failed and why |
 | 6 | Everyone | Rebuild the same testing pipeline again |
 
-### ✅ The brisk-aitesting Solution
+### The brisk-aitesting Solution
 
 | Step | What happens |
 |:----:|:------------|
-| 1 | Say the goal in **plain language** |
+| 1 | Say the goal in **human language** |
 | 2 | Let **discovery** inspect the app, repo, routes, and contracts |
 | 3 | Let **AI** create a structured JSON plan, not unsafe code |
 | 4 | **Validate and repair** the plan before execution |
@@ -220,7 +148,80 @@ Yet testing remains **expensive and fragmented**.
 | 6 | **Execute** with the right engines |
 | 7 | Return **one stable handover object** for CI, dashboards, databases, or internal platforms |
 
-## 🎯 What It Solves
+## How It Works
+
+`brisk-aitesting` is not "AI writes random Playwright code and runs it."
+
+It is a controlled testing pipeline:
+
+| Step | What happens |
+|:----:|:-------------|
+| 1 | It looks at your repo, routes, UI pages, and OpenAPI files. |
+| 2 | It asks AI to create a structured test plan in JSON. |
+| 3 | It checks and repairs that plan before anything is allowed to run. |
+| 4 | It sends each test to the right built-in engine: browser, API, or OpenAPI contract. |
+| 5 | It collects screenshots, traces, request/response data, logs, and final results. |
+| 6 | It gives your app one stable JSON result that you can store, show, or send to CI. |
+
+The most important idea is simple:
+
+```text
+AI suggests the plan.
+Brisk checks the plan.
+Engines run the tests.
+Evidence shows what actually happened.
+```
+
+## Built Now vs Not Built Yet
+
+This section keeps the promise honest.
+
+| Area | Status today | What users get |
+|:-----|:-------------|:---------------|
+| UI testing | Built | Browser tests through Playwright with grounded page evidence. |
+| API testing | Built | HTTP checks, status checks, body checks, headers, and schema-backed response checks. |
+| OpenAPI testing | Built | JSON/YAML contract parsing, route discovery, positive and negative API scenarios, response schema validation. |
+| AI planning | Built | AI returns JSON plans. Plans are normalized, validated, and repaired before execution. |
+| Result handover | Built | One versioned JSON result for CI, dashboards, databases, and internal tools. |
+| Local SDK/CLI | Built | Use it inside your app or from the command line. No hosted platform required. |
+| Schemathesis OpenAPI deep API checker | Built | Optional Python/Schemathesis engine that sends many real OpenAPI request variations. |
+| JS-native schema fuzz engine | Not built-in yet | Planned: lighter built-in negative API testing from schemas, without Python. |
+| Replay engine | Not built-in yet | Planned: rerun captured traffic to catch regressions quickly. |
+| AsyncAPI/Pact/message testing | Not built-in yet | Planned: event and message contract testing. |
+| Specmatic/Keploy adapters | Not built-in yet | Planned as optional adapters, not core promises today. |
+| UI healing | Not built-in yet | Planned: if a button or field moves, retry with fresh page evidence and show exactly what changed. |
+| Serious SaaS proof app | Built | A real sample product used to prove auth, roles, UI, API, OpenAPI, negative cases, state changes, and saved evidence. |
+| Full proof app collection | Not built yet | Planned: Todo, e-commerce, API-only, multi-tenant, and event/messaging apps. |
+| Built-in engine quality check | Built | Built-in engines must prove they can run, return the expected result shape, and save evidence. |
+| External engine quality check | Built for engines | Third-party engines must prove routing, result shape, artifact shape, timeout handling, and secret safety before being trusted. |
+| Non-engine extension checks | Not built yet | Planned: quality checks for custom discovery, planning, validation, UI grounding, and AI provider extensions. |
+
+### What Is Ready Now
+
+These are not future promises anymore:
+
+| Ready now | Why it matters |
+|:----------|:---------------|
+| Serious SaaS proof app | We test against a real product shape, not only tiny examples. |
+| Golden expected outputs | We keep known-good plans and results so future changes cannot quietly weaken behavior. |
+| External engine quality check | A custom engine must prove it behaves safely before teams trust it. |
+| Schemathesis OpenAPI deep API checker | Brisk can run a real third-party OpenAPI testing tool and fold the results into the same evidence format. |
+| Adapter readiness gate | If we call an adapter "built", automation checks code, docs, packaging, CI wiring, proof app coverage, and result evidence. |
+
+### Still Expanding
+
+These are the next product areas, listed separately so nobody confuses them with completed work:
+
+| Still expanding | User impact |
+|:----------------|:------------|
+| More proof apps | More confidence across common product shapes like e-commerce, API-only, and event-driven systems. |
+| JS-native schema fuzz engine | Faster schema-based negative API checks without needing Python. |
+| Replay engine | Faster regression checks from traffic the app has already seen. |
+| Message adapters | Coverage beyond browser screens and HTTP APIs. |
+| UI healing | Fewer fragile browser failures, with a clear before/after explanation. |
+| Non-engine extension checks | Safer custom discovery, planning, validation, UI grounding, and AI provider extensions. |
+
+## What It Solves
 
 `brisk-aitesting` helps teams avoid the biggest testing bottlenecks:
 
@@ -361,7 +362,7 @@ Yet testing remains **expensive and fragmented**.
 
 ### 🧭 Business Intent as Executable Scenarios
 
-`brisk-aitesting` does not need to magically discover every business rule in a company. The practical model is simpler and stronger:
+`brisk-aitesting` does not need to automatically know every business rule in a company. The practical model is simpler and stronger:
 
 ```text
 Brisk discovers the application's testable surfaces.

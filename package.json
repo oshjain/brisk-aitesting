@@ -1,7 +1,7 @@
 {
   "name": "brisk-aitesting",
   "version": "0.1.1",
-  "description": "AI-native modular testing engine for SaaS, APIs, UI workflows, and contracts.",
+  "description": "Locally embeddable software testing engine using AI planning and precise execution.",
   "type": "module",
   "license": "MIT",
   "author": "Hasmukh Jain",

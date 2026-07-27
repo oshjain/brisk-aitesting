@@ -66,7 +66,7 @@ Host apps should not have to care about the moving parts. Developers should stil
 
 11. Engine Plugin Conformance
    `runEnginePluginConformance` emits `brisk-aitesting.plugin-conformance.v1`.
-   In plain language: external engines must prove they route correctly, return the right result shape, save evidence, respect timeouts, and avoid obvious secret leaks before Brisk trusts them.
+   In simple terms: external engines must prove they route correctly, return the right result shape, save evidence, respect timeouts, and avoid obvious secret leaks before Brisk trusts them.
    They must accept only their own scenarios, reject unrelated scenarios, return stable `ScenarioResult` objects, respect runtime timeout, avoid obvious secret leakage, and emit valid artifact shapes.
 
 12. Schemathesis OpenAPI Fuzzing
