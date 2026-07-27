@@ -58,15 +58,15 @@ Host apps should not have to care about the moving parts. Developers should stil
 
 9. Benchmark
    `npm run benchmark` emits `brisk-aitesting.benchmark.v1`.
-   Benchmark cases check known failure modes so regressions are easier to spot.
+   Benchmark cases intentionally feed bad inputs and broken setups so regressions are easier to spot.
 
 10. Release Pack Check
    `npm run pack:check` emits `brisk-aitesting.pack-check.v1`.
-   Pack check verifies distributable files and blocks secrets, smoke fixtures, and generated artifacts from the npm tarball.
+   Pack check verifies distributable files and blocks secrets, local health-check fixtures, and generated artifacts from the npm tarball.
 
 11. Engine Plugin Conformance
    `runEnginePluginConformance` emits `brisk-aitesting.plugin-conformance.v1`.
-   External engines must prove they behave like good citizens before we trust them.
+   In plain language: external engines must prove they route correctly, return the right result shape, save evidence, respect timeouts, and avoid obvious secret leaks before Brisk trusts them.
    They must accept only their own scenarios, reject unrelated scenarios, return stable `ScenarioResult` objects, respect runtime timeout, avoid obvious secret leakage, and emit valid artifact shapes.
 
 12. Schemathesis OpenAPI Fuzzing
@@ -75,7 +75,7 @@ Host apps should not have to care about the moving parts. Developers should stil
 
 13. Adapter Readiness
    `adapters/manifest.json` uses `brisk-aitesting.adapter-manifest.v1` to declare adapters that are truly built.
-   `npm run smoke:adapter-readiness` emits `brisk-aitesting.adapter-readiness.v1` and fails if a built adapter is missing source, exports, smoke coverage, CI workflow, docs, package inclusion, reference app proof, conformance proof, evidence schema, or positive coverage minimums.
+   `npm run smoke:adapter-readiness` emits `brisk-aitesting.adapter-readiness.v1` and checks the adapter like a shipping checklist: source code, exports, docs, package inclusion, CI workflow, proof-app coverage, quality proof, evidence schema, and minimum coverage.
 ```
 
 ## Schema Registry
@@ -90,24 +90,24 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.result.v1` | handover | Full run result |
 | `brisk-aitesting.handover.v1` | handover | Host consumption contract |
 | `brisk-aitesting.cli-result.v1` | CLI | Machine-readable CLI run summary |
-| `brisk-aitesting.benchmark.v1` | benchmark | Known failure-mode benchmark report |
+| `brisk-aitesting.benchmark.v1` | bad-input safety | Report for broken inputs and unsafe setup checks |
 | `brisk-aitesting.pack-check.v1` | release | npm package tarball verification report |
 | `brisk-aitesting.adapter-manifest.v1` | adapters | Declares adapters that are built, packaged, documented, and tested |
 | `brisk-aitesting.adapter-readiness.v1` | adapters | Machine check that built adapters meet readiness requirements |
-| `brisk-aitesting.engine-conformance.v1` | conformance | Built-in engine behavior report |
-| `brisk-aitesting.plugin-conformance.v1` | conformance | External engine plugin behavior report |
-| `brisk-aitesting.plugin-conformance-smoke.v1` | conformance | Smoke proof that good plugins pass and bad plugins fail |
+| `brisk-aitesting.engine-conformance.v1` | quality checks | Built-in engine behavior report |
+| `brisk-aitesting.plugin-conformance.v1` | quality checks | External engine plugin behavior report |
+| `brisk-aitesting.plugin-conformance-smoke.v1` | quality checks | Health-check proof that good plugins pass and unsafe plugins fail |
 | `brisk-aitesting.schemathesis-evidence.v1` | Schemathesis adapter | OpenAPI fuzz execution evidence |
-| `brisk-aitesting.schemathesis-smoke.v1` | Schemathesis adapter | Real adapter smoke report |
-| `brisk-aitesting.reference-serious-saas.v1` | reference app | Serious SaaS reference smoke report |
-| `brisk-aitesting.golden-fixtures.v1` | golden fixtures | Stable scenario/result baseline report |
+| `brisk-aitesting.schemathesis-smoke.v1` | Schemathesis adapter | Real adapter health-check report |
+| `brisk-aitesting.reference-serious-saas.v1` | proof app | Serious SaaS proof-app report |
+| `brisk-aitesting.golden-fixtures.v1` | expected outputs | Stable scenario/result baseline report |
 | `brisk-aitesting.api-evidence.v1` | API engine | Request/response evidence |
 | `brisk-aitesting.openapi-summary.v1` | contract engine/discoverer | OpenAPI JSON/YAML operation summary |
 | `brisk-aitesting.playwright-evidence.v1` | UI engine | UI execution manifest |
 | `brisk-aitesting.ui-grounding.v1` | UI grounder/engine | Real page element evidence |
 | `brisk-aitesting.ui-actions.v1` | UI engine | Executed grounded action evidence |
 
-Any new schema must be documented here and covered by smoke tests before we call it stable.
+Any new schema must be documented here and covered by automated health checks before we call it stable.
 
 ## Extension Points
 
@@ -168,11 +168,11 @@ npm run benchmark
 npm run pack:check
 ```
 
-`npm run smoke:ci` runs the same deterministic gate used by GitHub Actions. It includes pack-check and excludes real provider calls.
+`npm run smoke:ci` runs the same deterministic release check used by GitHub Actions. It includes package checks and excludes real provider calls.
 
-`npm run smoke:schemathesis` is an optional adapter gate. It needs Python and the Schemathesis package, then runs real OpenAPI fuzzing against the serious SaaS reference app.
+`npm run smoke:schemathesis` is an optional deep OpenAPI adapter check. It needs Python and the Schemathesis package, then sends many contract-based requests against the serious SaaS proof app.
 
-`smoke:real-ai` needs provider credentials and enterprise CA config when applicable. It proves the configured provider path works. It does not yet score provider quality across models.
+`smoke:real-ai` needs provider credentials and enterprise CA config when applicable. It proves the configured AI provider works. It does not yet compare quality across models.
 
 ## Current Boundaries
 
@@ -185,11 +185,11 @@ Built:
 - OpenAPI JSON/YAML route discovery, schema extraction, generated API scenarios, and response schema validation.
 - Evidence-rich API/UI artifacts.
 - Stable result handover for host apps.
-- Engine conformance smoke for built-in engines.
-- Engine plugin conformance API and smoke gate for external `Engine` implementations.
-- Optional Schemathesis OpenAPI fuzz engine and smoke gate.
-- Serious SaaS reference app smoke.
-- Golden fixture baseline for serious SaaS scenario/result stability.
+- Built-in engine quality checks.
+- External engine quality API and health-check gate for external `Engine` implementations.
+- Optional Schemathesis OpenAPI deep API checker.
+- Serious SaaS proof app.
+- Golden expected-output baseline for serious SaaS scenario/result stability.
 
 Still missing:
 
@@ -197,4 +197,4 @@ Still missing:
 - JUnit/HTML CI report generation.
 - Public npm publishing automation.
 - Metrics/analytics module.
-- Conformance suites for external `Discoverer`, `Planner`, `PlanValidator`, `UiRouteGrounder`, and `AiPlannerProvider` implementations.
+- Quality-check suites for external `Discoverer`, `Planner`, `PlanValidator`, `UiRouteGrounder`, and `AiPlannerProvider` implementations.

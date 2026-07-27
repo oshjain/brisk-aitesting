@@ -90,30 +90,42 @@ This section exists so there is no confusion.
 | AI planning | Built | AI returns JSON plans. Plans are normalized, validated, and repaired before execution. |
 | Result handover | Built | One versioned JSON result for CI, dashboards, databases, and internal tools. |
 | Local SDK/CLI | Built | Use it inside your app or from the command line. No hosted platform required. |
-| Schemathesis OpenAPI fuzz adapter | Built | Optional Python/Schemathesis engine for real OpenAPI fuzz and negative testing. |
-| JS-native schema fuzz engine | Not built-in yet | Planned: lighter built-in negative API testing from schemas. |
-| Replay engine | Not built-in yet | Planned: replay captured traffic for fast regression checks. |
+| Schemathesis OpenAPI deep API checker | Built | Optional Python/Schemathesis engine that attacks OpenAPI routes with many real request variations. |
+| JS-native schema fuzz engine | Not built-in yet | Planned: lighter built-in negative API testing from schemas, without Python. |
+| Replay engine | Not built-in yet | Planned: rerun captured traffic to catch regressions quickly. |
 | AsyncAPI/Pact/message testing | Not built-in yet | Planned: event and message contract testing. |
 | Specmatic/Keploy adapters | Not built-in yet | Planned as optional adapters, not core promises today. |
-| UI healing | Not built-in yet | Planned: retry failed UI selectors using fresh page evidence and report what changed. |
-| Serious SaaS reference app | Built | Proves auth, roles, UI, API, OpenAPI, negative cases, state change, and artifacts. |
-| Full reference app matrix | Not built yet | Planned: Todo, e-commerce, API-only, multi-tenant, and event/messaging apps. |
-| Built-in engine conformance suite | Built | Built-in engines must return stable result and artifact shapes. |
-| Engine plugin conformance suite | Built | External engines must prove scenario routing, result shape, artifact shape, timeout handling, and secret safety before being trusted. |
-| Non-engine plugin conformance | Not built yet | Planned: conformance for custom discoverers, planners, validators, UI grounders, and AI providers. |
+| UI healing | Not built-in yet | Planned: if a button or field moves, retry with fresh page evidence and show exactly what changed. |
+| Serious SaaS proof app | Built | A real sample product used to prove auth, roles, UI, API, OpenAPI, negative cases, state changes, and saved evidence. |
+| Full proof app collection | Not built yet | Planned: Todo, e-commerce, API-only, multi-tenant, and event/messaging apps. |
+| Built-in engine quality check | Built | Built-in engines must prove they can run, return the expected result shape, and save evidence. |
+| External engine quality check | Built for engines | Third-party engines must prove routing, result shape, artifact shape, timeout handling, and secret safety before being trusted. |
+| Non-engine extension checks | Not built yet | Planned: quality checks for custom discovery, planning, validation, UI grounding, and AI provider extensions. |
 
-Future work is only worth adding when it clearly helps users:
+### What Is Ready Now
 
-| Future work | User impact |
-|:------------|:------------|
-| Reference apps | More confidence that Brisk works on real app shapes. |
-| Golden fixtures | Less chance that future changes quietly weaken plans. |
-| Plugin conformance | Safer third-party and internal engines, before they are trusted. |
-| Schemathesis adapter | More OpenAPI bugs caught without slow browser tests. |
-| JS-native schema fuzz engine | Faster lightweight schema checks without Python. |
-| Replay engine | Faster regression checks from known traffic. |
-| Message adapters | Coverage beyond HTTP and browser workflows. |
-| UI healing | Fewer flaky browser failures, with evidence when healing happens. |
+These are not future promises anymore:
+
+| Ready now | Why it matters |
+|:----------|:---------------|
+| Serious SaaS proof app | We test against a real product shape, not only tiny examples. |
+| Golden expected outputs | We keep known-good plans and results so future changes cannot quietly weaken behavior. |
+| External engine quality check | A custom engine must prove it behaves safely before teams trust it. |
+| Schemathesis OpenAPI deep API checker | Brisk can run a real third-party OpenAPI testing tool and fold the results into the same evidence format. |
+| Adapter readiness gate | If we call an adapter "built", automation checks code, docs, packaging, CI wiring, proof app coverage, and result evidence. |
+
+### Still Expanding
+
+These are the next product areas, and they are listed separately so nobody confuses them with completed work:
+
+| Still expanding | User impact |
+|:----------------|:------------|
+| More proof apps | More confidence across common product shapes like e-commerce, API-only, and event-driven systems. |
+| JS-native schema fuzz engine | Faster schema-based negative API checks without needing Python. |
+| Replay engine | Faster regression checks from traffic the app has already seen. |
+| Message adapters | Coverage beyond browser screens and HTTP APIs. |
+| UI healing | Fewer fragile browser failures, with a clear before/after explanation. |
+| Non-engine extension checks | Safer custom discovery, planning, validation, UI grounding, and AI provider extensions. |
 
 ## 🌍 Why This Exists
 
@@ -1063,11 +1075,11 @@ This may be the most valuable part of the product for enterprise teams. The resu
 | `brisk-aitesting.adapter-readiness.v1` | Adapter Readiness |
 | `brisk-aitesting.engine-conformance.v1` | Engine Conformance |
 | `brisk-aitesting.plugin-conformance.v1` | Plugin Conformance |
-| `brisk-aitesting.plugin-conformance-smoke.v1` | Plugin Conformance Smoke |
+| `brisk-aitesting.plugin-conformance-smoke.v1` | Plugin Quality Health Check |
 | `brisk-aitesting.schemathesis-evidence.v1` | Schemathesis Evidence |
-| `brisk-aitesting.schemathesis-smoke.v1` | Schemathesis Smoke |
-| `brisk-aitesting.reference-serious-saas.v1` | Serious SaaS Reference |
-| `brisk-aitesting.golden-fixtures.v1` | Golden Fixtures |
+| `brisk-aitesting.schemathesis-smoke.v1` | Schemathesis Health Check |
+| `brisk-aitesting.reference-serious-saas.v1` | Serious SaaS Proof App |
+| `brisk-aitesting.golden-fixtures.v1` | Golden Expected Outputs |
 | `brisk-aitesting.api-evidence.v1` | 📡 API Evidence |
 | `brisk-aitesting.openapi-summary.v1` | 📜 OpenAPI Summary |
 | `brisk-aitesting.playwright-evidence.v1` | 🎭 Playwright Evidence |
@@ -1100,41 +1112,54 @@ npm run typecheck  &&  npm run build  &&  npm run smoke:ci  &&  npm run benchmar
   <tr>
     <td align="center">TypeScript type validation</td>
     <td align="center">Production build</td>
-    <td align="center">Deterministic smoke tests</td>
-    <td align="center">Adversarial checks</td>
+    <td align="center">Automated release health checks</td>
+    <td align="center">Bad-input safety checks</td>
   </tr>
   <tr>
     <td colspan="4" align="center"><h3>🤖 <code>smoke:real-ai</code></h3></td>
   </tr>
   <tr>
-    <td colspan="4" align="center">Real provider credentials from <code>.env.local</code> or environment. Separated from CI because enterprise networks may require CA certificates or provider-specific routing.</td>
+    <td colspan="4" align="center">Uses a real configured AI provider. Kept separate from normal CI because enterprise networks may require custom certificates or provider routing.</td>
   </tr>
 </table>
 
 <br />
 
+#### What The Release Check Actually Does
+
+Some command names are developer shorthand, so here is the plain meaning:
+
+| Word | Plain meaning |
+|:-----|:--------------|
+| Smoke test | A quick health check. Like switching on a machine and checking that the main parts start correctly. |
+| Real AI smoke | A quick health check that uses an actual configured AI provider instead of a fake response. |
+| Conformance | A quality contract. It means an engine or plugin must behave in the exact shape Brisk expects before we trust it. |
+| Reference app | A real sample application we test against. It is our proving ground, not a toy assertion. |
+| Golden fixture | A known-good saved answer. If Brisk changes that answer later, we review why. |
+| Failure mode proof | A test that intentionally feeds bad input, missing config, broken schemas, or unsafe behavior to prove Brisk fails safely. |
+
 #### What `smoke:ci` Checks
 
 | Check | Description |
 |:-----:|:------------|
-| 📋 Contract/schema registry checks | Verify all schemas are valid |
-| Engine conformance checks | Verify built-in engines obey the same result and artifact rules |
-| Engine plugin conformance checks | Verify good external engines pass and unsafe external engines fail |
-| Adapter readiness checks | Verify every built adapter has code, exports, docs, package files, CI wiring, conformance proof, and coverage minimums |
-| Serious SaaS reference checks | Verify auth, roles, UI, API, OpenAPI, negative cases, state change, and artifacts |
-| Golden fixture checks | Verify serious SaaS scenario inventory and result summary do not silently drift |
-| ⌨️ CLI checks | Ensure CLI exits with correct codes |
-| 🔧 AI fixture repair checks | Test repair feedback loop |
-| ⚙️ Full engine smoke checks | Verify all engines start correctly |
-| 📦 npm pack safety checks | Confirm package is packable |
+| Contract/schema registry checks | Make sure every public JSON shape Brisk promises is still documented and exported. |
+| Built-in engine quality checks | Make sure Playwright, API, and contract engines run correctly and return the same clean result shape. |
+| External engine quality checks | Make sure third-party engines cannot claim support unless they route correctly, time out safely, and avoid obvious secret leakage. |
+| Adapter readiness checks | Make sure every adapter marked "built" has code, docs, package files, CI wiring, proof-app coverage, and saved evidence. |
+| Serious SaaS proof app checks | Run Brisk against a real SaaS-style app with auth, roles, UI, API, OpenAPI, negative cases, state changes, and artifacts. |
+| Golden expected-output checks | Compare today's output with known-good output so quiet weakening is caught. |
+| CLI checks | Make sure command-line usage returns the right exit codes and JSON. |
+| AI repair checks | Make sure invalid AI plans are rejected or repaired instead of being blindly executed. |
+| Full engine health checks | Make sure all built-in engines start, run, and save evidence. |
+| npm package safety checks | Make sure the package can ship without source clutter, secrets, local test artifacts, or missing files. |
 
-Optional adapter gate:
+Optional deep OpenAPI adapter check:
 
 ```bash
 npm run smoke:schemathesis
 ```
 
-This runs the real Schemathesis OpenAPI fuzz adapter against the serious SaaS reference app. It needs Python plus the Schemathesis package installed.
+This runs the real Schemathesis OpenAPI deep API checker against the serious SaaS proof app. In simple words: it reads the OpenAPI file, sends many valid and invalid API requests, and reports whether the live API behaves like the contract says it should. It needs Python plus the Schemathesis package installed.
 
 The adapter is exported as `SchemathesisOpenApiFuzzEngine`:
 
@@ -1142,18 +1167,18 @@ The adapter is exported as `SchemathesisOpenApiFuzzEngine`:
 import { SchemathesisOpenApiFuzzEngine } from 'brisk-aitesting';
 ```
 
-Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads `adapters/manifest.json`, checks `brisk-aitesting.adapter-manifest.v1`, verifies exports, docs, package files, the smoke script, the GitHub Actions workflow, the serious SaaS reference app, conformance proof, and coverage minimums. It emits `brisk-aitesting.adapter-readiness.v1`.
+Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads `adapters/manifest.json` and checks the adapter like a shipping checklist: source code exists, exports exist, docs mention it, package includes it, CI can run it, proof-app coverage exists, quality checks pass, and evidence is saved. It emits `brisk-aitesting.adapter-readiness.v1` for machines to read.
 
 #### What `benchmark` Checks
 
 | Check | Description |
 |:-----:|:------------|
-| 📜 Malformed contracts | Adversarial contract parsing |
-| 🤖 Invalid AI output | Malformed AI responses |
-| 🔄 Schema mismatches | Schema validation edge cases |
-| 🚫 Undocumented statuses | Unknown status code handling |
-| 🌐 Blocked network calls | Network policy enforcement |
-| ⚠️ CLI setup errors | Misconfiguration handling |
+| Broken contract files | Brisk should explain the problem instead of crashing. |
+| Bad AI output | Brisk should reject messy AI responses instead of running unsafe tests. |
+| Wrong response shape | Brisk should catch when an API returns the wrong JSON shape. |
+| Undocumented HTTP status | Brisk should catch when an API returns a status code missing from the contract. |
+| Blocked network calls | Brisk should respect the configured network boundary. |
+| CLI setup errors | Brisk should give clear setup errors and the right exit code. |
 
 ## 📈 Current Status
 
@@ -1196,17 +1221,17 @@ Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads 
     <td>🧪</td>
     <td>Deterministic CI gate</td>
     <td>📊</td>
-    <td>Adversarial benchmark suite</td>
+    <td>Bad-input safety suite</td>
   </tr>
   <tr>
     <td>📦</td>
     <td>npm pack safety check</td>
-    <td>Engine conformance suite</td>
+    <td>Engine quality suite</td>
     <td>Built-in engines return stable result and artifact shapes</td>
   </tr>
   <tr>
     <td>🤖</td>
-    <td>Real AI smoke path</td>
+    <td>Real AI provider check</td>
     <td>🤖</td>
     <td>npm package publication path</td>
   </tr>
@@ -1233,7 +1258,7 @@ Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads 
     <td>📚</td>
     <td>More framework-specific examples</td>
     <td>🧪</td>
-    <td>More reference apps and non-engine plugin conformance suites</td>
+    <td>More proof apps and non-engine extension quality checks</td>
   </tr>
   <tr>
     <td>🧬</td>

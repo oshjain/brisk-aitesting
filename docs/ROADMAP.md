@@ -23,7 +23,7 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 - UI actions use observed evidence IDs, not invented selectors.
 - Results always follow versioned handover contracts.
 - Host apps own storage, dashboards, CI, and observability.
-- Custom engines must pass conformance checks before we trust them in normal runs.
+- Custom engines must pass quality checks before we trust them in normal runs.
 
 ## Built Today
 
@@ -38,13 +38,13 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 - Built-in Playwright UI engine.
 - Built-in API engine.
 - Built-in OpenAPI contract engine.
-- Engine plugin conformance API and smoke gate.
-- Optional Schemathesis OpenAPI fuzz adapter with readiness manifest and smoke coverage gate.
+- External engine quality API and automated health gate.
+- Optional Schemathesis OpenAPI deep API checker with readiness manifest and coverage gate.
 - UI grounding and evidence-ID action execution.
 - Versioned result and handover JSON.
 - Event stream callbacks.
 - Artifact collection.
-- Deterministic smoke, benchmark, pack, and real-AI gates.
+- Deterministic release, bad-input, package, and real-AI gates.
 - Adapter readiness gate for built adapters.
 
 ## Gaps
@@ -54,17 +54,17 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 - No built-in Specmatic adapter yet.
 - No built-in Keploy adapter yet.
 - No built-in AsyncAPI, Pact, or message-contract engine yet.
-- No reference app matrix yet.
-- No conformance suite yet for non-engine extension points: discoverers, planners, validators, UI grounders, and AI providers.
+- No full proof app collection yet.
+- No quality-check suite yet for non-engine extension points: discoverers, planners, validators, UI grounders, and AI providers.
 - No formal UI healing stage with before/after evidence diffing yet.
 - No JUnit/HTML reporters yet.
 - No shared business rule catalog yet.
 
 ## How We Finish It Properly
 
-### 1. Reference Apps
+### 1. Proof Apps
 
-Create real sample applications that every product change must pass:
+Create real sample applications that every product change must pass. Think of these as proving grounds: if Brisk works here, users can trust that it handles real product shapes, not only small demos.
 
 - Todo app
 - Auth SaaS app
@@ -82,9 +82,9 @@ Each app should provide:
 - safe test users
 - expected result fixtures
 
-### 2. Golden Fixtures
+### 2. Golden Expected Outputs
 
-For stable inputs, store expected plans and result summaries.
+For stable inputs, store expected plans and result summaries. In simple words: keep a known-good answer, then compare future answers against it.
 
 When a plan changes, the suite should report:
 
@@ -96,9 +96,9 @@ When a plan changes, the suite should report:
 
 This catches quiet degradation after AI repair or planner changes.
 
-### 3. Plugin Conformance Suite
+### 3. Extension Quality Checks
 
-Engine plugin conformance is built for the `Engine` interface. The remaining work is to apply the same discipline to the other extension points.
+Engine quality checks are built for the `Engine` interface. The remaining work is to apply the same discipline to the other extension points.
 
 Every engine plugin must prove:
 
@@ -110,9 +110,9 @@ Every engine plugin must prove:
 - it never leaks secrets
 - it maps failures into diagnostics
 
-Every adapter marked as built must also appear in `adapters/manifest.json` and pass the adapter readiness gate. That means code, exports, docs, package inclusion, CI workflow, reference app proof, conformance proof, evidence schema, and coverage minimums are checked by automation.
+Every adapter marked as built must also appear in `adapters/manifest.json` and pass the adapter readiness gate. That means automation checks the shipping basics: code exists, exports exist, docs mention it, the npm package includes it, CI can run it, proof-app coverage exists, quality checks pass, evidence is saved, and minimum coverage is met.
 
-Future non-engine conformance suites should define the stable output contract for each extension type.
+Future non-engine quality checks should define the stable output contract for each extension type.
 
 ### 4. Schema Fuzz Engine
 
@@ -177,7 +177,7 @@ The product should not claim it can know every critical rule unless the host sup
 ## Early Useful Use Cases
 
 - OpenAPI regression generation.
-- Pull-request smoke testing.
+- Pull-request health checks.
 - Internal SaaS testing feature.
 - AI-generated application verification.
 - Domain-specific testing layers.
@@ -187,10 +187,10 @@ The product should not claim it can know every critical rule unless the host sup
 
 Before calling the product production-ready, require:
 
-- reference app matrix passing on Windows and Linux
-- plugin conformance suite passing
-- golden fixture diffs reviewed
-- real provider smoke passing
+- proof app collection passing on Windows and Linux
+- plugin quality suite passing
+- golden expected-output diffs reviewed
+- real provider check passing
 - npm pack check passing
 - security tests passing
 - failure recovery tests passing
