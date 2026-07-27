@@ -95,7 +95,9 @@ This section exists so there is no confusion.
 | AsyncAPI/Pact/message testing | Not built-in yet | Planned: event and message contract testing. |
 | Specmatic/Schemathesis/Keploy adapters | Not built-in yet | Planned as optional adapters, not core promises today. |
 | UI healing | Not built-in yet | Planned: retry failed UI selectors using fresh page evidence and report what changed. |
-| Reference app matrix | Not built yet | Planned: prove changes against real sample apps, not only smoke tests. |
+| Serious SaaS reference app | Built | Proves auth, roles, UI, API, OpenAPI, negative cases, state change, and artifacts. |
+| Full reference app matrix | Not built yet | Planned: Todo, e-commerce, API-only, multi-tenant, and event/messaging apps. |
+| Built-in engine conformance suite | Built | Built-in engines must return stable result and artifact shapes. |
 | Plugin conformance suite | Not built yet | Planned: every custom engine must pass the same safety/result rules. |
 
 Future work is not there to look impressive. It has to improve something measurable:
@@ -1054,6 +1056,9 @@ This may be the most valuable part of the product for enterprise teams. The resu
 | `brisk-aitesting.cli-result.v1` | ⌨️ CLI Result |
 | `brisk-aitesting.benchmark.v1` | 📊 Benchmark |
 | `brisk-aitesting.pack-check.v1` | 📦 Pack Check |
+| `brisk-aitesting.engine-conformance.v1` | Engine Conformance |
+| `brisk-aitesting.reference-serious-saas.v1` | Serious SaaS Reference |
+| `brisk-aitesting.golden-fixtures.v1` | Golden Fixtures |
 | `brisk-aitesting.api-evidence.v1` | 📡 API Evidence |
 | `brisk-aitesting.openapi-summary.v1` | 📜 OpenAPI Summary |
 | `brisk-aitesting.playwright-evidence.v1` | 🎭 Playwright Evidence |
@@ -1104,6 +1109,9 @@ npm run typecheck  &&  npm run build  &&  npm run smoke:ci  &&  npm run benchmar
 | Check | Description |
 |:-----:|:------------|
 | 📋 Contract/schema registry checks | Verify all schemas are valid |
+| Engine conformance checks | Verify built-in engines obey the same result and artifact rules |
+| Serious SaaS reference checks | Verify auth, roles, UI, API, OpenAPI, negative cases, state change, and artifacts |
+| Golden fixture checks | Verify serious SaaS scenario inventory and result summary do not silently drift |
 | ⌨️ CLI checks | Ensure CLI exits with correct codes |
 | 🔧 AI fixture repair checks | Test repair feedback loop |
 | ⚙️ Full engine smoke checks | Verify all engines start correctly |
@@ -1166,8 +1174,14 @@ npm run typecheck  &&  npm run build  &&  npm run smoke:ci  &&  npm run benchmar
   <tr>
     <td>📦</td>
     <td>npm pack safety check</td>
+    <td>Engine conformance suite</td>
+    <td>Built-in engines return stable result and artifact shapes</td>
+  </tr>
+  <tr>
     <td>🤖</td>
     <td>Real AI smoke path</td>
+    <td>🤖</td>
+    <td>npm package publication path</td>
   </tr>
 </table>
 

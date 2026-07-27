@@ -79,6 +79,9 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.cli-result.v1` | CLI | Machine-readable CLI run summary |
 | `brisk-aitesting.benchmark.v1` | benchmark | Deterministic adversarial benchmark report |
 | `brisk-aitesting.pack-check.v1` | release | npm package tarball verification report |
+| `brisk-aitesting.engine-conformance.v1` | conformance | Built-in and plugin engine behavior report |
+| `brisk-aitesting.reference-serious-saas.v1` | reference app | Serious SaaS reference smoke report |
+| `brisk-aitesting.golden-fixtures.v1` | golden fixtures | Stable scenario/result baseline report |
 | `brisk-aitesting.api-evidence.v1` | API engine | Request/response evidence |
 | `brisk-aitesting.openapi-summary.v1` | contract engine/discoverer | OpenAPI JSON/YAML operation summary |
 | `brisk-aitesting.playwright-evidence.v1` | UI engine | UI execution manifest |
@@ -134,6 +137,9 @@ Before a change is considered product-safe, run:
 npm run typecheck
 npm run build
 npm run smoke:contracts
+npm run smoke:engine-conformance
+npm run smoke:reference-serious-saas
+npm run smoke:golden-fixtures
 npm run smoke:cli
 npm run smoke:ai-fixtures
 npm run smoke
@@ -156,6 +162,9 @@ Built:
 - OpenAPI JSON/YAML route discovery, schema extraction, generated API scenarios, and response schema validation.
 - Evidence-rich API/UI artifacts.
 - Host handover contract.
+- Engine conformance smoke for built-in engines.
+- Serious SaaS reference app smoke.
+- Golden fixture baseline for serious SaaS scenario/result stability.
 
 Still intentionally incomplete:
 

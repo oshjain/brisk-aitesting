@@ -26,6 +26,8 @@
     "README.md",
     "docs",
     "examples",
+    "reference-apps",
+    "fixtures",
     "assets"
   ],
   "scripts": {
@@ -33,10 +35,13 @@
     "build": "tsc",
     "smoke": "node smoke/run-smoke.mjs",
     "smoke:contracts": "node smoke/run-contracts.mjs",
+    "smoke:engine-conformance": "node smoke/run-engine-conformance.mjs",
+    "smoke:reference-serious-saas": "node smoke/run-reference-serious-saas.mjs",
+    "smoke:golden-fixtures": "node smoke/run-golden-fixtures.mjs",
     "smoke:cli": "node smoke/run-cli.mjs",
     "smoke:ai-fixtures": "node smoke/run-ai-fixtures.mjs",
     "smoke:real-ai": "node smoke/run-real-ai-smoke.mjs",
-    "smoke:ci": "npm run smoke:contracts && npm run smoke:cli && npm run smoke:ai-fixtures && npm run smoke && npm run pack:check",
+    "smoke:ci": "npm run smoke:contracts && npm run smoke:engine-conformance && npm run smoke:reference-serious-saas && npm run smoke:golden-fixtures && npm run smoke:cli && npm run smoke:ai-fixtures && npm run smoke && npm run pack:check",
     "smoke:all": "npm run smoke:ci && npm run smoke:real-ai",
     "benchmark": "node smoke/run-benchmark.mjs",
     "pack:check": "npm run build && node smoke/run-pack-check.mjs",

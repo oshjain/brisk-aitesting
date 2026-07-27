@@ -17,6 +17,9 @@ This package is an alpha release. The foundation is intentionally strict: AI pla
 - Manual real AI smoke workflow.
 - Adversarial benchmark report: `brisk-aitesting.benchmark.v1`.
 - Release pack check: `brisk-aitesting.pack-check.v1`.
+- Engine conformance report: `brisk-aitesting.engine-conformance.v1`.
+- Serious SaaS reference app report: `brisk-aitesting.reference-serious-saas.v1`.
+- Golden fixture report: `brisk-aitesting.golden-fixtures.v1`.
 - npm package publication path.
 
 ## Partially Built
@@ -36,8 +39,8 @@ This package is an alpha release. The foundation is intentionally strict: AI pla
 - Built-in Schemathesis, Specmatic, Keploy, AsyncAPI, Pact, or message-contract adapters.
 - Built-in schema fuzz engine.
 - Built-in replay engine.
-- Reference app matrix.
-- Plugin conformance suite.
+- Full reference app matrix beyond serious-saas.
+- Plugin conformance suite beyond built-in engine conformance.
 - Formal UI selector healing stage with before/after evidence diffing.
 
 ## Next Product Completeness Work

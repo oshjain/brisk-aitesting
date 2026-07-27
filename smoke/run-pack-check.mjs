@@ -15,6 +15,12 @@ const required = [
   'package/docs/ROADMAP.md',
   'package/examples/brisk-aitesting.config.ts',
   'package/examples/host-config-bridge.ts',
+  'package/reference-apps/serious-saas/README.md',
+  'package/reference-apps/serious-saas/server.mjs',
+  'package/reference-apps/serious-saas/openapi.json',
+  'package/reference-apps/serious-saas/brisk-aitesting.config.mjs',
+  'package/fixtures/golden/serious-saas-plan.json',
+  'package/fixtures/golden/serious-saas-result-summary.json',
   'package/assets/logo_transparent.png',
   'package/assets/logo_transparent.ico',
 ];
