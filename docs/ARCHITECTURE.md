@@ -124,6 +124,20 @@ Host apps and integrators can replace these interfaces:
 
 The orchestrator should stay small. New domain behavior should usually come in through one of these extension points.
 
+## Engine Modules
+
+Built-in engine code is split by responsibility:
+
+| Module | Responsibility |
+|:-------|:---------------|
+| `src/engines/api.ts` | HTTP execution, response assertions, OpenAPI-backed API checks |
+| `src/engines/contract.ts` | OpenAPI/contract parsing checks |
+| `src/engines/playwright.ts` | Browser execution and artifact collection |
+| `src/engines/playwright-grounder.ts` | Pre-execution UI evidence capture |
+| `src/engines/shared.ts` | Shared result, artifact, Playwright, API, redaction, and assertion helpers |
+
+`src/engines/builtin.ts` remains a compatibility export file so existing imports keep working.
+
 ## UI Grounding Model
 
 The UI flow is intentionally two-step:

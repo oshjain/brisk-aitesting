@@ -14,7 +14,16 @@ export class BuiltinPlanValidator implements PlanValidator {
   readonly name = 'builtin-plan-validator';
 
   validate(context: PlanValidatorContext): ValidationResult {
-    const issues: ValidationIssue[] = [...validatePlanJsonContract(context.plan)];
+    const contractIssues = validatePlanJsonContract(context.plan);
+    if (contractIssues.some((issue) => issue.severity === 'error')) {
+      return {
+        schemaVersion: 'brisk-aitesting.validation.v1',
+        valid: false,
+        issues: contractIssues,
+      };
+    }
+
+    const issues: ValidationIssue[] = [...contractIssues];
     const plan = context.plan;
 
     validateObjectKeys('plan', plan, PLAN_KEYS, issues);

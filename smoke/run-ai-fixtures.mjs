@@ -274,6 +274,15 @@ try {
     }
   }
 
+  const malformedValidation = validator.validate({
+    config,
+    input: context.input,
+    plan: { schemaVersion: 'brisk-aitesting.plan.v1', scenarios: [] },
+  });
+  if (malformedValidation.valid || !malformedValidation.issues.some((issue) => issue.code === 'PLAN_CONTRACT_REQUIRED')) {
+    errors.push(`malformed validator gate: expected required contract issues, got ${JSON.stringify(malformedValidation)}`);
+  }
+
   const duplicateRepairProvider = {
     name: 'duplicate-repair-provider',
     calls: 0,
