@@ -148,6 +148,22 @@ Yet testing remains **expensive and fragmented**.
 | 6 | **Execute** with the right engines |
 | 7 | Return **one stable handover object** for CI, dashboards, databases, or internal platforms |
 
+## Competitive Position
+
+The AI testing market is already real. Products like mabl, testRigor, Functionize, Applitools, and Tricentis Testim prove that teams are spending heavily to reduce manual testing, flaky automation, and slow release cycles.
+
+Brisk is designed differently: local, embeddable, evidence-first, and built around a strict AI safety boundary.
+
+| Positioning point | Why Brisk is different |
+|:------------------|:-----------------------|
+| Local by default | Use it inside your own product, CLI, or CI without forcing a hosted dashboard |
+| AI with control | AI proposes structured plans; Brisk validates before execution |
+| Multi-engine core | UI, API, OpenAPI contracts, Playwright, and Schemathesis can share one pipeline |
+| Evidence handover | Results come back as versioned JSON your product can store, render, or send to CI |
+| Extensible by design | Custom engines and adapters fit the same result contract |
+
+See the sourced 55-feature matrix: [Competitive Comparison](./docs/COMPETITIVE_COMPARISON.md).
+
 ## How It Works
 
 `brisk-aitesting` is not "AI writes random Playwright code and runs it."
@@ -220,22 +236,6 @@ These are the next product areas, listed separately so nobody confuses them with
 | Message adapters | Coverage beyond browser screens and HTTP APIs. |
 | UI healing | Fewer fragile browser failures, with a clear before/after explanation. |
 | Non-engine extension checks | Safer custom discovery, planning, validation, UI grounding, and AI provider extensions. |
-
-## Competitive Position
-
-The AI testing market is already real. Products like mabl, testRigor, Functionize, Applitools, and Tricentis Testim prove that teams are spending heavily to reduce manual testing, flaky automation, and slow release cycles.
-
-Brisk is designed differently: local, embeddable, evidence-first, and built around a strict AI safety boundary.
-
-| Positioning point | Why Brisk is different |
-|:------------------|:-----------------------|
-| Local by default | Use it inside your own product, CLI, or CI without forcing a hosted dashboard |
-| AI with control | AI proposes structured plans; Brisk validates before execution |
-| Multi-engine core | UI, API, OpenAPI contracts, Playwright, and Schemathesis can share one pipeline |
-| Evidence handover | Results come back as versioned JSON your product can store, render, or send to CI |
-| Extensible by design | Custom engines and adapters fit the same result contract |
-
-See the sourced 55-feature matrix: [Competitive Comparison](./docs/COMPETITIVE_COMPARISON.md).
 
 ## What It Solves
 
