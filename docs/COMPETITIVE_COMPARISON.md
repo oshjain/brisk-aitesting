@@ -158,7 +158,7 @@ This is a public-evidence map. It does not claim private product internals.
   </tr>
   <tr>
     <td><strong>Implementation-contract drift detection</strong><br />Identify implemented-but-undocumented and documented-but-missing routes.</td>
-    <td align="center">&#128295;</td>
+    <td align="center">&#9989;</td>
     <td align="center">&#128295;</td>
     <td align="center">&#128295;</td>
     <td align="center">&#128295;</td>
@@ -221,7 +221,7 @@ This is a public-evidence map. It does not claim private product internals.
   </tr>
   <tr>
     <td><strong>Comparative product capability score</strong><br />Public capability score, not a lab benchmark result.</td>
-    <td align="center" bgcolor="#dcfce7"><strong>8.7 / 10</strong></td>
+    <td align="center" bgcolor="#dcfce7"><strong>9.0 / 10</strong></td>
     <td align="center" bgcolor="#fef3c7"><strong>6.8 / 10</strong></td>
     <td align="center" bgcolor="#dcfce7"><strong>8.2 / 10</strong></td>
     <td align="center" bgcolor="#fef3c7"><strong>7.6 / 10</strong></td>
@@ -232,7 +232,7 @@ This is a public-evidence map. It does not claim private product internals.
 
 Notes:
 
-- Brisk route discovery is native for supported JavaScript/TypeScript repository patterns; coverage varies by framework and may miss dynamic routes, decorators, generated routes, nested prefixes, and non-JS/TS backends.
+- Brisk contract drift detection is native for OpenAPI operations compared with repo/runtime API routes discovered from supported JavaScript/TypeScript patterns; coverage varies by framework and may miss dynamic routes, decorators, generated routes, nested prefixes, and non-JS/TS backends.
 - Katalon has native OpenAPI/schema validation capabilities, but its own documentation currently notes a validation limitation in `WS.validateOpenApiAgainstSpecification`.
 - Functionize has public API Explorer/API testing documentation, but direct public evidence for native OpenAPI scenario generation and implementation-contract drift detection was not found.
 - Scores are comparative editorial scores from public capability evidence and Brisk's current implementation. They are not vendor-certified results.
@@ -287,7 +287,7 @@ For competitors, the icons are based on public product capabilities. They are no
   <tr>
     <td>4</td>
     <td>Identify mismatch between implementation and contract</td>
-    <td align="center">&#128295;</td>
+    <td align="center">&#9989;</td>
     <td align="center">&#128295;</td>
     <td align="center">&#128295;</td>
     <td align="center">&#128295;</td>
@@ -376,7 +376,7 @@ For competitors, the icons are based on public product capabilities. They are no
   </tr>
   <tr>
     <td colspan="2"><strong>Comparative benchmark-readiness score</strong><br />Coverage against mandatory scenarios; competitor cells are public-capability mapping, not lab results.</td>
-    <td align="center" bgcolor="#dcfce7"><strong>8.1 / 10</strong></td>
+    <td align="center" bgcolor="#dcfce7"><strong>8.3 / 10</strong></td>
     <td align="center" bgcolor="#fef3c7"><strong>6.7 / 10</strong></td>
     <td align="center" bgcolor="#dcfce7"><strong>8.3 / 10</strong></td>
     <td align="center" bgcolor="#dcfce7"><strong>8.3 / 10</strong></td>
@@ -430,7 +430,7 @@ Brisk includes a local benchmark command:
 npm run benchmark
 ```
 
-Current benchmark coverage is 9 cases across config safety, OpenAPI parsing, discovery warnings, AI plan parsing, API schema validation, undocumented status detection, network policy, and CLI behavior.
+Current benchmark coverage is 10 cases across config safety, OpenAPI parsing, discovery warnings, implementation-contract drift detection, AI plan parsing, API schema validation, undocumented status detection, network policy, and CLI behavior.
 
 This is Brisk's internal proof line. A full public benchmark should add repeated UI flakiness runs, exact business-value checks, state-unchanged checks, changed-selector checks, and cross-vendor execution on the same benchmark app.
 

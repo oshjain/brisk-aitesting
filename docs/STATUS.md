@@ -12,12 +12,13 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - SDK entry point with stable result and handover objects.
 - OpenAPI JSON/YAML parsing.
 - OpenAPI route discovery, schema extraction, generated API scenarios, and response schema validation.
+- Implementation-vs-OpenAPI drift report: `brisk-aitesting.contract-drift.v1`.
 - Playwright UI execution with grounded locator evidence.
 - UI route grounding feedback loop.
-- API, OpenAPI, Playwright, UI grounding, UI action, result, handover, CLI, and benchmark schemas.
+- API, OpenAPI, contract drift, Playwright, UI grounding, UI action, result, handover, CLI, and benchmark schemas.
 - Deterministic release check: one command proves the main product paths still work.
 - Manual real AI provider check: proves the configured AI provider works in this environment.
-- Bad-input safety report: `brisk-aitesting.benchmark.v1`.
+- Benchmark report with bad-input, contract drift, schema mismatch, network policy, and CLI failure checks: `brisk-aitesting.benchmark.v1`.
 - Release pack check: `brisk-aitesting.pack-check.v1`.
 - Adapter manifest: `brisk-aitesting.adapter-manifest.v1`.
 - Adapter readiness gate: `brisk-aitesting.adapter-readiness.v1`.
@@ -33,6 +34,7 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 
 - UI workflow generation is grounded and executable, but complex multi-page journeys still need broader proof coverage.
 - OpenAPI scenario generation handles common request/response schemas, but deeper OpenAPI and JSON Schema coverage will keep expanding.
+- Contract drift detection compares OpenAPI operations with repo/runtime API routes discovered from supported patterns; framework coverage still needs expansion beyond current JavaScript/TypeScript route discovery.
 - Analytics exist as structured summaries and benchmark reports, but richer trend analytics are future work.
 - Business-intent scenarios can be expressed in goals/objectives/assertions, but reusable rule IDs, rule coverage, and contradiction checks are future work.
 - Scenario routing already understands `schema`, `replay`, and `custom` types. Schemathesis covers optional deep OpenAPI checking now; JS-native schema fuzzing and replay still need real built-in adapters.

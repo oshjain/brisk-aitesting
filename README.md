@@ -197,6 +197,7 @@ This section keeps the promise honest.
 | UI testing | Built | Browser tests through Playwright with grounded page evidence. |
 | API testing | Built | HTTP checks, status checks, body checks, headers, and schema-backed response checks. |
 | OpenAPI testing | Built | JSON/YAML contract parsing, route discovery, positive and negative API scenarios, response schema validation. |
+| Contract drift report | Built | Compares OpenAPI operations with repo/runtime API routes discovered from supported patterns and reports matched, undocumented, and missing routes. |
 | AI planning | Built | AI returns JSON plans. Plans are normalized, validated, and repaired before execution. |
 | Result handover | Built | One versioned JSON result for CI, dashboards, databases, and internal tools. |
 | Local SDK/CLI | Built | Use it inside your app or from the command line. No hosted platform required. |
@@ -1096,6 +1097,7 @@ This may be the most valuable part of the product for enterprise teams. The resu
 | `brisk-aitesting.plan.v1` | 📋 Plan |
 | `brisk-aitesting.validation.v1` | ✅ Validation |
 | `brisk-aitesting.discovery.v1` | 🔍 Discovery |
+| `brisk-aitesting.contract-drift.v1` | Contract Drift |
 | `brisk-aitesting.result.v1` | 📦 Result |
 | `brisk-aitesting.handover.v1` | 🤝 Handover |
 | `brisk-aitesting.cli-result.v1` | ⌨️ CLI Result |
@@ -1204,6 +1206,7 @@ Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads 
 | Check | Description |
 |:-----:|:------------|
 | Broken contract files | Brisk should explain the problem instead of crashing. |
+| Contract drift | Brisk should report implemented-but-undocumented, documented-but-missing, and matched API routes. |
 | Bad AI output | Brisk should reject messy AI responses instead of running unsafe tests. |
 | Wrong response shape | Brisk should catch when an API returns the wrong JSON shape. |
 | Undocumented HTTP status | Brisk should catch when an API returns a status code missing from the contract. |

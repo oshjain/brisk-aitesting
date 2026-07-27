@@ -20,8 +20,17 @@ const reportPath = join(workDir, 'benchmark-report.json');
 
 await rm(workDir, { recursive: true, force: true });
 await mkdir(workDir, { recursive: true });
+await mkdir(join(workDir, 'src'), { recursive: true });
 await writeFile(join(workDir, 'malformed-openapi.yaml'), 'openapi: 3.0.3\npaths:\n  /broken:\n    get: [', 'utf8');
 await writeFile(join(workDir, 'empty-openapi.json'), JSON.stringify({ openapi: '3.0.3', info: { title: 'Empty', version: '1.0.0' }, paths: {} }, null, 2), 'utf8');
+await writeFile(join(workDir, 'package.json'), JSON.stringify({ dependencies: { express: '^4.0.0' } }, null, 2), 'utf8');
+await writeFile(join(workDir, 'src', 'routes.ts'), [
+  "import express from 'express';",
+  'const app = express();',
+  "app.get('/api/implemented', (_request, response) => response.json({ ok: true }));",
+  "app.post('/api/undocumented', (_request, response) => response.json({ ok: true }));",
+  "app.get('/internal/ignored', (_request, response) => response.json({ ok: true }));",
+].join('\n'), 'utf8');
 
 const server = createServer(async (request, response) => {
   if (request.url === '/api/wrong-schema') {
@@ -105,6 +114,38 @@ try {
       const discovery = await new BuiltinDiscoverer().discover({ config: normalized, input: { goal: 'missing contract' }, runId: `bench_${randomUUID()}` });
       const passed = discovery.contracts[0]?.exists === false && discovery.warnings.some((warning) => /does not exist/i.test(warning));
       return { passed, observed: JSON.stringify({ contracts: discovery.contracts, warnings: discovery.warnings }) };
+    },
+  });
+
+  await benchmark(cases, {
+    id: 'discovery.contract-drift-reports-route-mismatches',
+    area: 'discovery',
+    expected: 'discovery reports implemented-but-undocumented and documented-but-not-implemented API routes',
+    run: async () => {
+      const driftContractPath = join(workDir, 'drift-openapi.json');
+      await writeFile(driftContractPath, JSON.stringify(driftOpenApi(), null, 2), 'utf8');
+      const config = defineConfig({
+        app: { name: 'drift benchmark app', baseUrl, repoPath: workDir },
+        contracts: { openApiPath: driftContractPath },
+        discovery: { includeRepo: true, includeUi: false, includeApi: false, includeContracts: true },
+      });
+      const normalized = normalizeConfig(config);
+      const discovery = await new BuiltinDiscoverer().discover({ config: normalized, input: { goal: 'contract drift' }, runId: `bench_${randomUUID()}` });
+      const drift = discovery.contractDrift;
+      const passed = drift?.schemaVersion === 'brisk-aitesting.contract-drift.v1'
+        && drift.implementedButUndocumented.some((route) => route.method === 'POST' && route.path === '/api/undocumented')
+        && drift.documentedButNotImplemented.some((route) => route.method === 'GET' && route.path === '/api/documented-only')
+        && drift.matchedRoutes.some((route) => route.method === 'GET' && route.path === '/api/implemented')
+        && !drift.implementedButUndocumented.some((route) => route.path === '/api/health');
+      return {
+        passed,
+        observed: JSON.stringify({
+          implementedButUndocumented: drift?.implementedButUndocumented,
+          documentedButNotImplemented: drift?.documentedButNotImplemented,
+          matchedRoutes: drift?.matchedRoutes.map((route) => ({ method: route.method, path: route.path })),
+          diagnostics: drift?.diagnostics,
+        }),
+      };
     },
   });
 
@@ -325,6 +366,53 @@ function benchmarkOpenApi() {
           responses: {
             200: {
               description: 'Documented success',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['ok'],
+                    properties: { ok: { type: 'boolean' } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+}
+
+function driftOpenApi() {
+  return {
+    openapi: '3.0.3',
+    info: { title: 'Drift Benchmark API', version: '1.0.0' },
+    paths: {
+      '/api/implemented': {
+        get: {
+          operationId: 'getImplemented',
+          responses: {
+            200: {
+              description: 'Implemented endpoint',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['ok'],
+                    properties: { ok: { type: 'boolean' } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/api/documented-only': {
+        get: {
+          operationId: 'getDocumentedOnly',
+          responses: {
+            200: {
+              description: 'Documented but not implemented',
               content: {
                 'application/json': {
                   schema: {

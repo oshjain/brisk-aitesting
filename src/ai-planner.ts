@@ -275,6 +275,15 @@ function summarizeDiscovery(discovery: DiscoveryResult): unknown {
     uiRoutes: discovery.uiRoutes.slice(0, 30),
     apiRoutes: discovery.apiRoutes.slice(0, 50),
     contracts: discovery.contracts,
+    ...(discovery.contractDrift !== undefined
+      ? {
+          contractDrift: {
+            implementedButUndocumented: discovery.contractDrift.implementedButUndocumented.slice(0, 20),
+            documentedButNotImplemented: discovery.contractDrift.documentedButNotImplemented.slice(0, 20),
+            diagnostics: discovery.contractDrift.diagnostics,
+          },
+        }
+      : {}),
     repoSignals: discovery.repoSignals.slice(0, 50),
   };
 }

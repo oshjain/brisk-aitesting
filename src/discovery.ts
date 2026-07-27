@@ -4,11 +4,15 @@ import { loadOpenApiSummary, openApiOperationsToDiscoveryRoutes } from './openap
 import type {
   Discoverer,
   DiscovererContext,
+  ContractDriftReport,
+  ContractDriftRoute,
   DiscoveryApiRoute,
   DiscoveryContract,
   DiscoveryResult,
   DiscoveryRoute,
 } from './types.js';
+
+type MatchedDriftRoute = ContractDriftReport['matchedRoutes'][number];
 
 const COMMON_UI_ROUTES = ['/', '/login', '/dashboard', '/settings'];
 const COMMON_API_ROUTES: readonly Pick<DiscoveryApiRoute, 'method' | 'path'>[] = [
@@ -42,7 +46,14 @@ export class BuiltinDiscoverer implements Discoverer {
       await discoverRepo(repoPath, { uiRoutes, apiRoutes, repoSignals, warnings });
     }
 
-    const contracts = await discoverContracts(context, { apiRoutes, warnings });
+    const implementedApiRoutes = implementationRoutesFrom(apiRoutes);
+    const contractApiRoutes = new Map<string, DiscoveryApiRoute>();
+    const contracts = await discoverContracts(context, { apiRoutes, contractApiRoutes, warnings });
+    const contractDrift = buildContractDriftReport({
+      implementedRoutes: implementedApiRoutes,
+      documentedRoutes: contractApiRoutes,
+      contracts,
+    });
 
     return {
       schemaVersion: 'brisk-aitesting.discovery.v1',
@@ -54,6 +65,7 @@ export class BuiltinDiscoverer implements Discoverer {
       uiRoutes: [...uiRoutes.values()].sort((left, right) => right.confidence - left.confidence || left.path.localeCompare(right.path)),
       apiRoutes: [...apiRoutes.values()].sort((left, right) => right.confidence - left.confidence || `${left.method} ${left.path}`.localeCompare(`${right.method} ${right.path}`)),
       contracts,
+      ...(contractDrift !== undefined ? { contractDrift } : {}),
       repoSignals,
       warnings,
       createdAt: new Date().toISOString(),
@@ -174,6 +186,7 @@ function apiRouteHintsFromContent(content: string): readonly Pick<DiscoveryApiRo
 
 async function discoverContracts(context: DiscovererContext, state: {
   readonly apiRoutes: Map<string, DiscoveryApiRoute>;
+  readonly contractApiRoutes: Map<string, DiscoveryApiRoute>;
   readonly warnings: string[];
 }): Promise<readonly DiscoveryContract[]> {
   if (!context.config.discovery.includeContracts) return [];
@@ -184,7 +197,9 @@ async function discoverContracts(context: DiscovererContext, state: {
       try {
         const summary = await loadOpenApiSummary(context.config.contracts.openApiPath);
         for (const route of openApiOperationsToDiscoveryRoutes(summary)) {
-          state.apiRoutes.set(`${route.method} ${route.path}`, route);
+          const key = routeKey(route.method, route.path);
+          state.contractApiRoutes.set(key, route);
+          state.apiRoutes.set(key, route);
         }
         configured.push({
           kind: 'openapi',
@@ -221,6 +236,102 @@ async function discoverContracts(context: DiscovererContext, state: {
     });
   }
   return configured;
+}
+
+function implementationRoutesFrom(routes: Map<string, DiscoveryApiRoute>): Map<string, DiscoveryApiRoute> {
+  const result = new Map<string, DiscoveryApiRoute>();
+  for (const route of routes.values()) {
+    if (route.source === 'repo' || route.source === 'runtime') {
+      result.set(routeKey(route.method, route.path), route);
+    }
+  }
+  return result;
+}
+
+function buildContractDriftReport(params: {
+  readonly implementedRoutes: Map<string, DiscoveryApiRoute>;
+  readonly documentedRoutes: Map<string, DiscoveryApiRoute>;
+  readonly contracts: readonly DiscoveryContract[];
+}): ContractDriftReport | undefined {
+  if (params.documentedRoutes.size === 0 && !params.contracts.some((contract) => contract.kind === 'openapi' && contract.exists)) {
+    return undefined;
+  }
+
+  const matchedRoutes: MatchedDriftRoute[] = [];
+  const implementedButUndocumented: ContractDriftRoute[] = [];
+  const documentedButNotImplemented: ContractDriftRoute[] = [];
+
+  for (const [key, implementation] of params.implementedRoutes) {
+    const contract = params.documentedRoutes.get(key);
+    if (contract === undefined) {
+      implementedButUndocumented.push(toDriftRoute(implementation));
+    } else {
+      matchedRoutes.push({
+        method: implementation.method.toUpperCase(),
+        path: normalizeRoutePath(implementation.path),
+        implementation: toDriftRoute(implementation),
+        contract: toDriftRoute(contract),
+      });
+    }
+  }
+
+  for (const [key, contract] of params.documentedRoutes) {
+    if (!params.implementedRoutes.has(key)) {
+      documentedButNotImplemented.push(toDriftRoute(contract));
+    }
+  }
+
+  const diagnostics: string[] = [
+    `Compared ${params.implementedRoutes.size} implemented route(s) discovered from repo/runtime evidence with ${params.documentedRoutes.size} OpenAPI operation(s).`,
+  ];
+  if (params.implementedRoutes.size === 0) {
+    diagnostics.push('No repo/runtime API routes were discovered; config default API route candidates are not treated as implementation evidence.');
+  }
+  if (implementedButUndocumented.length === 0 && documentedButNotImplemented.length === 0 && params.documentedRoutes.size > 0) {
+    diagnostics.push('No implementation-contract drift detected for discovered route keys.');
+  }
+
+  const openApiContract = params.contracts.find((contract) => contract.kind === 'openapi' && contract.exists);
+  return {
+    schemaVersion: 'brisk-aitesting.contract-drift.v1',
+    kind: 'openapi',
+    ...(openApiContract?.path !== undefined ? { contractPath: openApiContract.path } : {}),
+    implementedRoutes: [...params.implementedRoutes.values()].map(toDriftRoute).sort(compareDriftRoutes),
+    documentedRoutes: [...params.documentedRoutes.values()].map(toDriftRoute).sort(compareDriftRoutes),
+    matchedRoutes: matchedRoutes.sort((left, right) => compareRouteParts(left.method, left.path, right.method, right.path)),
+    implementedButUndocumented: implementedButUndocumented.sort(compareDriftRoutes),
+    documentedButNotImplemented: documentedButNotImplemented.sort(compareDriftRoutes),
+    diagnostics,
+  };
+}
+
+function toDriftRoute(route: DiscoveryApiRoute): ContractDriftRoute {
+  return {
+    method: route.method.toUpperCase(),
+    path: normalizeRoutePath(route.path),
+    source: route.source,
+    confidence: route.confidence,
+    ...(route.operationId !== undefined ? { operationId: route.operationId } : {}),
+    ...(route.contractPath !== undefined ? { contractPath: route.contractPath } : {}),
+  };
+}
+
+function routeKey(method: string, path: string): string {
+  return `${method.toUpperCase()} ${normalizeRoutePath(path)}`;
+}
+
+function normalizeRoutePath(path: string): string {
+  if (path === '') return '/';
+  const normalized = path.replace(/\/+/g, '/');
+  return normalized.length > 1 ? normalized.replace(/\/$/, '') : normalized;
+}
+
+function compareDriftRoutes(left: ContractDriftRoute, right: ContractDriftRoute): number {
+  return compareRouteParts(left.method, left.path, right.method, right.path);
+}
+
+function compareRouteParts(leftMethod: string, leftPath: string, rightMethod: string, rightPath: string): number {
+  return leftPath.localeCompare(rightPath) || leftMethod.localeCompare(rightMethod);
 }
 
 async function exists(path: string): Promise<boolean> {

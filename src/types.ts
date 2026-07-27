@@ -189,6 +189,32 @@ export interface DiscoveryContract {
   readonly errors?: readonly string[];
 }
 
+export interface ContractDriftRoute {
+  readonly method: string;
+  readonly path: string;
+  readonly source?: DiscoveryApiRoute['source'];
+  readonly confidence?: number;
+  readonly operationId?: string;
+  readonly contractPath?: string;
+}
+
+export interface ContractDriftReport {
+  readonly schemaVersion: 'brisk-aitesting.contract-drift.v1';
+  readonly kind: 'openapi';
+  readonly contractPath?: string;
+  readonly implementedRoutes: readonly ContractDriftRoute[];
+  readonly documentedRoutes: readonly ContractDriftRoute[];
+  readonly matchedRoutes: readonly {
+    readonly method: string;
+    readonly path: string;
+    readonly implementation: ContractDriftRoute;
+    readonly contract: ContractDriftRoute;
+  }[];
+  readonly implementedButUndocumented: readonly ContractDriftRoute[];
+  readonly documentedButNotImplemented: readonly ContractDriftRoute[];
+  readonly diagnostics: readonly string[];
+}
+
 export interface OpenApiOperationSummary {
   readonly method: string;
   readonly path: string;
@@ -228,6 +254,7 @@ export interface DiscoveryResult {
   readonly uiRoutes: readonly DiscoveryRoute[];
   readonly apiRoutes: readonly DiscoveryApiRoute[];
   readonly contracts: readonly DiscoveryContract[];
+  readonly contractDrift?: ContractDriftReport;
   readonly repoSignals: readonly {
     readonly kind: 'framework' | 'package' | 'test-runner' | 'source-file';
     readonly value: string;

@@ -47,7 +47,7 @@
     "smoke:real-ai": "node smoke/run-real-ai-smoke.mjs",
     "smoke:ci": "npm run smoke:contracts && npm run smoke:engine-conformance && npm run smoke:plugin-conformance && npm run smoke:adapter-readiness && npm run smoke:reference-serious-saas && npm run smoke:golden-fixtures && npm run smoke:cli && npm run smoke:ai-fixtures && npm run smoke && npm run pack:check",
     "smoke:all": "npm run smoke:ci && npm run smoke:real-ai",
-    "benchmark": "node smoke/run-benchmark.mjs",
+    "benchmark": "npm run build && node smoke/run-benchmark.mjs",
     "pack:check": "npm run build && node smoke/run-pack-check.mjs",
     "typecheck": "tsc --noEmit",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",

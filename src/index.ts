@@ -80,6 +80,8 @@ export type {
   BriskAiTestingRunInput,
   BriskAiTestingStatus,
   ContractConfig,
+  ContractDriftReport,
+  ContractDriftRoute,
   Engine,
   EngineContext,
   EngineRunResult,

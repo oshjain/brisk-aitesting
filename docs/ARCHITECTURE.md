@@ -58,7 +58,7 @@ Host apps should not have to care about the moving parts. Developers should stil
 
 9. Benchmark
    `npm run benchmark` emits `brisk-aitesting.benchmark.v1`.
-   Benchmark cases intentionally feed bad inputs and broken setups so regressions are easier to spot.
+   Benchmark cases intentionally feed bad inputs, broken setups, contract drift, schema mismatches, blocked networks, and CLI errors so regressions are easier to spot.
 
 10. Release Pack Check
    `npm run pack:check` emits `brisk-aitesting.pack-check.v1`.
@@ -87,10 +87,11 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.plan.v1` | planner | Structured test plan |
 | `brisk-aitesting.validation.v1` | validator | Plan validation result |
 | `brisk-aitesting.discovery.v1` | discoverer | Discovered app surface |
+| `brisk-aitesting.contract-drift.v1` | discoverer | Implementation-vs-OpenAPI drift report |
 | `brisk-aitesting.result.v1` | handover | Full run result |
 | `brisk-aitesting.handover.v1` | handover | Host consumption contract |
 | `brisk-aitesting.cli-result.v1` | CLI | Machine-readable CLI run summary |
-| `brisk-aitesting.benchmark.v1` | bad-input safety | Report for broken inputs and unsafe setup checks |
+| `brisk-aitesting.benchmark.v1` | benchmark | Report for bad inputs, contract drift, schema mismatch, network policy, and CLI failure checks |
 | `brisk-aitesting.pack-check.v1` | release | npm package tarball verification report |
 | `brisk-aitesting.adapter-manifest.v1` | adapters | Declares adapters that are built, packaged, documented, and tested |
 | `brisk-aitesting.adapter-readiness.v1` | adapters | Machine check that built adapters meet readiness requirements |
