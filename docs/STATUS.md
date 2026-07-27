@@ -34,7 +34,7 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 
 - UI workflow generation is grounded and executable, but complex multi-page journeys still need broader proof coverage.
 - OpenAPI scenario generation handles common request/response schemas, but deeper OpenAPI and JSON Schema coverage will keep expanding.
-- Contract drift detection compares OpenAPI operations with repo/runtime API routes discovered from supported patterns; framework coverage still needs expansion beyond current JavaScript/TypeScript route discovery.
+- Contract drift detection compares OpenAPI operations with repo/runtime API routes discovered from supported patterns, including common `:id` and `{id}` parameter route shapes; framework coverage still needs expansion beyond current JavaScript/TypeScript route discovery.
 - Analytics exist as structured summaries and benchmark reports, but richer trend analytics are future work.
 - Business-intent scenarios can be expressed in goals/objectives/assertions, but reusable rule IDs, rule coverage, and contradiction checks are future work.
 - Scenario routing already understands `schema`, `replay`, and `custom` types. Schemathesis covers optional deep OpenAPI checking now; JS-native schema fuzzing and replay still need real built-in adapters.

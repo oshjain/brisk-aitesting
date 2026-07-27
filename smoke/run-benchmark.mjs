@@ -28,7 +28,9 @@ await writeFile(join(workDir, 'src', 'routes.ts'), [
   "import express from 'express';",
   'const app = express();',
   "app.get('/api/implemented', (_request, response) => response.json({ ok: true }));",
+  "app.get('/api/users/:id', (_request, response) => response.json({ ok: true }));",
   "app.post('/api/undocumented', (_request, response) => response.json({ ok: true }));",
+  "request('/api/generic-request-helper');",
   "app.get('/internal/ignored', (_request, response) => response.json({ ok: true }));",
 ].join('\n'), 'utf8');
 
@@ -136,6 +138,9 @@ try {
         && drift.implementedButUndocumented.some((route) => route.method === 'POST' && route.path === '/api/undocumented')
         && drift.documentedButNotImplemented.some((route) => route.method === 'GET' && route.path === '/api/documented-only')
         && drift.matchedRoutes.some((route) => route.method === 'GET' && route.path === '/api/implemented')
+        && drift.matchedRoutes.some((route) => route.method === 'GET' && route.implementation.path === '/api/users/:id' && route.contract.path === '/api/users/{userId}')
+        && !discovery.apiRoutes.some((route) => route.method === 'REQUEST')
+        && !discovery.apiRoutes.some((route) => route.path === '/api/generic-request-helper')
         && !drift.implementedButUndocumented.some((route) => route.path === '/api/health');
       return {
         passed,
@@ -143,6 +148,7 @@ try {
           implementedButUndocumented: drift?.implementedButUndocumented,
           documentedButNotImplemented: drift?.documentedButNotImplemented,
           matchedRoutes: drift?.matchedRoutes.map((route) => ({ method: route.method, path: route.path })),
+          apiRouteMethods: discovery.apiRoutes.map((route) => route.method),
           diagnostics: drift?.diagnostics,
         }),
       };
@@ -413,6 +419,25 @@ function driftOpenApi() {
           responses: {
             200: {
               description: 'Documented but not implemented',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['ok'],
+                    properties: { ok: { type: 'boolean' } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/api/users/{userId}': {
+        get: {
+          operationId: 'getUserById',
+          responses: {
+            200: {
+              description: 'Parameterized user endpoint',
               content: {
                 'application/json': {
                   schema: {

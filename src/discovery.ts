@@ -170,16 +170,10 @@ function routeHintsFromPath(path: string): readonly string[] {
 
 function apiRouteHintsFromContent(content: string): readonly Pick<DiscoveryApiRoute, 'method' | 'path'>[] {
   const routes: Pick<DiscoveryApiRoute, 'method' | 'path'>[] = [];
-  const patterns = [
-    /\b(?:app|router)\.(get|post|put|patch|delete)\(\s*['"`]([^'"`]+)['"`]/gi,
-    /\b(request|get|post|put|patch|delete)\(\s*['"`](\/api\/[^'"`]+)['"`]/gi,
-  ];
-  for (const pattern of patterns) {
-    for (const match of content.matchAll(pattern)) {
-      const method = String(match[1] ?? 'GET').toUpperCase();
-      const path = String(match[2] ?? '');
-      if (path.startsWith('/api/')) routes.push({ method, path });
-    }
+  for (const match of content.matchAll(/\b(?:app|router)\.(get|post|put|patch|delete)\(\s*['"`]([^'"`]+)['"`]/gi)) {
+    const method = String(match[1] ?? 'GET').toUpperCase();
+    const path = String(match[2] ?? '');
+    if (path.startsWith('/api/')) routes.push({ method, path });
   }
   return routes;
 }
@@ -317,13 +311,19 @@ function toDriftRoute(route: DiscoveryApiRoute): ContractDriftRoute {
 }
 
 function routeKey(method: string, path: string): string {
-  return `${method.toUpperCase()} ${normalizeRoutePath(path)}`;
+  return `${method.toUpperCase()} ${normalizeRouteMatchPath(path)}`;
 }
 
 function normalizeRoutePath(path: string): string {
   if (path === '') return '/';
   const normalized = path.replace(/\/+/g, '/');
   return normalized.length > 1 ? normalized.replace(/\/$/, '') : normalized;
+}
+
+function normalizeRouteMatchPath(path: string): string {
+  return normalizeRoutePath(path)
+    .replace(/\/:[^/]+/g, '/:param')
+    .replace(/\/\{[^/{}]+\}/g, '/:param');
 }
 
 function compareDriftRoutes(left: ContractDriftRoute, right: ContractDriftRoute): number {
