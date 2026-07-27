@@ -221,6 +221,22 @@ These are the next product areas, listed separately so nobody confuses them with
 | UI healing | Fewer fragile browser failures, with a clear before/after explanation. |
 | Non-engine extension checks | Safer custom discovery, planning, validation, UI grounding, and AI provider extensions. |
 
+## Competitive Position
+
+The AI testing market is already real. Products like mabl, testRigor, Functionize, Applitools, and Tricentis Testim prove that teams are spending heavily to reduce manual testing, flaky automation, and slow release cycles.
+
+Brisk is designed differently: local, embeddable, evidence-first, and built around a strict AI safety boundary.
+
+| Positioning point | Why Brisk is different |
+|:------------------|:-----------------------|
+| Local by default | Use it inside your own product, CLI, or CI without forcing a hosted dashboard |
+| AI with control | AI proposes structured plans; Brisk validates before execution |
+| Multi-engine core | UI, API, OpenAPI contracts, Playwright, and Schemathesis can share one pipeline |
+| Evidence handover | Results come back as versioned JSON your product can store, render, or send to CI |
+| Extensible by design | Custom engines and adapters fit the same result contract |
+
+See the sourced 55-feature matrix: [Competitive Comparison](./docs/COMPETITIVE_COMPARISON.md).
+
 ## What It Solves
 
 `brisk-aitesting` helps teams avoid the biggest testing bottlenecks:
@@ -634,6 +650,7 @@ flowchart TD
 | [API Reference](./docs/API_REFERENCE.md) | You are embedding Brisk through the SDK |
 | [Security](./docs/SECURITY.md) | You need to understand data flow, AI boundaries, artifacts, and network policy |
 | [Compatibility](./docs/COMPATIBILITY.md) | You want to know where Brisk works best today |
+| [Competitive Comparison](./docs/COMPETITIVE_COMPARISON.md) | You want the sourced Brisk-vs-market feature matrix |
 | [Troubleshooting](./docs/TROUBLESHOOTING.md) | A run failed and you need a direct fix |
 | [Release](./docs/RELEASE.md) | You are publishing or validating a release |
 

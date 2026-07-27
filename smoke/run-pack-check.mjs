@@ -19,6 +19,7 @@ const required = [
   'package/docs/API_REFERENCE.md',
   'package/docs/SECURITY.md',
   'package/docs/COMPATIBILITY.md',
+  'package/docs/COMPETITIVE_COMPARISON.md',
   'package/docs/TROUBLESHOOTING.md',
   'package/docs/RELEASE.md',
   'package/examples/brisk-aitesting.config.ts',
