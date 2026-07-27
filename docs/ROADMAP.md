@@ -39,6 +39,7 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 - Built-in API engine.
 - Built-in OpenAPI contract engine.
 - Engine plugin conformance API and smoke gate.
+- Optional Schemathesis OpenAPI fuzz adapter.
 - UI grounding and evidence-ID action execution.
 - Versioned result and handover JSON.
 - Event stream callbacks.
@@ -49,7 +50,7 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 
 - No built-in schema fuzz engine yet.
 - No built-in replay engine yet.
-- No built-in Schemathesis or Specmatic adapter yet.
+- No built-in Specmatic adapter yet.
 - No built-in Keploy adapter yet.
 - No built-in AsyncAPI, Pact, or message-contract engine yet.
 - No reference app matrix yet.
@@ -112,7 +113,7 @@ Future non-engine conformance suites should define the stable output contract fo
 
 ### 4. Schema Fuzz Engine
 
-Add a built-in engine that creates schema-aware negative cases from OpenAPI/JSON Schema:
+Schemathesis now provides optional real OpenAPI fuzzing through its CLI. The remaining product work is a lighter JS-native engine that creates schema-aware negative cases from OpenAPI/JSON Schema:
 
 - missing required fields
 - invalid enum values

@@ -24,6 +24,7 @@ const expectedRuntimeExports = [
   'BuiltinPlaywrightEngine',
   'BuiltinPlaywrightRouteGrounder',
   'OpenAiCompatibleProvider',
+  'SchemathesisOpenApiFuzzEngine',
   'createInvalidSchemaExample',
   'createAiProviderFromConfig',
   'createBriskAiTesting',
@@ -68,6 +69,7 @@ const expectedTypeExports = [
   'UiRouteGrounderResult',
   'ValidationResult',
   'SchemaValidationResult',
+  'SchemathesisEngineOptions',
 ];
 
 const expectedSchemas = [
@@ -82,6 +84,8 @@ const expectedSchemas = [
   'brisk-aitesting.engine-conformance.v1',
   'brisk-aitesting.plugin-conformance.v1',
   'brisk-aitesting.plugin-conformance-smoke.v1',
+  'brisk-aitesting.schemathesis-evidence.v1',
+  'brisk-aitesting.schemathesis-smoke.v1',
   'brisk-aitesting.reference-serious-saas.v1',
   'brisk-aitesting.golden-fixtures.v1',
   'brisk-aitesting.api-evidence.v1',
@@ -98,6 +102,7 @@ const expectedScripts = [
   'smoke:contracts',
   'smoke:engine-conformance',
   'smoke:plugin-conformance',
+  'smoke:schemathesis',
   'smoke:reference-serious-saas',
   'smoke:golden-fixtures',
   'smoke:cli',

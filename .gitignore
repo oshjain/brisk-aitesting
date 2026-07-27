@@ -3,6 +3,7 @@ dist/
 coverage/
 .brisk-aitesting/
 .brisk-aitesting-*/
+.schemathesis/
 playwright-work/
 test-results/
 playwright-report/

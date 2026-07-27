@@ -37,6 +37,7 @@
     "smoke:contracts": "node smoke/run-contracts.mjs",
     "smoke:engine-conformance": "node smoke/run-engine-conformance.mjs",
     "smoke:plugin-conformance": "node smoke/run-plugin-conformance.mjs",
+    "smoke:schemathesis": "node smoke/run-schemathesis-smoke.mjs",
     "smoke:reference-serious-saas": "node smoke/run-reference-serious-saas.mjs",
     "smoke:golden-fixtures": "node smoke/run-golden-fixtures.mjs",
     "smoke:cli": "node smoke/run-cli.mjs",

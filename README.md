@@ -90,10 +90,11 @@ This section exists so there is no confusion.
 | AI planning | Built | AI returns JSON plans. Plans are normalized, validated, and repaired before execution. |
 | Result handover | Built | One versioned JSON result for CI, dashboards, databases, and internal tools. |
 | Local SDK/CLI | Built | Use it inside your app or from the command line. No hosted platform required. |
-| Schema fuzz engine | Not built-in yet | Planned: stronger negative API testing from schemas. |
+| Schemathesis OpenAPI fuzz adapter | Built | Optional Python/Schemathesis engine for real OpenAPI fuzz and negative testing. |
+| JS-native schema fuzz engine | Not built-in yet | Planned: lighter built-in negative API testing from schemas. |
 | Replay engine | Not built-in yet | Planned: replay captured traffic for fast regression checks. |
 | AsyncAPI/Pact/message testing | Not built-in yet | Planned: event and message contract testing. |
-| Specmatic/Schemathesis/Keploy adapters | Not built-in yet | Planned as optional adapters, not core promises today. |
+| Specmatic/Keploy adapters | Not built-in yet | Planned as optional adapters, not core promises today. |
 | UI healing | Not built-in yet | Planned: retry failed UI selectors using fresh page evidence and report what changed. |
 | Serious SaaS reference app | Built | Proves auth, roles, UI, API, OpenAPI, negative cases, state change, and artifacts. |
 | Full reference app matrix | Not built yet | Planned: Todo, e-commerce, API-only, multi-tenant, and event/messaging apps. |
@@ -108,7 +109,8 @@ Future work is only worth adding when it clearly helps users:
 | Reference apps | More confidence that Brisk works on real app shapes. |
 | Golden fixtures | Less chance that future changes quietly weaken plans. |
 | Plugin conformance | Safer third-party and internal engines, before they are trusted. |
-| Schema fuzz engine | More API bugs caught without slow browser tests. |
+| Schemathesis adapter | More OpenAPI bugs caught without slow browser tests. |
+| JS-native schema fuzz engine | Faster lightweight schema checks without Python. |
 | Replay engine | Faster regression checks from known traffic. |
 | Message adapters | Coverage beyond HTTP and browser workflows. |
 | UI healing | Fewer flaky browser failures, with evidence when healing happens. |
@@ -1060,6 +1062,8 @@ This may be the most valuable part of the product for enterprise teams. The resu
 | `brisk-aitesting.engine-conformance.v1` | Engine Conformance |
 | `brisk-aitesting.plugin-conformance.v1` | Plugin Conformance |
 | `brisk-aitesting.plugin-conformance-smoke.v1` | Plugin Conformance Smoke |
+| `brisk-aitesting.schemathesis-evidence.v1` | Schemathesis Evidence |
+| `brisk-aitesting.schemathesis-smoke.v1` | Schemathesis Smoke |
 | `brisk-aitesting.reference-serious-saas.v1` | Serious SaaS Reference |
 | `brisk-aitesting.golden-fixtures.v1` | Golden Fixtures |
 | `brisk-aitesting.api-evidence.v1` | 📡 API Evidence |
@@ -1120,6 +1124,14 @@ npm run typecheck  &&  npm run build  &&  npm run smoke:ci  &&  npm run benchmar
 | 🔧 AI fixture repair checks | Test repair feedback loop |
 | ⚙️ Full engine smoke checks | Verify all engines start correctly |
 | 📦 npm pack safety checks | Confirm package is packable |
+
+Optional adapter gate:
+
+```bash
+npm run smoke:schemathesis
+```
+
+This runs the real Schemathesis OpenAPI fuzz adapter against the serious SaaS reference app. It needs Python plus the Schemathesis package installed.
 
 #### What `benchmark` Checks
 

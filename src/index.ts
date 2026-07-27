@@ -51,6 +51,10 @@ export {
 } from './conformance.js';
 
 export {
+  SchemathesisOpenApiFuzzEngine,
+} from './schemathesis.js';
+
+export {
   BuiltinApiEngine,
   BuiltinContractEngine,
   BuiltinPlaywrightEngine,
@@ -109,6 +113,10 @@ export type {
   EnginePluginConformanceEngineReport,
   EnginePluginConformanceReport,
 } from './conformance.js';
+
+export type {
+  SchemathesisEngineOptions,
+} from './schemathesis.js';
 
 export type {
   SchemaValidationResult,

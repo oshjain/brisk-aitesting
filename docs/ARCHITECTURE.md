@@ -68,6 +68,10 @@ Host apps should not have to care about the moving parts. Developers should stil
    `runEnginePluginConformance` emits `brisk-aitesting.plugin-conformance.v1`.
    External engines must prove they behave like good citizens before we trust them.
    They must accept only their own scenarios, reject unrelated scenarios, return stable `ScenarioResult` objects, respect runtime timeout, avoid obvious secret leakage, and emit valid artifact shapes.
+
+12. Schemathesis OpenAPI Fuzzing
+   `SchemathesisOpenApiFuzzEngine` runs the real Schemathesis CLI for schema scenarios that explicitly ask for the Schemathesis adapter.
+   It writes NDJSON, JUnit, HAR, log, and `brisk-aitesting.schemathesis-evidence.v1` artifacts.
 ```
 
 ## Schema Registry
@@ -87,6 +91,8 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.engine-conformance.v1` | conformance | Built-in engine behavior report |
 | `brisk-aitesting.plugin-conformance.v1` | conformance | External engine plugin behavior report |
 | `brisk-aitesting.plugin-conformance-smoke.v1` | conformance | Smoke proof that good plugins pass and bad plugins fail |
+| `brisk-aitesting.schemathesis-evidence.v1` | Schemathesis adapter | OpenAPI fuzz execution evidence |
+| `brisk-aitesting.schemathesis-smoke.v1` | Schemathesis adapter | Real adapter smoke report |
 | `brisk-aitesting.reference-serious-saas.v1` | reference app | Serious SaaS reference smoke report |
 | `brisk-aitesting.golden-fixtures.v1` | golden fixtures | Stable scenario/result baseline report |
 | `brisk-aitesting.api-evidence.v1` | API engine | Request/response evidence |
@@ -157,6 +163,8 @@ npm run pack:check
 
 `npm run smoke:ci` runs the same deterministic gate used by GitHub Actions. It includes pack-check and excludes real provider calls.
 
+`npm run smoke:schemathesis` is an optional adapter gate. It needs Python and the Schemathesis package, then runs real OpenAPI fuzzing against the serious SaaS reference app.
+
 `smoke:real-ai` needs provider credentials and enterprise CA config when applicable. It proves the configured provider path works. It does not yet score provider quality across models.
 
 ## Current Boundaries
@@ -172,6 +180,7 @@ Built:
 - Stable result handover for host apps.
 - Engine conformance smoke for built-in engines.
 - Engine plugin conformance API and smoke gate for external `Engine` implementations.
+- Optional Schemathesis OpenAPI fuzz engine and smoke gate.
 - Serious SaaS reference app smoke.
 - Golden fixture baseline for serious SaaS scenario/result stability.
 

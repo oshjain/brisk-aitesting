@@ -21,6 +21,7 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - Release pack check: `brisk-aitesting.pack-check.v1`.
 - Engine conformance report: `brisk-aitesting.engine-conformance.v1`.
 - Engine plugin conformance API and smoke report: `brisk-aitesting.plugin-conformance.v1`.
+- Optional Schemathesis OpenAPI fuzz adapter and smoke report: `brisk-aitesting.schemathesis-smoke.v1`.
 - Serious SaaS reference app report: `brisk-aitesting.reference-serious-saas.v1`.
 - Golden fixture report: `brisk-aitesting.golden-fixtures.v1`.
 - npm package publication path.
@@ -31,7 +32,7 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - OpenAPI scenario generation handles common request/response schemas, but deeper OpenAPI and JSON Schema coverage will keep expanding.
 - Analytics exist as structured summaries and benchmark reports, but richer trend analytics are future work.
 - Business-intent scenarios can be expressed in goals/objectives/assertions, but reusable rule IDs, rule coverage, and contradiction checks are future work.
-- Scenario routing already understands `schema`, `replay`, and `custom` types, but schema fuzz and replay engines still need real built-in adapters.
+- Scenario routing already understands `schema`, `replay`, and `custom` types. Schemathesis covers optional OpenAPI fuzzing now; JS-native schema fuzzing and replay still need real built-in adapters.
 
 ## Not Built Yet
 
@@ -39,8 +40,8 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - AI-generated Playwright code is not accepted.
 - AI-generated selectors are not trusted.
 - Real provider quality is not benchmark-scored across models yet.
-- Built-in Schemathesis, Specmatic, Keploy, AsyncAPI, Pact, or message-contract adapters.
-- Built-in schema fuzz engine.
+- Built-in Specmatic, Keploy, AsyncAPI, Pact, or message-contract adapters.
+- JS-native schema fuzz engine.
 - Built-in replay engine.
 - Full reference app matrix beyond serious-saas.
 - Conformance suites for non-engine extension points: discoverers, planners, validators, UI grounders, and AI providers.
@@ -51,7 +52,7 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - Add reference apps: Todo, Auth SaaS, E-commerce, API-only, Multi-tenant SaaS, Event/messaging.
 - Add golden fixtures for stable plan/result comparison.
 - Extend conformance beyond engines to discoverers, planners, validators, UI grounders, and AI providers.
-- Add schema fuzz engine for OpenAPI/JSON Schema negative coverage.
+- Add JS-native schema fuzz engine for lightweight OpenAPI/JSON Schema negative coverage.
 - Add a replay adapter shape and then a Keploy-compatible implementation.
 - Add AsyncAPI/Pact/message-contract adapter support.
 - Add JUnit/HTML reporter support.
