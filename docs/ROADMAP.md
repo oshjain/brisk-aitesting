@@ -41,6 +41,7 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 - Built-in lightweight schema fuzz engine.
 - Built-in replay engine for declared HTTP interactions.
 - External engine quality API and automated health gate.
+- Non-engine extension quality API and automated health gate.
 - Optional Schemathesis OpenAPI deep API checker with readiness manifest and coverage gate.
 - UI grounding and evidence-ID action execution.
 - Versioned result and handover JSON.
@@ -48,14 +49,15 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 - Artifact collection.
 - Deterministic release, bad-input, package, and real-AI gates.
 - Adapter readiness gate for built adapters.
+- Release readiness automation and versioned changelog.
+- Serious SaaS, API-only, Todo, and multi-tenant proof apps.
 
 ## Gaps
 
 - No built-in Specmatic adapter yet.
 - No built-in Keploy adapter yet.
 - No built-in AsyncAPI, Pact, or message-contract engine yet.
-- No full proof app collection yet.
-- No quality-check suite yet for non-engine extension points: discoverers, planners, validators, UI grounders, and AI providers.
+- No full proof app collection yet; e-commerce and event/messaging are still pending.
 - No formal UI healing stage with before/after evidence diffing yet.
 - No shared business rule catalog yet.
 
@@ -65,11 +67,8 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 
 Create real sample applications that every product change must pass. Think of these as proving grounds: if Brisk works here, users can trust that it handles real product shapes, not only small demos.
 
-- Todo app
 - Auth SaaS app
 - E-commerce app
-- API-only app
-- Multi-tenant SaaS app
 - Event/messaging app
 
 Each app should provide:
@@ -97,7 +96,7 @@ This catches quiet degradation after AI repair or planner changes.
 
 ### 3. Extension Quality Checks
 
-Engine quality checks are built for the `Engine` interface. The remaining work is to apply the same discipline to the other extension points.
+Engine and non-engine extension checks are now built. The next work is to add deeper behavior cases as new extension types appear.
 
 Every engine plugin must prove:
 

@@ -29,10 +29,13 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - Adapter readiness gate: `brisk-aitesting.adapter-readiness.v1`.
 - Built-in engine quality report: `brisk-aitesting.engine-conformance.v1`.
 - External engine quality API and health-check report: `brisk-aitesting.plugin-conformance.v1`.
+- Non-engine extension quality API and health-check report: `brisk-aitesting.extension-conformance.v1`.
 - Optional Schemathesis OpenAPI deep API checker and run report: `brisk-aitesting.schemathesis-smoke.v1`.
 - Schemathesis adapter readiness now requires real event evidence, selected operations, successful scenarios, saved artifacts, CI workflow wiring, docs, package inclusion, and plugin quality proof.
 - Serious SaaS proof app report: `brisk-aitesting.reference-serious-saas.v1`.
+- API-only, Todo, and multi-tenant proof app report: `brisk-aitesting.reference-proof-apps.v1`.
 - Golden expected-output report: `brisk-aitesting.golden-fixtures.v1`.
+- Release readiness check and versioned changelog: `brisk-aitesting.release-readiness.v1`.
 - npm package publication path.
 
 ## Partly Built
@@ -51,17 +54,15 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - AI-generated selectors are not trusted.
 - Real provider quality is not compared across multiple AI models yet.
 - Built-in Specmatic, Keploy, AsyncAPI, Pact, or message-contract adapters.
-- Full proof app collection beyond serious-saas.
-- Quality checks for non-engine extension points: discoverers, planners, validators, UI grounders, and AI providers.
+- Full proof app collection beyond serious-saas, API-only, Todo, and multi-tenant.
 - Formal UI selector healing stage with before/after evidence diffing.
 
 ## Next Work
 
-- Add proof apps: Todo, Auth SaaS, E-commerce, API-only, Multi-tenant SaaS, Event/messaging.
+- Add proof apps: E-commerce and Event/messaging.
 - Add more golden expected outputs for stable plan/result comparison.
 - Add source-route discovery adapters for Python, .NET, Go, Java, and generated-route systems.
-- Extend quality checks beyond engines to discoverers, planners, validators, UI grounders, and AI providers.
 - Add a Keploy-compatible replay importer/exporter around the built-in replay engine.
 - Add AsyncAPI/Pact/message-contract adapter support.
 - Add multi-provider benchmark scoring.
-- Add release notes and npm release automation.
+- Add npm publish workflow automation when release governance is ready.

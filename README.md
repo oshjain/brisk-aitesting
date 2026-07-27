@@ -209,10 +209,11 @@ This section keeps the promise honest: what is built, what is partly built, and 
 | Keploy compatibility | Expansion work | Built-in replay exists today; Keploy import/export compatibility is not built yet. |
 | UI healing | Expansion work | Planned: if a button or field moves, retry with fresh page evidence and show exactly what changed. |
 | Serious SaaS proof app | Built | A real sample product used to prove auth, roles, UI, API, OpenAPI, negative cases, state changes, and saved evidence. |
-| Full proof app collection | Expansion work | Serious SaaS exists today; Todo, e-commerce, API-only, multi-tenant, and event/messaging proof apps are still pending. |
+| Proof app collection | Partly built | Serious SaaS, API-only, Todo, and multi-tenant proof apps run today; e-commerce and event/messaging proof apps are still pending. |
 | Built-in engine quality check | Built | Built-in engines must prove they can run, return the expected result shape, and save evidence. |
 | External engine quality check | Built for engines | Third-party engines must prove routing, result shape, artifact shape, timeout handling, and secret safety before being trusted. |
-| Non-engine extension checks | Expansion work | Engine checks exist today; quality checks for custom discovery, planning, validation, UI grounding, and AI provider extensions are still pending. |
+| Non-engine extension checks | Built | Discoverer, planner, validator, UI grounder, and AI provider extensions have a conformance gate. |
+| Release automation | Built | `release:check` verifies typecheck, build, CI smoke, benchmark, package safety, and changelog readiness. |
 
 ### What Is Ready Now
 
@@ -228,6 +229,8 @@ These are not future promises anymore:
 | Built-in schema fuzzing | Brisk can run fast malformed-request checks from OpenAPI request schemas without Python. |
 | Built-in replay engine | Brisk can rerun declared HTTP interactions and show exactly what changed. |
 | Adapter readiness gate | If we call an adapter "built", automation checks code, docs, packaging, CI wiring, proof app coverage, and result evidence. |
+| Non-engine extension conformance | Custom discoverers, planners, validators, UI grounders, and AI providers can be checked before teams trust them. |
+| Release readiness check | Releases have a repeatable command and matching changelog check. |
 
 ### Still To Build
 
@@ -235,10 +238,9 @@ These are the real remaining product areas, listed separately so nobody confuses
 
 | Still to build | User impact |
 |:----------------|:------------|
-| More proof apps | More confidence across common product shapes like e-commerce, API-only, and event-driven systems. |
+| More proof apps | More confidence across e-commerce and event-driven systems. |
 | Message adapters | Coverage beyond browser screens and HTTP APIs. |
 | UI healing | Fewer fragile browser failures, with a clear before/after explanation. |
-| Non-engine extension checks | Safer custom discovery, planning, validation, UI grounding, and AI provider extensions. |
 
 ## What It Solves
 
@@ -1119,14 +1121,18 @@ This may be the most valuable part of the product for enterprise teams. The resu
 | `brisk-aitesting.clean-result.v1` | Cleanup Result |
 | `brisk-aitesting.benchmark.v1` | 📊 Benchmark |
 | `brisk-aitesting.pack-check.v1` | 📦 Pack Check |
+| `brisk-aitesting.release-readiness.v1` | Release Readiness |
 | `brisk-aitesting.adapter-manifest.v1` | Adapter Manifest |
 | `brisk-aitesting.adapter-readiness.v1` | Adapter Readiness |
 | `brisk-aitesting.engine-conformance.v1` | Engine Conformance |
 | `brisk-aitesting.plugin-conformance.v1` | Plugin Conformance |
 | `brisk-aitesting.plugin-conformance-smoke.v1` | Plugin Quality Health Check |
+| `brisk-aitesting.extension-conformance.v1` | Extension Conformance |
+| `brisk-aitesting.extension-conformance-smoke.v1` | Extension Quality Health Check |
 | `brisk-aitesting.schemathesis-evidence.v1` | Schemathesis Evidence |
 | `brisk-aitesting.schemathesis-smoke.v1` | Schemathesis Health Check |
 | `brisk-aitesting.reference-serious-saas.v1` | Serious SaaS Proof App |
+| `brisk-aitesting.reference-proof-apps.v1` | Reference Proof Apps |
 | `brisk-aitesting.golden-fixtures.v1` | Golden Expected Outputs |
 | `brisk-aitesting.junit-report.v1` | JUnit Report |
 | `brisk-aitesting.html-report.v1` | HTML Report |
@@ -1197,13 +1203,16 @@ Some command names are developer shorthand, so here is the plain meaning:
 | Contract/schema registry checks | Make sure every public JSON shape Brisk promises is still documented and exported. |
 | Built-in engine quality checks | Make sure Playwright, API, contract, schema fuzz, and replay engines run correctly and return the same clean result shape. |
 | External engine quality checks | Make sure third-party engines cannot claim support unless they route correctly, time out safely, and avoid obvious secret leakage. |
+| Non-engine extension quality checks | Make sure custom discovery, planning, validation, UI grounding, and AI provider extensions return the shapes Brisk expects. |
 | Adapter readiness checks | Make sure every adapter marked "built" has code, docs, package files, CI wiring, proof-app coverage, and saved evidence. |
 | Serious SaaS proof app checks | Run Brisk against a real SaaS-style app with auth, roles, UI, API, OpenAPI, negative cases, state changes, and artifacts. |
+| Reference proof app checks | Run Brisk against API-only, Todo, and multi-tenant apps so the product is proven across more than one app shape. |
 | Golden expected-output checks | Compare today's output with known-good output so quiet weakening is caught. |
 | CLI checks | Make sure command-line usage returns the right exit codes and JSON. |
 | AI repair checks | Make sure invalid AI plans are rejected or repaired instead of being blindly executed. |
 | Full engine health checks | Make sure all built-in engines start, run, and save evidence. |
 | npm package safety checks | Make sure the package can ship without source clutter, secrets, local test artifacts, or missing files. |
+| Release readiness checks | Make sure the current version has a changelog entry and the release scripts/docs are present. |
 
 Optional deep OpenAPI adapter check:
 
@@ -1306,6 +1315,18 @@ Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads 
     <td>🤖</td>
     <td>npm package publication path</td>
   </tr>
+  <tr>
+    <td>🧪</td>
+    <td>API-only, Todo, and multi-tenant proof apps</td>
+    <td>🔌</td>
+    <td>Non-engine extension quality checks</td>
+  </tr>
+  <tr>
+    <td>📦</td>
+    <td>Release readiness automation</td>
+    <td>📝</td>
+    <td>Versioned changelog</td>
+  </tr>
 </table>
 
 <br />
@@ -1315,7 +1336,7 @@ Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads 
 <table>
   <tr>
     <td>📦</td>
-    <td>npm release automation and versioned changelog</td>
+    <td>E-commerce and event/messaging proof apps</td>
     <td>🏆</td>
     <td>Multi-provider benchmark scoring</td>
   </tr>
@@ -1327,7 +1348,7 @@ Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads 
   </tr>
   <tr>
     <td>🧪</td>
-    <td>More proof apps and non-engine extension quality checks</td>
+    <td>More golden expected outputs</td>
     <td>🔁</td>
     <td>Keploy-compatible replay importer/exporter</td>
   </tr>

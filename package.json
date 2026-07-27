@@ -24,6 +24,7 @@
   "files": [
     "dist",
     "README.md",
+    "CHANGELOG.md",
     "adapters",
     "docs",
     "examples",
@@ -38,17 +39,20 @@
     "smoke:contracts": "node smoke/run-contracts.mjs",
     "smoke:engine-conformance": "node smoke/run-engine-conformance.mjs",
     "smoke:plugin-conformance": "node smoke/run-plugin-conformance.mjs",
+    "smoke:extension-conformance": "node smoke/run-extension-conformance.mjs",
     "smoke:adapter-readiness": "node smoke/run-adapter-readiness.mjs",
     "smoke:schemathesis": "node smoke/run-schemathesis-smoke.mjs",
     "smoke:reference-serious-saas": "node smoke/run-reference-serious-saas.mjs",
+    "smoke:reference-proof-apps": "node smoke/run-reference-proof-apps.mjs",
     "smoke:golden-fixtures": "node smoke/run-golden-fixtures.mjs",
     "smoke:cli": "node smoke/run-cli.mjs",
     "smoke:ai-fixtures": "node smoke/run-ai-fixtures.mjs",
     "smoke:real-ai": "node smoke/run-real-ai-smoke.mjs",
-    "smoke:ci": "npm run smoke:contracts && npm run smoke:engine-conformance && npm run smoke:plugin-conformance && npm run smoke:adapter-readiness && npm run smoke:reference-serious-saas && npm run smoke:golden-fixtures && npm run smoke:cli && npm run smoke:ai-fixtures && npm run smoke && npm run pack:check",
+    "smoke:ci": "npm run smoke:contracts && npm run smoke:engine-conformance && npm run smoke:plugin-conformance && npm run smoke:extension-conformance && npm run smoke:adapter-readiness && npm run smoke:reference-serious-saas && npm run smoke:reference-proof-apps && npm run smoke:golden-fixtures && npm run smoke:cli && npm run smoke:ai-fixtures && npm run smoke && npm run pack:check",
     "smoke:all": "npm run smoke:ci && npm run smoke:real-ai",
     "benchmark": "npm run build && node smoke/run-benchmark.mjs",
     "pack:check": "npm run build && node smoke/run-pack-check.mjs",
+    "release:check": "npm run typecheck && npm run build && npm run smoke:ci && npm run benchmark && node smoke/run-release-readiness.mjs",
     "typecheck": "tsc --noEmit",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "clean:artifacts": "node dist/cli.js clean"
@@ -66,7 +70,9 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.62.0",
-    "@types/node": "^22.0.0"
+    "@tailwindcss/cli": "^4.3.3",
+    "@types/node": "^22.0.0",
+    "tailwindcss": "^4.3.3"
   },
   "dependencies": {
     "ajv": "^8.20.0",

@@ -73,11 +73,15 @@ Host apps should not have to care about the moving parts. Developers should stil
    In simple terms: external engines must prove they route correctly, return the right result shape, save evidence, respect timeouts, and avoid obvious secret leaks before Brisk trusts them.
    They must accept only their own scenarios, reject unrelated scenarios, return stable `ScenarioResult` objects, respect runtime timeout, avoid obvious secret leakage, and emit valid artifact shapes.
 
-12. Schemathesis OpenAPI Fuzzing
+12. Extension Conformance
+   `runExtensionConformance` emits `brisk-aitesting.extension-conformance.v1`.
+   It checks custom discoverers, planners, validators, UI grounders, and AI providers before teams trust them.
+
+13. Schemathesis OpenAPI Fuzzing
    `SchemathesisOpenApiFuzzEngine` runs the real Schemathesis CLI for schema scenarios that explicitly ask for the Schemathesis adapter.
    It writes NDJSON, JUnit, HAR, log, and `brisk-aitesting.schemathesis-evidence.v1` artifacts.
 
-13. Adapter Readiness
+14. Adapter Readiness
    `adapters/manifest.json` uses `brisk-aitesting.adapter-manifest.v1` to declare adapters that are truly built.
    `npm run smoke:adapter-readiness` emits `brisk-aitesting.adapter-readiness.v1` and checks the adapter like a shipping checklist: source code, exports, docs, package inclusion, CI workflow, proof-app coverage, quality proof, evidence schema, and minimum coverage.
 ```
@@ -98,14 +102,18 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.clean-result.v1` | CLI | Machine-readable artifact cleanup summary |
 | `brisk-aitesting.benchmark.v1` | benchmark | Report for bad inputs, contract drift, schema mismatch, network policy, and CLI failure checks |
 | `brisk-aitesting.pack-check.v1` | release | npm package tarball verification report |
+| `brisk-aitesting.release-readiness.v1` | release | Release script, changelog, and workflow readiness report |
 | `brisk-aitesting.adapter-manifest.v1` | adapters | Declares adapters that are built, packaged, documented, and tested |
 | `brisk-aitesting.adapter-readiness.v1` | adapters | Machine check that built adapters meet readiness requirements |
 | `brisk-aitesting.engine-conformance.v1` | quality checks | Built-in engine behavior report |
 | `brisk-aitesting.plugin-conformance.v1` | quality checks | External engine plugin behavior report |
 | `brisk-aitesting.plugin-conformance-smoke.v1` | quality checks | Health-check proof that good plugins pass and unsafe plugins fail |
+| `brisk-aitesting.extension-conformance.v1` | quality checks | Custom non-engine extension behavior report |
+| `brisk-aitesting.extension-conformance-smoke.v1` | quality checks | Health-check proof that good extensions pass and unsafe extensions fail |
 | `brisk-aitesting.schemathesis-evidence.v1` | Schemathesis adapter | OpenAPI fuzz execution evidence |
 | `brisk-aitesting.schemathesis-smoke.v1` | Schemathesis adapter | Real adapter health-check report |
 | `brisk-aitesting.reference-serious-saas.v1` | proof app | Serious SaaS proof-app report |
+| `brisk-aitesting.reference-proof-apps.v1` | proof apps | API-only, Todo, and multi-tenant proof-app report |
 | `brisk-aitesting.golden-fixtures.v1` | expected outputs | Stable scenario/result baseline report |
 | `brisk-aitesting.junit-report.v1` | handover | JUnit XML report artifact |
 | `brisk-aitesting.html-report.v1` | handover | HTML report artifact |
@@ -184,8 +192,10 @@ npm run build
 npm run smoke:contracts
 npm run smoke:engine-conformance
 npm run smoke:plugin-conformance
+npm run smoke:extension-conformance
 npm run smoke:adapter-readiness
 npm run smoke:reference-serious-saas
+npm run smoke:reference-proof-apps
 npm run smoke:golden-fixtures
 npm run smoke:cli
 npm run smoke:ai-fixtures
@@ -218,8 +228,11 @@ Built:
 - Built-in replay engine for declared HTTP interaction checks.
 - Built-in engine quality checks.
 - External engine quality API and health-check gate for external `Engine` implementations.
+- Non-engine extension quality API and health-check gate for `Discoverer`, `Planner`, `PlanValidator`, `UiRouteGrounder`, and `AiPlannerProvider` implementations.
 - Optional Schemathesis OpenAPI deep API checker.
 - Serious SaaS proof app.
+- API-only, Todo, and multi-tenant proof apps.
+- Release readiness automation and versioned changelog.
 - Golden expected-output baseline for serious SaaS scenario/result stability.
 
 Still missing:
@@ -228,4 +241,3 @@ Still missing:
 - Public npm publishing automation.
 - Metrics/analytics module.
 - Source-route discovery for Python, .NET, Go, Java, generated routes, and complex dynamic route composition.
-- Quality-check suites for external `Discoverer`, `Planner`, `PlanValidator`, `UiRouteGrounder`, and `AiPlannerProvider` implementations.

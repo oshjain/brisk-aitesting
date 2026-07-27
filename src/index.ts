@@ -53,6 +53,7 @@ export {
 
 export {
   runEnginePluginConformance,
+  runExtensionConformance,
 } from './conformance.js';
 
 export {
@@ -121,6 +122,9 @@ export type {
   EnginePluginConformanceCheck,
   EnginePluginConformanceEngineReport,
   EnginePluginConformanceReport,
+  ExtensionConformanceCase,
+  ExtensionConformanceExtensionReport,
+  ExtensionConformanceReport,
 } from './conformance.js';
 
 export type {

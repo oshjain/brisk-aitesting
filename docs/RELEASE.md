@@ -7,10 +7,18 @@ This page describes the release checklist.
 Run:
 
 ```bash
+npm run release:check
+```
+
+That command runs the deterministic release path:
+
+```bash
 npm run typecheck
 npm run build
 npm run smoke:ci
 npm run benchmark
+npm run pack:check
+node smoke/run-release-readiness.mjs
 ```
 
 Optional real environment checks:
@@ -27,6 +35,10 @@ npm run pack:check
 ```
 
 This confirms the npm package contains the expected files and does not ship generated local artifacts.
+
+## Changelog
+
+Every release must have a matching section in `CHANGELOG.md`.
 
 ## Version
 
@@ -57,4 +69,3 @@ Then create a GitHub release with:
 - user impact
 - migration notes if needed
 - verification commands that passed
-
