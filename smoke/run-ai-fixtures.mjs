@@ -8,6 +8,7 @@ import {
   createBriskAiTesting,
   defineConfig,
   parseAiPlanForTesting,
+  validatePlanJsonContract,
 } from '../dist/index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -183,6 +184,96 @@ try {
     }
   }
 
+  const contractFixtures = [
+    {
+      name: 'scenario-level headers are rejected',
+      plan: {
+        ...validPlanSkeleton(context),
+        scenarios: [
+          {
+            ...validApiScenario(),
+            headers: { authorization: 'Bearer token' },
+          },
+        ],
+      },
+      code: 'PLAN_CONTRACT_UNRECOGNIZED_KEY',
+      path: 'plan.scenarios.0.headers',
+    },
+    {
+      name: 'unsupported category field is rejected',
+      plan: {
+        ...validPlanSkeleton(context),
+        scenarios: [
+          {
+            ...validApiScenario(),
+            category: 'integration',
+          },
+        ],
+      },
+      code: 'PLAN_CONTRACT_UNRECOGNIZED_KEY',
+      path: 'plan.scenarios.0.category',
+    },
+    {
+      name: 'unsupported type value is rejected',
+      plan: {
+        ...validPlanSkeleton(context),
+        scenarios: [
+          {
+            ...validApiScenario(),
+            type: 'integration',
+          },
+        ],
+      },
+      code: 'PLAN_CONTRACT_INVALID_VALUE',
+      path: 'plan.scenarios.0.type',
+    },
+    {
+      name: 'missing evidence is rejected',
+      plan: {
+        ...validPlanSkeleton(context),
+        scenarios: [
+          {
+            id: 'missing_evidence',
+            name: 'Missing evidence',
+            type: 'api',
+            objective: 'must be rejected',
+            target: { method: 'GET', path: '/api/health' },
+            assertions: ['status is ok'],
+          },
+        ],
+      },
+      code: 'PLAN_CONTRACT_REQUIRED',
+      path: 'plan.scenarios.0.evidenceRequired',
+    },
+    {
+      name: 'invalid ui action value contract is rejected',
+      plan: {
+        ...validPlanSkeleton(context),
+        scenarios: [
+          {
+            id: 'bad_ui_action',
+            name: 'Bad UI action',
+            type: 'ui',
+            objective: 'must be rejected',
+            target: { route: '/' },
+            assertions: ['page visible'],
+            evidenceRequired: ['ui'],
+            uiActions: [{ action: 'fill', evidenceId: 'ui_el_001' }],
+          },
+        ],
+      },
+      code: 'PLAN_CONTRACT_REQUIRED',
+      path: 'plan.scenarios.0.uiActions.0.value',
+    },
+  ];
+
+  for (const fixture of contractFixtures) {
+    const issues = validatePlanJsonContract(fixture.plan);
+    if (!issues.some((issue) => issue.code === fixture.code && issue.path === fixture.path)) {
+      errors.push(`${fixture.name}: expected ${fixture.code} at ${fixture.path}, got ${JSON.stringify(issues)}`);
+    }
+  }
+
   const duplicateRepairProvider = {
     name: 'duplicate-repair-provider',
     calls: 0,
@@ -271,6 +362,7 @@ try {
     console.log(JSON.stringify({
       status: 'passed',
       fixtures: fixtures.length,
+      contractFixtures: contractFixtures.length,
       repairedRun: repairedResult.summary,
       repairEvents: repairEvents.length,
     }, null, 2));
@@ -283,4 +375,30 @@ function assertHasType(plan, type) {
   const scenario = plan.scenarios.find((candidate) => candidate.type === type);
   if (scenario === undefined) throw new Error(`expected ${type} scenario`);
   return scenario;
+}
+
+function validPlanSkeleton(context) {
+  return {
+    schemaVersion: 'brisk-aitesting.plan.v1',
+    runId: context.runId,
+    goal: context.input.goal,
+    mode: 'automatic',
+    scenarios: [],
+    discovery: context.discovery,
+    warnings: [],
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function validApiScenario() {
+  return {
+    id: 'valid_api',
+    name: 'Valid API',
+    type: 'api',
+    objective: 'health responds',
+    target: { method: 'GET', path: '/api/health' },
+    expect: { status: 200 },
+    assertions: ['status is ok'],
+    evidenceRequired: ['api'],
+  };
 }

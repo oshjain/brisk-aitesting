@@ -7,7 +7,8 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 ## Built
 
 - Provider-agnostic AI planner adapter.
-- Validation and repair loop for AI-generated plans.
+- AJV-backed public plan contract gate: `brisk-aitesting.plan.v1`.
+- Validation and repair loop for AI-generated plans after the public contract gate.
 - CLI run workflow with stable exit codes and `brisk-aitesting.cli-result.v1`.
 - SDK entry point with stable result and handover objects.
 - OpenAPI JSON/YAML parsing.

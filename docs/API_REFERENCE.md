@@ -44,6 +44,21 @@ Important fields:
 | `diagnosis` | Failure reasons and next checks |
 | `handover` | How host apps can store or consume the result |
 
+## Plan Contract Gate
+
+Every executable plan must match `brisk-aitesting.plan.v1`.
+
+```ts
+import { planJsonSchema, validatePlanJsonContract } from 'brisk-aitesting';
+
+const issues = validatePlanJsonContract(candidatePlan);
+if (issues.length > 0) {
+  // Show these issues to the user or send them back to the planner for repair.
+}
+```
+
+Use `planJsonSchema` when a host app wants to validate plans with its own JSON Schema tooling. Use `validatePlanJsonContract` when it wants the same issue shape Brisk uses internally.
+
 ## Events
 
 ```ts
@@ -89,4 +104,3 @@ const engine = {
 ```
 
 Before trusting a custom engine, run it through `runEnginePluginConformance`.
-

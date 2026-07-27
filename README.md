@@ -198,7 +198,7 @@ This section keeps the promise honest.
 | API testing | Built | HTTP checks, status checks, body checks, headers, and schema-backed response checks. |
 | OpenAPI testing | Built | JSON/YAML contract parsing, route discovery, positive and negative API scenarios, response schema validation. |
 | Contract drift report | Built | Compares OpenAPI operations with repo/runtime API routes discovered from supported JavaScript/TypeScript patterns and reports matched, undocumented, and missing routes. |
-| AI planning | Built | AI returns JSON plans. Plans are normalized, validated, and repaired before execution. |
+| AI planning | Built | AI returns JSON plans. Plans pass the public AJV-backed contract gate, then Brisk validates and repairs them before execution. |
 | Result handover | Built | One versioned JSON result for CI, dashboards, databases, and internal tools. |
 | Local SDK/CLI | Built | Use it inside your app or from the command line. No hosted platform required. |
 | Schemathesis OpenAPI deep API checker | Built | Optional Python/Schemathesis engine that sends many real OpenAPI request variations. |
@@ -221,6 +221,7 @@ These are not future promises anymore:
 |:----------|:---------------|
 | Serious SaaS proof app | We test against a real product shape, not only tiny examples. |
 | Golden expected outputs | We keep known-good plans and results so future changes cannot quietly weaken behavior. |
+| Public plan contract gate | Every plan must pass the exported `brisk-aitesting.plan.v1` JSON Schema before Brisk-specific execution checks run. |
 | External engine quality check | A custom engine must prove it behaves safely before teams trust it. |
 | Schemathesis OpenAPI deep API checker | Brisk can run a real third-party OpenAPI testing tool and fold the results into the same evidence format. |
 | Adapter readiness gate | If we call an adapter "built", automation checks code, docs, packaging, CI wiring, proof app coverage, and result evidence. |

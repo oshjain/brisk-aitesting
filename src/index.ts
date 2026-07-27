@@ -29,6 +29,11 @@ export {
 } from './validation.js';
 
 export {
+  planJsonSchema,
+  validatePlanJsonContract,
+} from './plan-contract.js';
+
+export {
   loadOpenApiSummary,
   openApiOperationsToDiscoveryRoutes,
   summarizeOpenApiDocument,

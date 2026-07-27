@@ -14,7 +14,7 @@ Host apps should not have to care about the moving parts. Developers should stil
 - AI providers do not write executable Playwright scripts for us to run blindly.
 - UI selectors are not accepted directly from AI.
 - UI actions execute only through `ui_el_*` evidence IDs from `brisk-aitesting.ui-grounding.v1`.
-- Engines run only after the plan validates.
+- Engines run only after the plan passes the public JSON Schema gate and Brisk-specific execution checks.
 - Broken plans get a clear validation report and, when possible, a repair attempt.
 - Every real run must produce evidence artifacts.
 - Product configuration uses `BRISK_AITESTING_*` as the primary namespace. Provider-specific env vars are aliases only.
@@ -36,7 +36,7 @@ Host apps should not have to care about the moving parts. Developers should stil
     BuiltinPlanner can generate API scenarios from OpenAPI operations.
 
 4. Validation And Repair
-   BuiltinPlanValidator checks structural executability.
+   BuiltinPlanValidator first applies the public `brisk-aitesting.plan.v1` JSON Schema with AJV, then checks Brisk-specific executability.
    AiPlanner.repair can fix invalid plans using validator issues.
 
 5. Route Grounding Feedback
@@ -182,6 +182,7 @@ Built:
 
 - Provider-agnostic AI planning adapter.
 - Plan validation and repair.
+- Public AJV-backed plan contract gate through `planJsonSchema` and `validatePlanJsonContract`.
 - Route grounding feedback loop.
 - Grounded UI action execution.
 - OpenAPI JSON/YAML route discovery, schema extraction, generated API scenarios, and response schema validation.

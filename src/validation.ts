@@ -1,4 +1,5 @@
 import type { PlanValidator, PlanValidatorContext, ValidationIssue, ValidationResult } from './types.js';
+import { validatePlanJsonContract } from './plan-contract.js';
 
 const ENGINE_TYPES = new Set(['ui', 'api', 'contract', 'schema', 'replay', 'custom']);
 const PLAN_KEYS = new Set(['schemaVersion', 'runId', 'goal', 'mode', 'scenarios', 'discovery', 'warnings', 'createdAt']);
@@ -13,7 +14,7 @@ export class BuiltinPlanValidator implements PlanValidator {
   readonly name = 'builtin-plan-validator';
 
   validate(context: PlanValidatorContext): ValidationResult {
-    const issues: ValidationIssue[] = [];
+    const issues: ValidationIssue[] = [...validatePlanJsonContract(context.plan)];
     const plan = context.plan;
 
     validateObjectKeys('plan', plan, PLAN_KEYS, issues);

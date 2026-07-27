@@ -38,9 +38,11 @@ const expectedRuntimeExports = [
   'openApiOperationsToDiscoveryRoutes',
   'normalizeConfig',
   'parseAiPlanForTesting',
+  'planJsonSchema',
   'runEnginePluginConformance',
   'summarizeOpenApiDocument',
   'validateJsonSchema',
+  'validatePlanJsonContract',
 ];
 
 const expectedTypeExports = [
