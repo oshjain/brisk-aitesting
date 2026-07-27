@@ -197,13 +197,13 @@ This section keeps the promise honest.
 | UI testing | Built | Browser tests through Playwright with grounded page evidence. |
 | API testing | Built | HTTP checks, status checks, body checks, headers, and schema-backed response checks. |
 | OpenAPI testing | Built | JSON/YAML contract parsing, route discovery, positive and negative API scenarios, response schema validation. |
+| Built-in schema fuzzing | Built | Fast malformed-request checks from OpenAPI request schemas, with evidence in the same result contract. |
 | Contract drift report | Built | Compares OpenAPI operations with repo/runtime API routes discovered from supported JavaScript/TypeScript patterns and reports matched, undocumented, and missing routes. |
 | AI planning | Built | AI returns JSON plans. Plans pass the public AJV-backed contract gate, then Brisk validates and repairs them before execution. |
 | Result handover | Built | One versioned JSON result for CI, dashboards, databases, and internal tools. |
 | Local SDK/CLI | Built | Use it inside your app or from the command line. No hosted platform required. |
 | Schemathesis OpenAPI deep API checker | Built | Optional Python/Schemathesis engine that sends many real OpenAPI request variations. |
-| JS-native schema fuzz engine | Not built-in yet | Planned: lighter built-in negative API testing from schemas, without Python. |
-| Replay engine | Not built-in yet | Planned: rerun captured traffic to catch regressions quickly. |
+| Replay engine | Built | Reruns declared HTTP interactions to catch regressions quickly, with evidence in the same result contract. |
 | AsyncAPI/Pact/message testing | Not built-in yet | Planned: event and message contract testing. |
 | Specmatic/Keploy adapters | Not built-in yet | Planned as optional adapters, not core promises today. |
 | UI healing | Not built-in yet | Planned: if a button or field moves, retry with fresh page evidence and show exactly what changed. |
@@ -224,6 +224,8 @@ These are not future promises anymore:
 | Public plan contract gate | Every plan must pass the exported `brisk-aitesting.plan.v1` JSON Schema before Brisk-specific execution checks run. |
 | External engine quality check | A custom engine must prove it behaves safely before teams trust it. |
 | Schemathesis OpenAPI deep API checker | Brisk can run a real third-party OpenAPI testing tool and fold the results into the same evidence format. |
+| Built-in schema fuzzing | Brisk can run fast malformed-request checks from OpenAPI request schemas without Python. |
+| Built-in replay engine | Brisk can rerun declared HTTP interactions and show exactly what changed. |
 | Adapter readiness gate | If we call an adapter "built", automation checks code, docs, packaging, CI wiring, proof app coverage, and result evidence. |
 
 ### Still Expanding
@@ -233,8 +235,6 @@ These are the next product areas, listed separately so nobody confuses them with
 | Still expanding | User impact |
 |:----------------|:------------|
 | More proof apps | More confidence across common product shapes like e-commerce, API-only, and event-driven systems. |
-| JS-native schema fuzz engine | Faster schema-based negative API checks without needing Python. |
-| Replay engine | Faster regression checks from traffic the app has already seen. |
 | Message adapters | Coverage beyond browser screens and HTTP APIs. |
 | UI healing | Fewer fragile browser failures, with a clear before/after explanation. |
 | Non-engine extension checks | Safer custom discovery, planning, validation, UI grounding, and AI provider extensions. |
@@ -458,10 +458,6 @@ That is already a business rule expressed as an executable scenario. A formal ru
   <tr>
     <td>🗄️</td>
     <td>It does <strong>not</strong> provide built-in long-term test <strong>history storage</strong> yet</td>
-  </tr>
-  <tr>
-    <td>📄</td>
-    <td>It does <strong>not</strong> publish <strong>JUnit or HTML reports</strong> yet — although the result contract is ready for those outputs</td>
   </tr>
   <tr>
     <td>📱</td>
@@ -1010,7 +1006,7 @@ The AI planner returns JSON shaped as `brisk-aitesting.plan.v1`. The engine then
 
 <br />
 
-> 🧩 **Extensible.** Custom engines can be plugged in for schema fuzzing, replay, database, messaging, mobile, or enterprise-specific systems. Those adapters are extension points today, not built-in engines yet.
+> 🧩 **Extensible.** Built-in engines cover UI, API, contract, schema fuzzing, and declared HTTP replay. Custom engines can still be plugged in for database, messaging, mobile, or enterprise-specific systems.
 
 ### 🏭 Controlled Factory Line
 
@@ -1107,6 +1103,7 @@ This may be the most valuable part of the product for enterprise teams. The resu
 | `brisk-aitesting.result.v1` | 📦 Result |
 | `brisk-aitesting.handover.v1` | 🤝 Handover |
 | `brisk-aitesting.cli-result.v1` | ⌨️ CLI Result |
+| `brisk-aitesting.clean-result.v1` | Cleanup Result |
 | `brisk-aitesting.benchmark.v1` | 📊 Benchmark |
 | `brisk-aitesting.pack-check.v1` | 📦 Pack Check |
 | `brisk-aitesting.adapter-manifest.v1` | Adapter Manifest |
@@ -1118,6 +1115,10 @@ This may be the most valuable part of the product for enterprise teams. The resu
 | `brisk-aitesting.schemathesis-smoke.v1` | Schemathesis Health Check |
 | `brisk-aitesting.reference-serious-saas.v1` | Serious SaaS Proof App |
 | `brisk-aitesting.golden-fixtures.v1` | Golden Expected Outputs |
+| `brisk-aitesting.junit-report.v1` | JUnit Report |
+| `brisk-aitesting.html-report.v1` | HTML Report |
+| `brisk-aitesting.schema-fuzz-evidence.v1` | Schema Fuzz Evidence |
+| `brisk-aitesting.replay-evidence.v1` | Replay Evidence |
 | `brisk-aitesting.api-evidence.v1` | 📡 API Evidence |
 | `brisk-aitesting.openapi-summary.v1` | 📜 OpenAPI Summary |
 | `brisk-aitesting.playwright-evidence.v1` | 🎭 Playwright Evidence |
@@ -1269,6 +1270,24 @@ Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads 
     <td>Built-in engines return stable result and artifact shapes</td>
   </tr>
   <tr>
+    <td>📄</td>
+    <td>JUnit and HTML reports</td>
+    <td>🧹</td>
+    <td>Cleanup command with dry-run and JSON output</td>
+  </tr>
+  <tr>
+    <td>🧬</td>
+    <td>Built-in schema fuzz engine</td>
+    <td>📜</td>
+    <td>Fast OpenAPI malformed-request checks</td>
+  </tr>
+  <tr>
+    <td>🔁</td>
+    <td>Built-in replay engine</td>
+    <td>📜</td>
+    <td>Declared HTTP interaction replay with evidence</td>
+  </tr>
+  <tr>
     <td>🤖</td>
     <td>Real AI provider check</td>
     <td>🤖</td>
@@ -1288,22 +1307,16 @@ Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads 
     <td>Multi-provider benchmark scoring</td>
   </tr>
   <tr>
-    <td>📄</td>
-    <td>JUnit / HTML report generation</td>
     <td>📊</td>
     <td>Built-in analytics module</td>
-  </tr>
-  <tr>
     <td>📚</td>
     <td>More framework-specific examples</td>
-    <td>🧪</td>
-    <td>More proof apps and non-engine extension quality checks</td>
   </tr>
   <tr>
-    <td>🧬</td>
-    <td>Built-in schema fuzz engine</td>
+    <td>🧪</td>
+    <td>More proof apps and non-engine extension quality checks</td>
     <td>🔁</td>
-    <td>Built-in replay engine adapter</td>
+    <td>Keploy-compatible replay importer/exporter</td>
   </tr>
   <tr>
     <td>📨</td>

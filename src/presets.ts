@@ -8,4 +8,6 @@ export {
   BuiltinContractEngine,
   BuiltinPlaywrightEngine,
   BuiltinPlaywrightRouteGrounder,
+  BuiltinReplayEngine,
+  BuiltinSchemaFuzzEngine,
 } from './engines.js';

@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { createBriskAiTesting } from './orchestrator.js';
 import { loadConfig } from './config.js';
 import { loadEnvFiles } from './env.js';
+import { removePath } from './engines/shared.js';
 import type { BriskAiTestingResult, EngineType } from './types.js';
 
 class UsageError extends Error {}
@@ -101,7 +102,10 @@ function help(): void {
     '  --quiet                      suppress progress and human summary',
     '',
     'Options for clean:',
+    '  --artifacts-dir <path>       remove this artifact directory instead of .brisk-aitesting',
     '  --include-playwright-output  also remove test-results and playwright-report',
+    '  --dry-run                    show what would be removed without deleting',
+    '  --json                       print machine-readable cleanup summary',
     '',
     'Example:',
     '  brisk-aitesting run --goal "Test login, billing, API contracts, and permissions" --scenarios 15',
@@ -109,12 +113,9 @@ function help(): void {
 }
 
 async function clean(args: readonly string[]): Promise<void> {
-  const includePlaywrightOutput = args.includes('--include-playwright-output');
-  const unknown = args.find((arg) => arg.startsWith('--') && arg !== '--include-playwright-output');
-  if (unknown !== undefined) throw new UsageError(`Unknown clean option ${unknown}.`);
-
+  const options = parseCleanArgs(args);
   const targets = [
-    '.brisk-aitesting',
+    options.artifactsDir,
     '.brisk-aitesting-benchmark',
     '.brisk-aitesting-cli-smoke',
     '.brisk-aitesting-engine-conformance',
@@ -125,13 +126,67 @@ async function clean(args: readonly string[]): Promise<void> {
     '.brisk-aitesting-reference-serious-saas',
     '.brisk-aitesting-smoke',
     'brisk-aitesting-playwright-work',
-    ...(includePlaywrightOutput ? ['test-results', 'playwright-report'] : []),
+    ...(options.includePlaywrightOutput ? ['test-results', 'playwright-report'] : []),
   ];
+  const absoluteTargets = [...new Set(targets.map((target) => resolve(process.cwd(), target)))];
+  const existedBefore = new Map(absoluteTargets.map((target) => [target, existsSync(target)]));
+  const existingTargets = absoluteTargets.filter((target) => existedBefore.get(target) === true);
 
-  for (const target of targets) {
-    await rm(resolve(process.cwd(), target), { recursive: true, force: true });
+  if (!options.dryRun) {
+    for (const target of absoluteTargets) {
+      await removePath(target);
+    }
   }
-  console.log(`Removed ${targets.length} local artifact locations.`);
+
+  const summary = {
+    schemaVersion: 'brisk-aitesting.clean-result.v1',
+    dryRun: options.dryRun,
+    removed: options.dryRun ? 0 : existingTargets.length,
+    targets: absoluteTargets.map((target) => ({
+      path: target,
+      existed: existedBefore.get(target) === true,
+      action: options.dryRun ? 'would-remove' : 'removed',
+    })),
+  };
+  if (options.json) {
+    console.log(JSON.stringify(summary, null, 2));
+  } else {
+    const verb = options.dryRun ? 'Would remove' : 'Removed';
+    console.log(`${verb} ${options.dryRun ? existingTargets.length : summary.removed} existing artifact locations.`);
+  }
+}
+
+function parseCleanArgs(args: readonly string[]): {
+  readonly artifactsDir: string;
+  readonly includePlaywrightOutput: boolean;
+  readonly dryRun: boolean;
+  readonly json: boolean;
+} {
+  let artifactsDir = '.brisk-aitesting';
+  let includePlaywrightOutput = false;
+  let dryRun = false;
+  let json = false;
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--include-playwright-output') {
+      includePlaywrightOutput = true;
+    } else if (arg === '--dry-run') {
+      dryRun = true;
+    } else if (arg === '--json') {
+      json = true;
+    } else if (arg === '--artifacts-dir') {
+      artifactsDir = readOptionValue(args, index, arg);
+      index += 1;
+    } else if (arg === '--help' || arg === '-h') {
+      help();
+      process.exit(0);
+    } else if (arg?.startsWith('--') === true) {
+      throw new UsageError(`Unknown clean option ${arg}.`);
+    } else if (arg !== undefined) {
+      throw new UsageError(`Unexpected clean argument ${arg}.`);
+    }
+  }
+  return { artifactsDir, includePlaywrightOutput, dryRun, json };
 }
 
 function parseRunArgs(args: readonly string[]): {

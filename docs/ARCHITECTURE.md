@@ -46,6 +46,8 @@ Host apps should not have to care about the moving parts. Developers should stil
 6. Execution
     BuiltinApiEngine executes API scenarios.
     BuiltinApiEngine validates JSON responses against OpenAPI response schemas when available.
+    BuiltinSchemaFuzzEngine sends lightweight malformed OpenAPI requests and records rejection evidence.
+    BuiltinReplayEngine reruns declared HTTP interactions and records response evidence.
     BuiltinPlaywrightEngine executes UI scenarios and grounded UI actions.
     BuiltinContractEngine parses OpenAPI JSON/YAML contracts and emits operation summaries.
 
@@ -55,6 +57,7 @@ Host apps should not have to care about the moving parts. Developers should stil
 
 8. CLI Boundary
    `brisk-aitesting run --json` returns `brisk-aitesting.cli-result.v1`.
+   `brisk-aitesting clean --json` returns `brisk-aitesting.clean-result.v1`.
    Exit codes are stable: 0 passed, 1 completed non-passed, 2 setup/usage error.
 
 9. Benchmark
@@ -92,6 +95,7 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.result.v1` | handover | Full run result |
 | `brisk-aitesting.handover.v1` | handover | Host consumption contract |
 | `brisk-aitesting.cli-result.v1` | CLI | Machine-readable CLI run summary |
+| `brisk-aitesting.clean-result.v1` | CLI | Machine-readable artifact cleanup summary |
 | `brisk-aitesting.benchmark.v1` | benchmark | Report for bad inputs, contract drift, schema mismatch, network policy, and CLI failure checks |
 | `brisk-aitesting.pack-check.v1` | release | npm package tarball verification report |
 | `brisk-aitesting.adapter-manifest.v1` | adapters | Declares adapters that are built, packaged, documented, and tested |
@@ -103,6 +107,10 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.schemathesis-smoke.v1` | Schemathesis adapter | Real adapter health-check report |
 | `brisk-aitesting.reference-serious-saas.v1` | proof app | Serious SaaS proof-app report |
 | `brisk-aitesting.golden-fixtures.v1` | expected outputs | Stable scenario/result baseline report |
+| `brisk-aitesting.junit-report.v1` | handover | JUnit XML report artifact |
+| `brisk-aitesting.html-report.v1` | handover | HTML report artifact |
+| `brisk-aitesting.schema-fuzz-evidence.v1` | schema engine | Lightweight OpenAPI malformed-request evidence |
+| `brisk-aitesting.replay-evidence.v1` | replay engine | Declared HTTP interaction replay evidence |
 | `brisk-aitesting.api-evidence.v1` | API engine | Request/response evidence |
 | `brisk-aitesting.openapi-summary.v1` | contract engine/discoverer | OpenAPI JSON/YAML operation summary |
 | `brisk-aitesting.playwright-evidence.v1` | UI engine | UI execution manifest |
@@ -134,6 +142,8 @@ Built-in engine code is split by responsibility:
 | `src/engines/contract.ts` | OpenAPI/contract parsing checks |
 | `src/engines/playwright.ts` | Browser execution and artifact collection |
 | `src/engines/playwright-grounder.ts` | Pre-execution UI evidence capture |
+| `src/engines/schema-fuzz.ts` | Lightweight malformed-request checks from OpenAPI request schemas |
+| `src/engines/replay.ts` | Declared HTTP interaction replay checks |
 | `src/engines/shared.ts` | Shared result, artifact, Playwright, API, redaction, and assertion helpers |
 
 `src/engines/builtin.ts` remains a compatibility export file so existing imports keep working.
@@ -200,9 +210,12 @@ Built:
 - Route grounding feedback loop.
 - Grounded UI action execution.
 - OpenAPI JSON/YAML route discovery, schema extraction, generated API scenarios, and response schema validation.
+- Built-in lightweight schema fuzz engine for OpenAPI malformed-request checks.
 - JavaScript/TypeScript API route discovery for direct routes, nested router prefixes, chained route declarations, Nest-style decorators, and OpenAPI parameter matching.
 - Evidence-rich API/UI artifacts.
 - Stable result handover for host apps.
+- JUnit XML and HTML report artifacts for CI and human review.
+- Built-in replay engine for declared HTTP interaction checks.
 - Built-in engine quality checks.
 - External engine quality API and health-check gate for external `Engine` implementations.
 - Optional Schemathesis OpenAPI deep API checker.
@@ -212,7 +225,6 @@ Built:
 Still missing:
 
 - Benchmark-level multi-provider scoring.
-- JUnit/HTML CI report generation.
 - Public npm publishing automation.
 - Metrics/analytics module.
 - Source-route discovery for Python, .NET, Go, Java, generated routes, and complex dynamic route composition.

@@ -6,6 +6,8 @@ import {
   BuiltinApiEngine,
   BuiltinContractEngine,
   BuiltinPlaywrightEngine,
+  BuiltinReplayEngine,
+  BuiltinSchemaFuzzEngine,
   defineConfig,
   normalizeConfig,
 } from '../dist/index.js';
@@ -24,6 +26,23 @@ const server = createServer(async (request, response) => {
   if (request.url === '/api/health') {
     response.writeHead(200, { 'content-type': 'application/json' });
     response.end(JSON.stringify({ ok: true, service: 'engine-conformance' }));
+    return;
+  }
+  if (request.url === '/api/widgets' && request.method === 'POST') {
+    let body = '';
+    request.on('data', (chunk) => {
+      body += chunk.toString();
+    });
+    request.on('end', () => {
+      const parsed = parseJsonOrNull(body);
+      if (!parsed || typeof parsed.name !== 'string') {
+        response.writeHead(400, { 'content-type': 'application/json' });
+        response.end(JSON.stringify({ error: 'invalid_widget' }));
+        return;
+      }
+      response.writeHead(201, { 'content-type': 'application/json' });
+      response.end(JSON.stringify({ ok: true }));
+    });
     return;
   }
 
@@ -130,6 +149,28 @@ try {
       assertions: ['contract parses'],
       evidenceRequired: ['schema'],
     },
+    schema: {
+      id: 'conformance_schema_fuzz',
+      name: 'Schema fuzz engine conformance OpenAPI negative check',
+      type: 'schema',
+      objective: 'Schema fuzz engine sends malformed OpenAPI requests and receives safe rejection.',
+      target: { schema: openApiPath },
+      assertions: ['malformed requests are rejected'],
+      evidenceRequired: ['schema', 'api'],
+    },
+    replay: {
+      id: 'conformance_replay_health',
+      name: 'Replay engine conformance health check',
+      type: 'replay',
+      objective: 'Replay engine reruns declared HTTP interactions.',
+      assertions: ['recorded interaction replays'],
+      evidenceRequired: ['api'],
+      metadata: {
+        replay: {
+          requests: [{ method: 'GET', path: '/api/health', expectStatus: 200 }],
+        },
+      },
+    },
   };
 
   const plan = {
@@ -146,6 +187,8 @@ try {
   const engineCases = [
     { engine: new BuiltinApiEngine(), validScenario: scenarios.api, unrelatedScenario: scenarios.ui },
     { engine: new BuiltinContractEngine(), validScenario: scenarios.contract, unrelatedScenario: scenarios.api },
+    { engine: new BuiltinSchemaFuzzEngine(), validScenario: scenarios.schema, unrelatedScenario: scenarios.api },
+    { engine: new BuiltinReplayEngine(), validScenario: scenarios.replay, unrelatedScenario: scenarios.api },
     { engine: new BuiltinPlaywrightEngine(), validScenario: scenarios.ui, unrelatedScenario: scenarios.api },
   ];
 
@@ -295,6 +338,52 @@ function openApiDocument() {
           },
         },
       },
+      '/api/widgets': {
+        post: {
+          operationId: 'createWidget',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['name'],
+                  properties: {
+                    name: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            201: {
+              description: 'Created',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['ok'],
+                    properties: {
+                      ok: { type: 'boolean' },
+                    },
+                  },
+                },
+              },
+            },
+            400: {
+              description: 'Invalid request',
+            },
+          },
+        },
+      },
     },
   };
+}
+
+function parseJsonOrNull(value) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
 }

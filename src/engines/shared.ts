@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile, readdir, rm } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { loadOpenApiSummary } from '../openapi.js';
 import { validateJsonSchema } from '../schema.js';
@@ -325,6 +325,10 @@ export async function listFiles(root: string): Promise<readonly string[]> {
     }
   }
   return result;
+}
+
+export async function removePath(path: string): Promise<void> {
+  await rm(path, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
 }
 
 export interface PlaywrightReportSummary {

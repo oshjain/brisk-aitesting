@@ -88,3 +88,15 @@ To also remove Playwright's standard output folders:
 ```bash
 npx brisk-aitesting clean --include-playwright-output
 ```
+
+Preview cleanup without deleting anything:
+
+```bash
+npx brisk-aitesting clean --dry-run
+```
+
+Use JSON output in CI or scripts:
+
+```bash
+npx brisk-aitesting clean --artifacts-dir .brisk-aitesting --dry-run --json
+```

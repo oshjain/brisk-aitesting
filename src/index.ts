@@ -64,6 +64,8 @@ export {
   BuiltinContractEngine,
   BuiltinPlaywrightEngine,
   BuiltinPlaywrightRouteGrounder,
+  BuiltinReplayEngine,
+  BuiltinSchemaFuzzEngine,
   BuiltinPlanner,
 } from './presets.js';
 

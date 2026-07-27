@@ -10,8 +10,12 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - AJV-backed public plan contract gate: `brisk-aitesting.plan.v1`.
 - Validation and repair loop for AI-generated plans after the public contract gate.
 - CLI run workflow with stable exit codes and `brisk-aitesting.cli-result.v1`.
+- Cleanup workflow with dry-run/json output: `brisk-aitesting.clean-result.v1`.
 - SDK entry point with stable result and handover objects.
+- JUnit and HTML report artifacts for every run: `brisk-aitesting.junit-report.v1` and `brisk-aitesting.html-report.v1`.
 - OpenAPI JSON/YAML parsing.
+- Built-in lightweight OpenAPI schema fuzz engine: `brisk-aitesting.schema-fuzz-evidence.v1`.
+- Built-in replay engine for declared HTTP interactions: `brisk-aitesting.replay-evidence.v1`.
 - OpenAPI route discovery, schema extraction, generated API scenarios, and response schema validation.
 - Implementation-vs-OpenAPI drift report: `brisk-aitesting.contract-drift.v1`.
 - Playwright UI execution with grounded locator evidence.
@@ -38,7 +42,7 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - Contract drift detection compares OpenAPI operations with repo/runtime API routes discovered from supported JavaScript/TypeScript patterns. It now covers direct Express-style routes, nested router prefixes, `router.route(...).get(...)` chains, Nest-style controller/method decorators, and common `:id` versus `{id}` parameter route shapes. Coverage still needs expansion for dynamic route composition, generated routes, and non-JS/TS backend source discovery.
 - Analytics exist as structured summaries and benchmark reports, but richer trend analytics are future work.
 - Business-intent scenarios can be expressed in goals/objectives/assertions, but reusable rule IDs, rule coverage, and contradiction checks are future work.
-- Scenario routing already understands `schema`, `replay`, and `custom` types. Schemathesis covers optional deep OpenAPI checking now; JS-native schema fuzzing and replay still need real built-in adapters.
+- Scenario routing already understands `schema`, `replay`, and `custom` types. Schemathesis covers optional deep OpenAPI checking now. Built-in replay covers declared HTTP interactions.
 
 ## Not Built Yet
 
@@ -47,8 +51,6 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - AI-generated selectors are not trusted.
 - Real provider quality is not compared across multiple AI models yet.
 - Built-in Specmatic, Keploy, AsyncAPI, Pact, or message-contract adapters.
-- JS-native schema fuzz engine.
-- Built-in replay engine.
 - Full proof app collection beyond serious-saas.
 - Quality checks for non-engine extension points: discoverers, planners, validators, UI grounders, and AI providers.
 - Formal UI selector healing stage with before/after evidence diffing.
@@ -59,9 +61,7 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - Add more golden expected outputs for stable plan/result comparison.
 - Add source-route discovery adapters for Python, .NET, Go, Java, and generated-route systems.
 - Extend quality checks beyond engines to discoverers, planners, validators, UI grounders, and AI providers.
-- Add JS-native schema fuzz engine for lightweight OpenAPI/JSON Schema negative coverage.
-- Add a replay adapter shape and then a Keploy-compatible implementation.
+- Add a Keploy-compatible replay importer/exporter around the built-in replay engine.
 - Add AsyncAPI/Pact/message-contract adapter support.
-- Add JUnit/HTML reporter support.
 - Add multi-provider benchmark scoring.
 - Add release notes and npm release automation.

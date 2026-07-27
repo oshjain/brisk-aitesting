@@ -2,8 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { AiPlanner } from './ai-planner.js';
 import { normalizeConfig, type UserConfig } from './config.js';
 import { BuiltinDiscoverer } from './discovery.js';
-import { BuiltinApiEngine, BuiltinContractEngine, BuiltinPlaywrightEngine, BuiltinPlaywrightRouteGrounder } from './engines.js';
-import { buildResult, persistResult } from './handover.js';
+import { BuiltinApiEngine, BuiltinContractEngine, BuiltinPlaywrightEngine, BuiltinPlaywrightRouteGrounder, BuiltinReplayEngine, BuiltinSchemaFuzzEngine } from './engines.js';
+import { buildResult, persistCiReports, persistResult } from './handover.js';
 import { BuiltinPlanner } from './planner.js';
 import { BuiltinPlanValidator } from './validation.js';
 import type {
@@ -45,6 +45,8 @@ export class BriskAiTesting {
     this.engines = params?.engines ?? this.config.engines ?? [
       new BuiltinApiEngine(),
       new BuiltinPlaywrightEngine(),
+      new BuiltinSchemaFuzzEngine(),
+      new BuiltinReplayEngine(),
       new BuiltinContractEngine(),
     ];
     this.uiRouteGrounder = params?.uiRouteGrounder ?? new BuiltinPlaywrightRouteGrounder();
@@ -118,9 +120,10 @@ export class BriskAiTesting {
       artifacts,
     });
     const resultArtifact = await persistResult(this.config, resultWithoutFile);
+    const reportArtifacts = await persistCiReports(this.config, resultWithoutFile);
     const finalResult = {
       ...resultWithoutFile,
-      artifacts: [...resultWithoutFile.artifacts, resultArtifact],
+      artifacts: [...resultWithoutFile.artifacts, resultArtifact, ...reportArtifacts],
     };
     this.emit({ type: 'run.completed', runId, result: finalResult });
     return finalResult;

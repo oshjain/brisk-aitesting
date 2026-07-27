@@ -56,6 +56,17 @@ try {
   if (usage.code !== 2) errors.push(`expected usage exit 2, got ${usage.code}`);
   if (!usage.stderr.includes('--scenarios must be a positive integer')) errors.push('usage error did not explain invalid scenarios');
 
+  const cleanTarget = join(workDir, 'custom-artifacts');
+  await mkdir(cleanTarget, { recursive: true });
+  const cleanDryRun = await runCli(['clean', '--artifacts-dir', cleanTarget, '--dry-run', '--json']);
+  if (cleanDryRun.code !== 0) errors.push(`expected clean dry-run exit 0, got ${cleanDryRun.code}: ${cleanDryRun.stderr}`);
+  const cleanParsed = parseStdoutJson(cleanDryRun.stdout);
+  if (cleanParsed.schemaVersion !== 'brisk-aitesting.clean-result.v1') errors.push('wrong clean JSON schema');
+  if (cleanParsed.dryRun !== true || cleanParsed.removed !== 0) errors.push('clean dry-run did not report dryRun true and removed 0');
+  if (!Array.isArray(cleanParsed.targets) || !cleanParsed.targets.some((target) => target.path === cleanTarget && target.existed === true && target.action === 'would-remove')) {
+    errors.push('clean dry-run did not include custom artifact target');
+  }
+
   if (errors.length > 0) {
     console.error(JSON.stringify({ status: 'failed', errors, success, usage }, null, 2));
     process.exitCode = 1;
@@ -63,6 +74,7 @@ try {
     console.log(JSON.stringify({
       status: 'passed',
       cliSchema: parsed.schemaVersion,
+      cleanSchema: cleanParsed.schemaVersion,
       exitCode: success.code,
       usageExitCode: usage.code,
       resultPath: outputPath,

@@ -38,6 +38,8 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 - Built-in Playwright UI engine.
 - Built-in API engine.
 - Built-in OpenAPI contract engine.
+- Built-in lightweight schema fuzz engine.
+- Built-in replay engine for declared HTTP interactions.
 - External engine quality API and automated health gate.
 - Optional Schemathesis OpenAPI deep API checker with readiness manifest and coverage gate.
 - UI grounding and evidence-ID action execution.
@@ -49,15 +51,12 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 
 ## Gaps
 
-- No built-in schema fuzz engine yet.
-- No built-in replay engine yet.
 - No built-in Specmatic adapter yet.
 - No built-in Keploy adapter yet.
 - No built-in AsyncAPI, Pact, or message-contract engine yet.
 - No full proof app collection yet.
 - No quality-check suite yet for non-engine extension points: discoverers, planners, validators, UI grounders, and AI providers.
 - No formal UI healing stage with before/after evidence diffing yet.
-- No JUnit/HTML reporters yet.
 - No shared business rule catalog yet.
 
 ## How We Finish It Properly
@@ -114,22 +113,9 @@ Every adapter marked as built must also appear in `adapters/manifest.json` and p
 
 Future non-engine quality checks should define the stable output contract for each extension type.
 
-### 4. Schema Fuzz Engine
+### 4. Replay Importers
 
-Schemathesis now provides optional real OpenAPI fuzzing through its CLI. The remaining product work is a lighter JS-native engine that creates schema-aware negative cases from OpenAPI/JSON Schema:
-
-- missing required fields
-- invalid enum values
-- wrong primitive types
-- boundary values
-- additional properties
-- malformed payloads
-
-The first implementation should use the existing AJV/schema utilities before adding external fuzzing libraries.
-
-### 5. Replay Engine
-
-Add the replay engine shape first, then a Keploy-compatible adapter:
+The built-in replay engine can run declared HTTP interactions today. The remaining product work is to add importers/exporters for traffic captured by existing tools, starting with a Keploy-compatible path:
 
 - captured request input
 - expected response or invariant
@@ -137,7 +123,7 @@ Add the replay engine shape first, then a Keploy-compatible adapter:
 - diff artifact
 - pass/fail mapping
 
-### 6. Message And Contract Engines
+### 5. Message And Contract Engines
 
 Add adapters in this order:
 
@@ -148,7 +134,7 @@ Add adapters in this order:
 
 These should remain optional dependencies or separate packages if they add heavy runtime requirements.
 
-### 7. UI Healing
+### 6. UI Healing
 
 Build UI healing as a visible stage:
 
@@ -158,7 +144,7 @@ failed locator -> fresh grounding -> candidate replacement -> validation -> retr
 
 Healing must never silently hide failure. It should report what changed and why a retry was allowed.
 
-### 8. Business Intent And Rule Governance
+### 7. Business Intent And Rule Governance
 
 Stage 1: scenario carries the business rule.
 

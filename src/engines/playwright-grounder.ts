@@ -1,7 +1,7 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 import type { UiGroundingEvidence, UiRouteGrounder, UiRouteGrounderContext, UiRouteGrounderResult } from '../types.js';
-import { browserGroundingFunctionSource, firstUsefulLine, playwrightConfigSource, resolvePlaywrightCli, runProcess, toPlaywrightPath } from './shared.js';
+import { browserGroundingFunctionSource, firstUsefulLine, playwrightConfigSource, removePath, resolvePlaywrightCli, runProcess, toPlaywrightPath } from './shared.js';
 export class BuiltinPlaywrightRouteGrounder implements UiRouteGrounder {
   readonly name = 'builtin-playwright-route-grounder';
 
@@ -10,7 +10,7 @@ export class BuiltinPlaywrightRouteGrounder implements UiRouteGrounder {
     const repoRoot = resolve(context.config.app.repoPath ?? process.cwd());
     const dir = join(artifactsRoot, context.runId, 'grounding');
     const workDir = join(repoRoot, 'brisk-aitesting-playwright-work', context.runId, `${context.scenario.id}-grounding`);
-    await rm(workDir, { recursive: true, force: true });
+    await removePath(workDir);
     await mkdir(dir, { recursive: true });
     await mkdir(workDir, { recursive: true });
     const route = context.scenario.target?.route ?? '/';
@@ -58,7 +58,7 @@ export class BuiltinPlaywrightRouteGrounder implements UiRouteGrounder {
         timeoutMs: context.config.runtime.timeoutMs + 30_000,
       },
     );
-    await rm(workDir, { recursive: true, force: true });
+    await removePath(workDir);
     await writeFile(logPath, [execution.stdout, execution.stderr].filter((part) => part.trim().length > 0).join('\n\n'), 'utf8');
     if (execution.exitCode !== 0) {
       throw new Error(`Route grounding failed for ${route}: ${firstUsefulLine(execution.stderr || execution.stdout)}`);

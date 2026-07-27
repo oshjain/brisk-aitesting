@@ -179,6 +179,8 @@ try {
   if (result.summary.total !== 6) errors.push(`expected 6 tests, got ${result.summary.total}`);
   if (result.summary.passed !== 6) errors.push(`expected 6 passed, got ${result.summary.passed}`);
   if (!result.artifacts.some((artifact) => artifact.kind === 'json')) errors.push('missing JSON artifact');
+  if (!result.artifacts.some((artifact) => artifact.kind === 'junit' && artifact.metadata?.schemaVersion === 'brisk-aitesting.junit-report.v1')) errors.push('missing JUnit report artifact');
+  if (!result.artifacts.some((artifact) => artifact.kind === 'html' && artifact.metadata?.schemaVersion === 'brisk-aitesting.html-report.v1')) errors.push('missing HTML report artifact');
   if (!result.artifacts.some((artifact) => artifact.kind === 'test-file')) errors.push('missing generated test artifact');
   if (!result.artifacts.some((artifact) => artifact.label === 'API request/response')) errors.push('missing API request/response artifact');
   if (!result.artifacts.some((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.api-evidence.v1')) errors.push('missing API evidence metadata');

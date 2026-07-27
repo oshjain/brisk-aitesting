@@ -1,7 +1,7 @@
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 import type { ArtifactRef, Engine, EngineContext, EngineRunResult, ScenarioPlan } from '../types.js';
-import { browserGroundingFunctionSource, collectPlaywrightArtifacts, parsePlaywrightReport, playwrightConfigSource, playwrightLocatorFunctionSource, readUiGroundingSummary, resolvePlaywrightCli, runProcess, scenarioEvidence, scenarioResult, summarizePlaywrightExecution, toPlaywrightPath } from './shared.js';
+import { browserGroundingFunctionSource, collectPlaywrightArtifacts, parsePlaywrightReport, playwrightConfigSource, playwrightLocatorFunctionSource, readUiGroundingSummary, removePath, resolvePlaywrightCli, runProcess, scenarioEvidence, scenarioResult, summarizePlaywrightExecution, toPlaywrightPath } from './shared.js';
 export class BuiltinPlaywrightEngine implements Engine {
   readonly name = 'builtin-playwright-engine';
   readonly type = 'ui' as const;
@@ -17,7 +17,7 @@ export class BuiltinPlaywrightEngine implements Engine {
     const dir = join(artifactsRoot, context.runId, 'playwright');
     const workDir = join(repoRoot, 'brisk-aitesting-playwright-work', context.runId, context.scenario.id);
     const outputDir = join(dir, `${context.scenario.id}-results`);
-    await rm(workDir, { recursive: true, force: true });
+    await removePath(workDir);
     await mkdir(dir, { recursive: true });
     await mkdir(workDir, { recursive: true });
     await mkdir(outputDir, { recursive: true });
@@ -123,7 +123,7 @@ export class BuiltinPlaywrightEngine implements Engine {
         },
       },
     );
-    await rm(workDir, { recursive: true, force: true });
+    await removePath(workDir);
 
     await writeFile(logPath, [
       execution.stdout,
