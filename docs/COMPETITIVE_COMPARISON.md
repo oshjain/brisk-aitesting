@@ -52,6 +52,33 @@ Legend: `yes` means the capability is clearly offered or built. `partial` means 
 | 9 | One versioned JSON result contract for host-owned dashboards and databases | yes | not clear | not clear | not clear | not clear | not clear |
 | 10 | Third-party engine/adaptor model under one evidence contract | yes | partial | partial | partial | partial | partial |
 
+## Benchmark View
+
+Feature comparison is not enough. A testing product must also prove that it behaves correctly when things go wrong.
+
+Brisk includes a local benchmark command:
+
+```bash
+npm run benchmark
+```
+
+The benchmark is focused on product correctness, not marketing speed numbers. It checks whether Brisk can:
+
+| Benchmark area | What it proves |
+|:---------------|:---------------|
+| Config safety | Secret-looking configuration values are rejected instead of silently accepted |
+| OpenAPI parsing | Malformed YAML fails clearly, and empty contracts produce useful diagnostics |
+| Discovery | Missing OpenAPI files are reported as warnings instead of hidden failures |
+| AI plan parsing | The parser can ignore irrelevant AI text and select the real structured plan |
+| API schema validation | Runtime responses that violate OpenAPI schemas are caught |
+| Contract accuracy | Undocumented HTTP statuses fail the run instead of being treated as success |
+| Network policy | Requests to disallowed hosts are blocked safely |
+| CLI behavior | Invalid CLI input exits with a clear failure code and message |
+
+Current local benchmark coverage is 9 cases across config, OpenAPI, discovery, AI parsing, API execution, security, and CLI behavior.
+
+Cross-product speed or accuracy benchmarks are not listed here because the large platforms do not publish a common reproducible benchmark that Brisk can run locally against the same app, same test goal, same network, and same evidence rules. If we publish benchmark numbers, they should come from a reproducible public suite, not vendor claims.
+
 ## What This Shows
 
 The large platforms are powerful and mature. They usually win on enterprise sales, hosted execution, broad integrations, commercial support, and years of buyer trust.
