@@ -150,7 +150,7 @@ Yet testing remains **expensive and fragmented**.
 
 ## Competitive Position
 
-The AI testing market is already real. Enterprise platforms like Tricentis, OpenText, Keysight Eggplant, UiPath Test Cloud, and BrowserStack prove that serious companies spend heavily to reduce manual testing, flaky automation, and slow release cycles.
+The AI testing market is already real. Products like mabl, Katalon, Tricentis Tosca, testRigor, and Functionize prove that serious companies spend heavily to reduce manual testing, flaky automation, and slow release cycles.
 
 Brisk is designed differently: local, embeddable, evidence-first, and built around a strict AI safety boundary.
 
