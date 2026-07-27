@@ -188,9 +188,9 @@ Engines run the tests.
 Evidence shows what actually happened.
 ```
 
-## Built Now vs Not Built Yet
+## Product Status
 
-This section keeps the promise honest.
+This section keeps the promise honest: what is built, what is partly built, and what is still expansion work.
 
 | Area | Status today | What users get |
 |:-----|:-------------|:---------------|
@@ -204,14 +204,15 @@ This section keeps the promise honest.
 | Local SDK/CLI | Built | Use it inside your app or from the command line. No hosted platform required. |
 | Schemathesis OpenAPI deep API checker | Built | Optional Python/Schemathesis engine that sends many real OpenAPI request variations. |
 | Replay engine | Built | Reruns declared HTTP interactions to catch regressions quickly, with evidence in the same result contract. |
-| AsyncAPI/Pact/message testing | Not built-in yet | Planned: event and message contract testing. |
-| Specmatic/Keploy adapters | Not built-in yet | Planned as optional adapters, not core promises today. |
-| UI healing | Not built-in yet | Planned: if a button or field moves, retry with fresh page evidence and show exactly what changed. |
+| Message/event testing | Expansion work | AsyncAPI/Pact/message-contract adapters are not built into the package yet. |
+| Specmatic adapter | Expansion work | Planned as an optional adapter for teams that want Specmatic-backed contract execution. |
+| Keploy compatibility | Expansion work | Built-in replay exists today; Keploy import/export compatibility is not built yet. |
+| UI healing | Expansion work | Planned: if a button or field moves, retry with fresh page evidence and show exactly what changed. |
 | Serious SaaS proof app | Built | A real sample product used to prove auth, roles, UI, API, OpenAPI, negative cases, state changes, and saved evidence. |
-| Full proof app collection | Not built yet | Planned: Todo, e-commerce, API-only, multi-tenant, and event/messaging apps. |
+| Full proof app collection | Expansion work | Serious SaaS exists today; Todo, e-commerce, API-only, multi-tenant, and event/messaging proof apps are still pending. |
 | Built-in engine quality check | Built | Built-in engines must prove they can run, return the expected result shape, and save evidence. |
 | External engine quality check | Built for engines | Third-party engines must prove routing, result shape, artifact shape, timeout handling, and secret safety before being trusted. |
-| Non-engine extension checks | Not built yet | Planned: quality checks for custom discovery, planning, validation, UI grounding, and AI provider extensions. |
+| Non-engine extension checks | Expansion work | Engine checks exist today; quality checks for custom discovery, planning, validation, UI grounding, and AI provider extensions are still pending. |
 
 ### What Is Ready Now
 
@@ -228,11 +229,11 @@ These are not future promises anymore:
 | Built-in replay engine | Brisk can rerun declared HTTP interactions and show exactly what changed. |
 | Adapter readiness gate | If we call an adapter "built", automation checks code, docs, packaging, CI wiring, proof app coverage, and result evidence. |
 
-### Still Expanding
+### Still To Build
 
-These are the next product areas, listed separately so nobody confuses them with completed work:
+These are the real remaining product areas, listed separately so nobody confuses them with completed work:
 
-| Still expanding | User impact |
+| Still to build | User impact |
 |:----------------|:------------|
 | More proof apps | More confidence across common product shapes like e-commerce, API-only, and event-driven systems. |
 | Message adapters | Coverage beyond browser screens and HTTP APIs. |
