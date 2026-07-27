@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { createBriskAiTesting } from './orchestrator.js';
@@ -17,6 +17,8 @@ try {
     await init();
   } else if (command === 'run') {
     exitCode = await run(args);
+  } else if (command === 'clean') {
+    await clean(args);
   } else if (command === '--help' || command === '-h' || command === 'help') {
     help();
   } else {
@@ -85,6 +87,7 @@ function help(): void {
     'Commands:',
     '  init                         create brisk-aitesting.config.ts',
     '  run --goal "<goal>"          plan and run automated tests',
+    '  clean                        remove Brisk-generated local artifacts',
     '',
     'Options for run:',
     '  --config <path>              config file path',
@@ -97,9 +100,38 @@ function help(): void {
     '  --output <path>              write final result JSON to this path',
     '  --quiet                      suppress progress and human summary',
     '',
+    'Options for clean:',
+    '  --include-playwright-output  also remove test-results and playwright-report',
+    '',
     'Example:',
     '  brisk-aitesting run --goal "Test login, billing, API contracts, and permissions" --scenarios 15',
   ].join('\n'));
+}
+
+async function clean(args: readonly string[]): Promise<void> {
+  const includePlaywrightOutput = args.includes('--include-playwright-output');
+  const unknown = args.find((arg) => arg.startsWith('--') && arg !== '--include-playwright-output');
+  if (unknown !== undefined) throw new UsageError(`Unknown clean option ${unknown}.`);
+
+  const targets = [
+    '.brisk-aitesting',
+    '.brisk-aitesting-benchmark',
+    '.brisk-aitesting-cli-smoke',
+    '.brisk-aitesting-engine-conformance',
+    '.brisk-aitesting-fixtures',
+    '.brisk-aitesting-pack-check',
+    '.brisk-aitesting-plugin-conformance',
+    '.brisk-aitesting-real-ai',
+    '.brisk-aitesting-reference-serious-saas',
+    '.brisk-aitesting-smoke',
+    'brisk-aitesting-playwright-work',
+    ...(includePlaywrightOutput ? ['test-results', 'playwright-report'] : []),
+  ];
+
+  for (const target of targets) {
+    await rm(resolve(process.cwd(), target), { recursive: true, force: true });
+  }
+  console.log(`Removed ${targets.length} local artifact locations.`);
 }
 
 function parseRunArgs(args: readonly string[]): {

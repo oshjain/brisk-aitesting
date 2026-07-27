@@ -625,6 +625,18 @@ flowchart TD
   </table>
 </div>
 
+## Documentation
+
+| Guide | Use it when |
+|:------|:------------|
+| [Getting Started](./docs/GETTING_STARTED.md) | You want the fastest path from install to first run |
+| [Configuration](./docs/CONFIGURATION.md) | You need app, auth, AI, runtime, discovery, or host-config setup |
+| [API Reference](./docs/API_REFERENCE.md) | You are embedding Brisk through the SDK |
+| [Security](./docs/SECURITY.md) | You need to understand data flow, AI boundaries, artifacts, and network policy |
+| [Compatibility](./docs/COMPATIBILITY.md) | You want to know where Brisk works best today |
+| [Troubleshooting](./docs/TROUBLESHOOTING.md) | A run failed and you need a direct fix |
+| [Release](./docs/RELEASE.md) | You are publishing or validating a release |
+
 ## 📦 Install
 
 <table>
