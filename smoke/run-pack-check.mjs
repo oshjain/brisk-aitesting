@@ -10,6 +10,7 @@ const required = [
   'package/dist/index.d.ts',
   'package/dist/cli.js',
   'package/README.md',
+  'package/adapters/manifest.json',
   'package/docs/ARCHITECTURE.md',
   'package/docs/STATUS.md',
   'package/docs/ROADMAP.md',

@@ -72,6 +72,10 @@ Host apps should not have to care about the moving parts. Developers should stil
 12. Schemathesis OpenAPI Fuzzing
    `SchemathesisOpenApiFuzzEngine` runs the real Schemathesis CLI for schema scenarios that explicitly ask for the Schemathesis adapter.
    It writes NDJSON, JUnit, HAR, log, and `brisk-aitesting.schemathesis-evidence.v1` artifacts.
+
+13. Adapter Readiness
+   `adapters/manifest.json` uses `brisk-aitesting.adapter-manifest.v1` to declare adapters that are truly built.
+   `npm run smoke:adapter-readiness` emits `brisk-aitesting.adapter-readiness.v1` and fails if a built adapter is missing source, exports, smoke coverage, CI workflow, docs, package inclusion, reference app proof, conformance proof, evidence schema, or positive coverage minimums.
 ```
 
 ## Schema Registry
@@ -88,6 +92,8 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.cli-result.v1` | CLI | Machine-readable CLI run summary |
 | `brisk-aitesting.benchmark.v1` | benchmark | Known failure-mode benchmark report |
 | `brisk-aitesting.pack-check.v1` | release | npm package tarball verification report |
+| `brisk-aitesting.adapter-manifest.v1` | adapters | Declares adapters that are built, packaged, documented, and tested |
+| `brisk-aitesting.adapter-readiness.v1` | adapters | Machine check that built adapters meet readiness requirements |
 | `brisk-aitesting.engine-conformance.v1` | conformance | Built-in engine behavior report |
 | `brisk-aitesting.plugin-conformance.v1` | conformance | External engine plugin behavior report |
 | `brisk-aitesting.plugin-conformance-smoke.v1` | conformance | Smoke proof that good plugins pass and bad plugins fail |
@@ -152,6 +158,7 @@ npm run build
 npm run smoke:contracts
 npm run smoke:engine-conformance
 npm run smoke:plugin-conformance
+npm run smoke:adapter-readiness
 npm run smoke:reference-serious-saas
 npm run smoke:golden-fixtures
 npm run smoke:cli

@@ -1059,6 +1059,8 @@ This may be the most valuable part of the product for enterprise teams. The resu
 | `brisk-aitesting.cli-result.v1` | ⌨️ CLI Result |
 | `brisk-aitesting.benchmark.v1` | 📊 Benchmark |
 | `brisk-aitesting.pack-check.v1` | 📦 Pack Check |
+| `brisk-aitesting.adapter-manifest.v1` | Adapter Manifest |
+| `brisk-aitesting.adapter-readiness.v1` | Adapter Readiness |
 | `brisk-aitesting.engine-conformance.v1` | Engine Conformance |
 | `brisk-aitesting.plugin-conformance.v1` | Plugin Conformance |
 | `brisk-aitesting.plugin-conformance-smoke.v1` | Plugin Conformance Smoke |
@@ -1118,6 +1120,7 @@ npm run typecheck  &&  npm run build  &&  npm run smoke:ci  &&  npm run benchmar
 | 📋 Contract/schema registry checks | Verify all schemas are valid |
 | Engine conformance checks | Verify built-in engines obey the same result and artifact rules |
 | Engine plugin conformance checks | Verify good external engines pass and unsafe external engines fail |
+| Adapter readiness checks | Verify every built adapter has code, exports, docs, package files, CI wiring, conformance proof, and coverage minimums |
 | Serious SaaS reference checks | Verify auth, roles, UI, API, OpenAPI, negative cases, state change, and artifacts |
 | Golden fixture checks | Verify serious SaaS scenario inventory and result summary do not silently drift |
 | ⌨️ CLI checks | Ensure CLI exits with correct codes |
@@ -1132,6 +1135,14 @@ npm run smoke:schemathesis
 ```
 
 This runs the real Schemathesis OpenAPI fuzz adapter against the serious SaaS reference app. It needs Python plus the Schemathesis package installed.
+
+The adapter is exported as `SchemathesisOpenApiFuzzEngine`:
+
+```ts
+import { SchemathesisOpenApiFuzzEngine } from 'brisk-aitesting';
+```
+
+Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads `adapters/manifest.json`, checks `brisk-aitesting.adapter-manifest.v1`, verifies exports, docs, package files, the smoke script, the GitHub Actions workflow, the serious SaaS reference app, conformance proof, and coverage minimums. It emits `brisk-aitesting.adapter-readiness.v1`.
 
 #### What `benchmark` Checks
 

@@ -39,12 +39,13 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 - Built-in API engine.
 - Built-in OpenAPI contract engine.
 - Engine plugin conformance API and smoke gate.
-- Optional Schemathesis OpenAPI fuzz adapter.
+- Optional Schemathesis OpenAPI fuzz adapter with readiness manifest and smoke coverage gate.
 - UI grounding and evidence-ID action execution.
 - Versioned result and handover JSON.
 - Event stream callbacks.
 - Artifact collection.
 - Deterministic smoke, benchmark, pack, and real-AI gates.
+- Adapter readiness gate for built adapters.
 
 ## Gaps
 
@@ -108,6 +109,8 @@ Every engine plugin must prove:
 - it respects runtime timeout/retry/security config
 - it never leaks secrets
 - it maps failures into diagnostics
+
+Every adapter marked as built must also appear in `adapters/manifest.json` and pass the adapter readiness gate. That means code, exports, docs, package inclusion, CI workflow, reference app proof, conformance proof, evidence schema, and coverage minimums are checked by automation.
 
 Future non-engine conformance suites should define the stable output contract for each extension type.
 

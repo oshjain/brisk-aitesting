@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { mkdir, writeFile, access, readFile, readdir, rm } from 'node:fs/promises';
-import { dirname, join, relative } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { loadOpenApiSummary } from './openapi.js';
 import { validateJsonSchema } from './schema.js';
 import type { ArtifactRef, DiscoveryApiRoute, Engine, EngineContext, EngineRunResult, OpenApiOperationSummary, ScenarioPlan, ScenarioResult, UiGroundingEvidence, UiRouteGrounder, UiRouteGrounderContext, UiRouteGrounderResult } from './types.js';
@@ -13,14 +13,18 @@ export class BuiltinPlaywrightRouteGrounder implements UiRouteGrounder {
   readonly name = 'builtin-playwright-route-grounder';
 
   async ground(context: UiRouteGrounderContext): Promise<UiRouteGrounderResult> {
-    const dir = join(context.config.runtime.artifactsDir, context.runId, 'grounding');
-    const workDir = join(context.config.app.repoPath ?? process.cwd(), 'brisk-aitesting-playwright-work', context.runId, `${context.scenario.id}-grounding`);
+    const artifactsRoot = resolve(context.config.runtime.artifactsDir);
+    const repoRoot = resolve(context.config.app.repoPath ?? process.cwd());
+    const dir = join(artifactsRoot, context.runId, 'grounding');
+    const workDir = join(repoRoot, 'brisk-aitesting-playwright-work', context.runId, `${context.scenario.id}-grounding`);
+    await rm(workDir, { recursive: true, force: true });
     await mkdir(dir, { recursive: true });
     await mkdir(workDir, { recursive: true });
     const route = context.scenario.target?.route ?? '/';
     const targetUrl = new URL(route, context.config.app.baseUrl).toString();
     const groundingPath = join(dir, `${context.scenario.id}.ui-grounding.json`);
     const specPath = join(workDir, `${context.scenario.id}.grounding.spec.ts`);
+    const configPath = join(workDir, 'playwright.config.cjs');
     const logPath = join(dir, `${context.scenario.id}.grounding.log`);
     const testFile = [
       "import { writeFileSync } from 'node:fs';",
@@ -43,20 +47,21 @@ export class BuiltinPlaywrightRouteGrounder implements UiRouteGrounder {
       '',
     ].join('\n');
     await writeFile(specPath, testFile, 'utf8');
+    await writeFile(configPath, playwrightConfigSource(specPath), 'utf8');
     const cliPath = resolvePlaywrightCli();
-    const cwd = context.config.app.repoPath ?? process.cwd();
     const execution = await runProcess(
       process.execPath,
       [
         cliPath,
         'test',
-        toPlaywrightPath(specPath, cwd),
+        basename(specPath),
+        `--config=${toPlaywrightPath(configPath)}`,
         '--reporter=line',
         `--timeout=${Math.max(1_000, context.config.runtime.timeoutMs)}`,
         '--workers=1',
       ],
       {
-        cwd,
+        cwd: workDir,
         timeoutMs: context.config.runtime.timeoutMs + 30_000,
       },
     );
@@ -235,14 +240,18 @@ export class BuiltinPlaywrightEngine implements Engine {
 
   async run(context: EngineContext): Promise<EngineRunResult> {
     const started = Date.now();
-    const dir = join(context.config.runtime.artifactsDir, context.runId, 'playwright');
-    const workDir = join(context.config.app.repoPath ?? process.cwd(), 'brisk-aitesting-playwright-work', context.runId, context.scenario.id);
+    const artifactsRoot = resolve(context.config.runtime.artifactsDir);
+    const repoRoot = resolve(context.config.app.repoPath ?? process.cwd());
+    const dir = join(artifactsRoot, context.runId, 'playwright');
+    const workDir = join(repoRoot, 'brisk-aitesting-playwright-work', context.runId, context.scenario.id);
     const outputDir = join(dir, `${context.scenario.id}-results`);
+    await rm(workDir, { recursive: true, force: true });
     await mkdir(dir, { recursive: true });
     await mkdir(workDir, { recursive: true });
     await mkdir(outputDir, { recursive: true });
     const artifactSpecPath = join(dir, `${context.scenario.id}.spec.ts`);
     const executableSpecPath = join(workDir, `${context.scenario.id}.spec.ts`);
+    const configPath = join(workDir, 'playwright.config.cjs');
     const reportPath = join(dir, `${context.scenario.id}.report.json`);
     const logPath = join(dir, `${context.scenario.id}.log`);
     const manifestPath = join(dir, `${context.scenario.id}.evidence.json`);
@@ -294,6 +303,7 @@ export class BuiltinPlaywrightEngine implements Engine {
     ].join('\n');
     await writeFile(artifactSpecPath, testFile, 'utf8');
     await writeFile(executableSpecPath, testFile, 'utf8');
+    await writeFile(configPath, playwrightConfigSource(executableSpecPath), 'utf8');
 
     const testArtifact: ArtifactRef = {
       kind: 'test-file',
@@ -319,15 +329,14 @@ export class BuiltinPlaywrightEngine implements Engine {
     }
 
     const cliPath = resolvePlaywrightCli();
-    const cwd = context.config.app.repoPath ?? process.cwd();
-    const specArg = toPlaywrightPath(executableSpecPath, cwd);
-    const outputArg = toPlaywrightPath(outputDir, cwd);
+    const outputArg = toPlaywrightPath(outputDir);
     const execution = await runProcess(
       process.execPath,
       [
         cliPath,
         'test',
-        specArg,
+        basename(executableSpecPath),
+        `--config=${toPlaywrightPath(configPath)}`,
         '--reporter=json',
         `--output=${outputArg}`,
         `--timeout=${Math.max(1_000, context.config.runtime.timeoutMs)}`,
@@ -335,7 +344,7 @@ export class BuiltinPlaywrightEngine implements Engine {
         '--workers=1',
       ],
       {
-        cwd,
+        cwd: workDir,
         timeoutMs: context.config.runtime.timeoutMs + 30_000,
         env: {
           PLAYWRIGHT_JSON_OUTPUT_NAME: reportPath,
@@ -746,10 +755,20 @@ function resolvePlaywrightCli(): string {
   return join(dirname(packageJsonPath), 'cli.js');
 }
 
-function toPlaywrightPath(path: string, cwd: string): string {
-  const relativePath = relative(cwd, path);
-  const normalized = (relativePath.startsWith('..') ? path : relativePath).replace(/\\/g, '/');
-  return normalized.startsWith('.') ? normalized : `./${normalized}`;
+function toPlaywrightPath(path: string): string {
+  return path.replace(/\\/g, '/');
+}
+
+function playwrightConfigSource(specPath: string): string {
+  return [
+    'module.exports = {',
+    '  testDir: __dirname,',
+    `  testMatch: [${JSON.stringify(basename(specPath))}],`,
+    '  forbidOnly: true,',
+    '  fullyParallel: false,',
+    '};',
+    '',
+  ].join('\n');
 }
 
 async function runProcess(command: string, args: readonly string[], options: {

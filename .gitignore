@@ -4,7 +4,9 @@ coverage/
 .brisk-aitesting/
 .brisk-aitesting-*/
 .schemathesis/
+.hypothesis/
 playwright-work/
+brisk-aitesting-playwright-work/
 test-results/
 playwright-report/
 *.log

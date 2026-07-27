@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "brisk-aitesting.adapter-manifest.v1",
+  "adapters": [
+    {
+      "id": "schemathesis-openapi-fuzz",
+      "name": "Schemathesis OpenAPI fuzz adapter",
+      "status": "built",
+      "runtime": "python-cli",
+      "source": "src/schemathesis.ts",
+      "runtimeExport": "SchemathesisOpenApiFuzzEngine",
+      "typeExport": "SchemathesisEngineOptions",
+      "smokeScript": "smoke:schemathesis",
+      "coverageScript": "smoke:schemathesis",
+      "smokeFile": "smoke/run-schemathesis-smoke.mjs",
+      "workflow": ".github/workflows/schemathesis-smoke.yml",
+      "referenceApp": "reference-apps/serious-saas",
+      "conformance": "runEnginePluginConformance",
+      "evidenceSchema": "brisk-aitesting.schemathesis-evidence.v1",
+      "smokeSchema": "brisk-aitesting.schemathesis-smoke.v1",
+      "optionalDependency": "schemathesis",
+      "coverageMinimums": {
+        "events": 20,
+        "selectedOperations": 4,
+        "successfulScenarios": 4,
+        "artifacts": 5
+      },
+      "docs": [
+        "README.md",
+        "docs/ARCHITECTURE.md",
+        "docs/STATUS.md",
+        "docs/ROADMAP.md"
+      ]
+    }
+  ]
+}

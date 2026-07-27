@@ -24,11 +24,11 @@ try {
   const baseUrl = `http://127.0.0.1:${address.port}`;
   const config = seriousSaasConfig(baseUrl);
   const scenario = {
-    id: 'schemathesis_serious_saas_health_fuzz',
-    name: 'Schemathesis fuzzes serious SaaS health contract',
+    id: 'schemathesis_serious_saas_get_routes_fuzz',
+    name: 'Schemathesis fuzzes serious SaaS GET contracts',
     type: 'schema',
     objective: 'Run real Schemathesis OpenAPI fuzzing against the serious SaaS reference API.',
-    target: { schema: openApiPath, method: 'GET', path: '/api/health' },
+    target: { schema: openApiPath, method: 'GET' },
     assertions: ['Schemathesis finds no OpenAPI contract failures'],
     evidenceRequired: ['schema', 'api'],
     metadata: { adapter: 'schemathesis', polarity: 'positive' },
@@ -114,6 +114,14 @@ try {
   const evidence = evidenceArtifact?.path === undefined ? undefined : JSON.parse(await readFile(evidenceArtifact.path, 'utf8'));
   if (evidence?.schemaVersion !== 'brisk-aitesting.schemathesis-evidence.v1') errors.push('wrong Schemathesis evidence schema');
   if (typeof evidence?.events?.eventCount !== 'number') errors.push('Schemathesis evidence missing event count');
+  if ((evidence?.events?.eventCount ?? 0) < 20) errors.push(`expected at least 20 Schemathesis events, got ${evidence?.events?.eventCount ?? 0}`);
+  if ((evidence?.events?.operations?.selected ?? 0) < 4) errors.push(`expected at least 4 selected operations, got ${evidence?.events?.operations?.selected ?? 0}`);
+  for (const label of ['GET /api/health', 'GET /api/me', 'GET /api/users', 'GET /api/audit-events']) {
+    if (!evidence?.events?.scenarioLabels?.includes(label)) errors.push(`Schemathesis coverage missing ${label}`);
+  }
+  if (!evidence?.events?.phaseNames?.includes('Fuzzing')) errors.push('Schemathesis coverage missing Fuzzing phase');
+  if ((evidence?.events?.statusCounts?.success ?? 0) < 4) errors.push(`expected at least 4 successful Schemathesis scenarios, got ${evidence?.events?.statusCounts?.success ?? 0}`);
+  if (!evidence?.events?.generationModes?.includes('positive')) errors.push('Schemathesis coverage missing positive generation mode');
   for (const expectedLabel of ['Schemathesis execution log', 'Schemathesis JUnit report', 'Schemathesis NDJSON events', 'Schemathesis HAR report', 'Schemathesis evidence']) {
     const artifact = result.artifacts.find((entry) => entry.label === expectedLabel && entry.path !== undefined);
     if (artifact?.path === undefined || !existsSync(artifact.path)) errors.push(`missing artifact file: ${expectedLabel}`);
@@ -134,6 +142,11 @@ try {
       status: evidence.status,
       eventCount: evidence.events?.eventCount,
       eventTypes: evidence.events?.eventTypes,
+      operations: evidence.events?.operations,
+      scenarioLabels: evidence.events?.scenarioLabels,
+      phaseNames: evidence.events?.phaseNames,
+      statusCounts: evidence.events?.statusCounts,
+      generationModes: evidence.events?.generationModes,
     },
     errors,
   }, null, 2));

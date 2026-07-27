@@ -81,6 +81,8 @@ const expectedSchemas = [
   'brisk-aitesting.cli-result.v1',
   'brisk-aitesting.benchmark.v1',
   'brisk-aitesting.pack-check.v1',
+  'brisk-aitesting.adapter-manifest.v1',
+  'brisk-aitesting.adapter-readiness.v1',
   'brisk-aitesting.engine-conformance.v1',
   'brisk-aitesting.plugin-conformance.v1',
   'brisk-aitesting.plugin-conformance-smoke.v1',
@@ -102,6 +104,7 @@ const expectedScripts = [
   'smoke:contracts',
   'smoke:engine-conformance',
   'smoke:plugin-conformance',
+  'smoke:adapter-readiness',
   'smoke:schemathesis',
   'smoke:reference-serious-saas',
   'smoke:golden-fixtures',
@@ -136,8 +139,8 @@ for (const script of expectedScripts) {
   if (typeof packageJson.scripts?.[script] !== 'string') errors.push(`package.json missing script ${script}`);
 }
 
-if (!Array.isArray(packageJson.files) || !packageJson.files.includes('dist') || !packageJson.files.includes('README.md') || !packageJson.files.includes('docs') || !packageJson.files.includes('examples')) {
-  errors.push('package.json files must include dist, README.md, docs, and examples');
+if (!Array.isArray(packageJson.files) || !packageJson.files.includes('dist') || !packageJson.files.includes('README.md') || !packageJson.files.includes('adapters') || !packageJson.files.includes('docs') || !packageJson.files.includes('examples')) {
+  errors.push('package.json files must include dist, README.md, adapters, docs, and examples');
 }
 
 if (errors.length > 0) {

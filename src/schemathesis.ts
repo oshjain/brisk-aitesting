@@ -233,24 +233,99 @@ function includeOperationArgs(scenario: ScenarioPlan): readonly string[] {
 async function summarizeNdjson(path: string): Promise<{
   readonly eventCount: number;
   readonly eventTypes: readonly string[];
+  readonly operations: {
+    readonly total: number;
+    readonly selected: number;
+  };
+  readonly scenarioLabels: readonly string[];
+  readonly phaseNames: readonly string[];
+  readonly statusCounts: Record<string, number>;
+  readonly generationModes: readonly string[];
   readonly diagnostics: readonly string[];
 }> {
   try {
     const content = await readFile(path, 'utf8');
     const events = content.split(/\r?\n/).filter((line) => line.trim().length > 0).map((line) => parseJsonOrNull(line));
     const eventTypes = [...new Set(events.flatMap((event) => event === undefined ? [] : Object.keys(event)))].sort();
+    const operations = summarizeOperations(events);
+    const scenarioLabels = [...new Set(events.flatMap((event) => labelFromEvent(event)))].sort();
+    const phaseNames = [...new Set(events.flatMap((event) => phaseFromEvent(event)))].sort();
+    const statusCounts = summarizeStatuses(events);
+    const generationModes = [...new Set(events.flatMap((event) => generationModesFromEvent(event)))].sort();
     return {
       eventCount: events.length,
       eventTypes,
-      diagnostics: eventTypes.length > 0 ? [`Schemathesis emitted ${events.length} NDJSON events: ${eventTypes.join(', ')}.`] : [`Schemathesis emitted ${events.length} NDJSON events.`],
+      operations,
+      scenarioLabels,
+      phaseNames,
+      statusCounts,
+      generationModes,
+      diagnostics: eventTypes.length > 0
+        ? [`Schemathesis emitted ${events.length} NDJSON events across ${operations.selected} selected operations: ${eventTypes.join(', ')}.`]
+        : [`Schemathesis emitted ${events.length} NDJSON events.`],
     };
   } catch (error) {
     return {
       eventCount: 0,
       eventTypes: [],
+      operations: { total: 0, selected: 0 },
+      scenarioLabels: [],
+      phaseNames: [],
+      statusCounts: {},
+      generationModes: [],
       diagnostics: [`Could not read Schemathesis NDJSON report: ${error instanceof Error ? error.message : String(error)}`],
     };
   }
+}
+
+function summarizeOperations(events: readonly (Record<string, unknown> | undefined)[]): { readonly total: number; readonly selected: number } {
+  for (const event of events) {
+    const loadingFinished = recordValue(event, 'LoadingFinished');
+    const statistic = recordValue(loadingFinished, 'statistic');
+    const operations = recordValue(statistic, 'operations');
+    const total = numberValue(operations, 'total');
+    const selected = numberValue(operations, 'selected');
+    if (total !== undefined || selected !== undefined) return { total: total ?? 0, selected: selected ?? 0 };
+  }
+  return { total: 0, selected: 0 };
+}
+
+function labelFromEvent(event: Record<string, unknown> | undefined): readonly string[] {
+  const scenarioFinished = recordValue(event, 'ScenarioFinished');
+  const recorder = recordValue(scenarioFinished, 'recorder');
+  const label = stringValue(recorder, 'label');
+  return label === undefined ? [] : [label];
+}
+
+function phaseFromEvent(event: Record<string, unknown> | undefined): readonly string[] {
+  const scenarioFinished = recordValue(event, 'ScenarioFinished');
+  const phase = stringValue(scenarioFinished, 'phase');
+  return phase === undefined ? [] : [phase];
+}
+
+function summarizeStatuses(events: readonly (Record<string, unknown> | undefined)[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const event of events) {
+    const scenarioFinished = recordValue(event, 'ScenarioFinished');
+    const status = stringValue(scenarioFinished, 'status');
+    if (status !== undefined) counts[status] = (counts[status] ?? 0) + 1;
+  }
+  return counts;
+}
+
+function generationModesFromEvent(event: Record<string, unknown> | undefined): readonly string[] {
+  const scenarioFinished = recordValue(event, 'ScenarioFinished');
+  const recorder = recordValue(scenarioFinished, 'recorder');
+  const cases = recordValue(recorder, 'cases');
+  if (cases === undefined) return [];
+  const modes = [];
+  for (const value of Object.values(cases)) {
+    const caseValue = recordValue(recordValue(value, 'value'), 'meta');
+    const generation = recordValue(caseValue, 'generation');
+    const mode = stringValue(generation, 'mode');
+    if (mode !== undefined) modes.push(mode);
+  }
+  return modes;
 }
 
 function parseJsonOrNull(line: string): Record<string, unknown> | undefined {
@@ -260,6 +335,24 @@ function parseJsonOrNull(line: string): Record<string, unknown> | undefined {
   } catch {
     return undefined;
   }
+}
+
+function recordValue(value: unknown, key: string): Record<string, unknown> | undefined {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return undefined;
+  const nested = (value as Record<string, unknown>)[key];
+  return typeof nested === 'object' && nested !== null && !Array.isArray(nested) ? nested as Record<string, unknown> : undefined;
+}
+
+function stringValue(value: unknown, key: string): string | undefined {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return undefined;
+  const nested = (value as Record<string, unknown>)[key];
+  return typeof nested === 'string' ? nested : undefined;
+}
+
+function numberValue(value: unknown, key: string): number | undefined {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return undefined;
+  const nested = (value as Record<string, unknown>)[key];
+  return typeof nested === 'number' && Number.isFinite(nested) ? nested : undefined;
 }
 
 function scenarioResult(

@@ -19,9 +19,12 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - Manual real AI smoke workflow.
 - Adversarial benchmark report: `brisk-aitesting.benchmark.v1`.
 - Release pack check: `brisk-aitesting.pack-check.v1`.
+- Adapter manifest: `brisk-aitesting.adapter-manifest.v1`.
+- Adapter readiness gate: `brisk-aitesting.adapter-readiness.v1`.
 - Engine conformance report: `brisk-aitesting.engine-conformance.v1`.
 - Engine plugin conformance API and smoke report: `brisk-aitesting.plugin-conformance.v1`.
 - Optional Schemathesis OpenAPI fuzz adapter and smoke report: `brisk-aitesting.schemathesis-smoke.v1`.
+- Schemathesis adapter readiness coverage now requires real NDJSON evidence, selected operations, successful scenarios, artifacts, CI workflow wiring, docs, package inclusion, and plugin conformance proof.
 - Serious SaaS reference app report: `brisk-aitesting.reference-serious-saas.v1`.
 - Golden fixture report: `brisk-aitesting.golden-fixtures.v1`.
 - npm package publication path.
