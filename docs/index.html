@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>brisk-aitesting — Local, embeddable AI testing control layer</title>
+<meta name="description" content="Brisk discovers your application, creates structured test plans, validates them, routes scenarios to the right engine, and returns clean evidence your product can use. Local-first, embeddable, evidence-first.">
+<meta property="og:title" content="brisk-aitesting — Local, embeddable AI testing control layer">
+<meta property="og:description" content="Say what should be tested. Brisk turns it into checked, executable tests. Local-first, embeddable, evidence-first.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://github.com/oshjain/brisk-aitesting">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="brisk-aitesting">
+<meta name="twitter:description" content="Local, embeddable AI testing control layer. Fast, No-nonsense and Effective.">
+<meta property="og:image" content="assets/logo_transparent.png">
+<meta property="og:image:alt" content="Brisk logo">
+<link rel="icon" href="assets/logo_transparent.ico" type="image/x-icon">
+<link rel="stylesheet" href="css/site.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+<style>
+  html { scroll-padding-top: 4rem; }
+  @media (prefers-reduced-motion: reduce) { *,::before,::after { animation-duration:0.01ms!important; animation-iteration-count:1!important; transition-duration:0.01ms!important; } }
+  .skip-link { position:absolute;top:-100%;left:0;z-index:1000;padding:0.5rem 1rem;background:#310D5E;color:#fff;font-weight:600; }
+  .skip-link:focus { top:0; }
+  .drawer-backdrop { visibility:hidden;opacity:0;transition:visibility 0s 0.3s,opacity 0.3s; }
+  .drawer-backdrop.open { visibility:visible;opacity:1;transition:visibility 0s,opacity 0.3s; }
+  .mobile-drawer { transform:translateX(100%);transition:transform 0.3s ease; }
+  .mobile-drawer.open { transform:translateX(0); }
+  .pipeline-node { transition:all 0.3s ease; }
+  .pipeline-node:hover { transform:translateY(-2px);box-shadow:0 8px 25px rgba(49,13,94,0.15); }
+  @media (max-width:767px) { .comparison-desktop { display:none; } .comparison-mobile { display:block; } }
+  @media (min-width:768px) { .comparison-desktop { display:block; } .comparison-mobile { display:none; } }
+  [role="tabpanel"]:not(.active) { display:none; }
+  [role="tabpanel"].active { display:block; }
+  .evidence-json-highlight { background:rgba(74,20,140,0.25); border-radius:2px; transition:background 0.3s; }
+  .score-bar { transition:width 1s ease-out; }
+  .process-step-active .step-card { border-color:#4A148C; box-shadow:0 4px 12px rgba(49,13,94,0.1); }
+</style>
+</head>
+<body class="bg-[#FAFAFA] text-[#1A1A1A] font-sans antialiased">
+
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<!-- ===== HEADER ===== -->
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-brisk-gray-300" role="banner">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <!-- Logo -->
+      <a href="#home" class="flex items-center gap-3 shrink-0" aria-label="brisk-aitesting home">
+        <img src="assets/logo_transparent.png" alt="Brisk logo" class="h-9 w-9" width="36" height="36">
+        <span class="font-bold text-lg text-brisk-purple-900 hidden sm:inline">brisk-aitesting</span>
+      </a>
+      <!-- Desktop nav -->
+      <nav class="hidden lg:flex items-center gap-1" aria-label="Main navigation">
+        <a href="#home" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">home</span>Home</a>
+        <a href="#why-brisk" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">lightbulb</span>Why Brisk</a>
+        <a href="#compare" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">compare</span>Compare</a>
+        <a href="#how-it-works" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">account_tree</span>How It Works</a>
+        <a href="#capabilities" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">bolt</span>Capabilities</a>
+        <a href="#ai-control" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">shield</span>AI Control</a>
+        <a href="#evidence" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">description</span>Evidence</a>
+        <a href="#status" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">info</span>Status</a>
+        <a href="#get-started" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">rocket_launch</span>Get Started</a>
+        <a href="#roadmap" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">map</span>Roadmap</a>
+      </nav>
+      <!-- Actions -->
+      <div class="flex items-center gap-3">
+        <a href="https://github.com/oshjain/brisk-aitesting" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-lg hover:bg-brisk-gray-300/50 transition-colors" aria-label="View on GitHub">
+          <span class="material-symbols-outlined text-lg">code</span>
+          <span class="hidden md:inline">GitHub</span>
+        </a>
+        <a href="#get-started" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-brisk-yellow-600 text-brisk-gray-950 rounded-lg hover:bg-brisk-yellow-900 hover:text-white transition-colors">Get started</a>
+        <!-- Mobile menu button -->
+        <button id="menu-toggle" type="button" class="lg:hidden p-2 rounded-md text-brisk-gray-800 hover:bg-brisk-gray-300/50" aria-expanded="false" aria-controls="mobile-drawer" aria-label="Open navigation menu">
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- Reading progress bar -->
+  <div id="progress-bar" class="h-0.5 bg-brisk-yellow-600 w-0 transition-width duration-150"></div>
+</header>
+
+<!-- ===== MOBILE DRAWER ===== -->
+<div id="drawer-backdrop" class="drawer-backdrop fixed inset-0 z-40 bg-black/50 lg:hidden" aria-hidden="true"></div>
+<div id="mobile-drawer" class="mobile-drawer fixed top-0 right-0 z-50 h-full w-72 bg-white shadow-xl lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
+  <div class="flex items-center justify-between p-4 border-b border-brisk-gray-300">
+    <span class="font-bold text-brisk-purple-900">brisk-aitesting</span>
+    <button id="drawer-close" type="button" class="p-2 rounded-md hover:bg-brisk-gray-300/50" aria-label="Close navigation menu">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </div>
+  <nav class="p-4 flex flex-col gap-1" aria-label="Mobile navigation">
+    <a href="#home" class="mobile-nav-link px-3 py-3 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-2"><span class="material-symbols-outlined text-base">home</span>Home</a>
+    <a href="#why-brisk" class="mobile-nav-link px-3 py-3 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-2"><span class="material-symbols-outlined text-base">lightbulb</span>Why Brisk</a>
+    <a href="#compare" class="mobile-nav-link px-3 py-3 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-2"><span class="material-symbols-outlined text-base">compare</span>Compare</a>
+    <a href="#how-it-works" class="mobile-nav-link px-3 py-3 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-2"><span class="material-symbols-outlined text-base">account_tree</span>How It Works</a>
+    <a href="#capabilities" class="mobile-nav-link px-3 py-3 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-2"><span class="material-symbols-outlined text-base">bolt</span>Capabilities</a>
+    <a href="#ai-control" class="mobile-nav-link px-3 py-3 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-2"><span class="material-symbols-outlined text-base">shield</span>AI Control</a>
+    <a href="#evidence" class="mobile-nav-link px-3 py-3 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-2"><span class="material-symbols-outlined text-base">description</span>Evidence &amp; Integration</a>
+    <a href="#status" class="mobile-nav-link px-3 py-3 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-2"><span class="material-symbols-outlined text-base">info</span>Product Status</a>
+    <a href="#get-started" class="mobile-nav-link px-3 py-3 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-2"><span class="material-symbols-outlined text-base">rocket_launch</span>Get Started</a>
+    <a href="#roadmap" class="mobile-nav-link px-3 py-3 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-2"><span class="material-symbols-outlined text-base">map</span>Roadmap</a>
+  </nav>
+</div>
+
+<main id="main-content">
+
+<!-- ===== HOME / HERO ===== -->
+<section id="home" class="relative overflow-hidden bg-white" aria-labelledby="hero-heading">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 sm:pt-20 sm:pb-24">
+    <!-- Alpha badge -->
+    <div class="inline-flex items-center gap-2 px-3 py-1 bg-brisk-yellow-100 text-brisk-yellow-900 text-xs font-semibold rounded-full mb-6">
+      <span class="material-symbols-outlined text-sm">construction</span> Alpha
+    </div>
+    <!-- Eyebrow -->
+    <p class="text-sm font-medium tracking-wide uppercase text-brisk-purple-400 mb-4">Local-first &middot; Embeddable &middot; Evidence-first</p>
+    <!-- Heading -->
+    <h1 id="hero-heading" class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-brisk-gray-950 leading-tight mb-6 max-w-4xl">
+      Say what should be tested. <span class="text-brisk-purple-800">Brisk</span> turns it into checked, executable tests.
+    </h1>
+    <!-- Supporting text -->
+    <p class="text-lg sm:text-xl text-brisk-gray-600 max-w-3xl mb-8 leading-relaxed">
+      Brisk discovers the application, creates a structured test plan, validates it before execution, routes each scenario to the right engine, and returns clean evidence your product can use.
+    </p>
+    <!-- CTAs -->
+    <div class="flex flex-wrap gap-3 mb-8">
+      <a href="#get-started" class="inline-flex items-center gap-2 px-6 py-3 text-base font-semibold bg-brisk-yellow-600 text-brisk-gray-950 rounded-lg hover:bg-brisk-yellow-900 hover:text-white transition-colors shadow-sm">Get started <span class="material-symbols-outlined">arrow_forward</span></a>
+      <a href="https://github.com/oshjain/brisk-aitesting" class="inline-flex items-center gap-2 px-6 py-3 text-base font-medium text-brisk-gray-800 bg-white border border-brisk-gray-300 rounded-lg hover:border-brisk-purple-400 hover:text-brisk-purple-800 transition-colors">View on GitHub <span class="material-symbols-outlined">open_in_new</span></a>
+    </div>
+    <p class="text-sm text-brisk-gray-600 mb-10">Use it inside your product, from the CLI, or in CI. No proprietary hosted dashboard is required.</p>
+    <!-- Status badges -->
+    <div class="flex flex-wrap gap-2 mb-10">
+      <span class="inline-flex items-center gap-1 px-3 py-1 bg-brisk-purple-50 text-brisk-purple-800 text-xs font-medium rounded-full"><span class="material-symbols-outlined text-sm">lock_open</span> Open source</span>
+      <span class="inline-flex items-center gap-1 px-3 py-1 bg-brisk-purple-50 text-brisk-purple-800 text-xs font-medium rounded-full">MIT</span>
+      <span class="inline-flex items-center gap-1 px-3 py-1 bg-brisk-yellow-100 text-brisk-yellow-900 text-xs font-medium rounded-full">Alpha</span>
+      <span class="inline-flex items-center gap-1 px-3 py-1 bg-brisk-purple-50 text-brisk-purple-800 text-xs font-medium rounded-full"><span class="material-symbols-outlined text-sm">home</span> Local first</span>
+      <span class="inline-flex items-center gap-1 px-3 py-1 bg-brisk-purple-50 text-brisk-purple-800 text-xs font-medium rounded-full">PRs welcome</span>
+    </div>
+    <!-- Hero Pipeline Visual -->
+    <div class="relative mt-10" aria-label="Brisk testing pipeline: Human goal to Discovery to Checked plan to Engines to Evidence">
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-0">
+        <div class="pipeline-node flex-1 bg-white border-2 border-brisk-purple-100 rounded-xl p-4 text-center sm:mr-1">
+          <span class="material-symbols-outlined text-2xl text-brisk-purple-800 mb-2 block">psychology</span>
+          <p class="text-sm font-semibold text-brisk-gray-950">Human testing goal</p>
+        </div>
+        <div class="hidden sm:flex items-center text-brisk-purple-400"><span class="material-symbols-outlined">arrow_forward</span></div>
+        <div class="flex sm:hidden justify-center text-brisk-purple-400"><span class="material-symbols-outlined rotate-90">arrow_forward</span></div>
+        <div class="pipeline-node flex-1 bg-white border-2 border-brisk-purple-100 rounded-xl p-4 text-center sm:mx-1">
+          <span class="material-symbols-outlined text-2xl text-brisk-purple-800 mb-2 block">travel_explore</span>
+          <p class="text-sm font-semibold text-brisk-gray-950">Discovery</p>
+        </div>
+        <div class="hidden sm:flex items-center text-brisk-purple-400"><span class="material-symbols-outlined">arrow_forward</span></div>
+        <div class="flex sm:hidden justify-center text-brisk-purple-400"><span class="material-symbols-outlined rotate-90">arrow_forward</span></div>
+        <div class="pipeline-node flex-1 bg-brisk-purple-50 border-2 border-brisk-purple-400 rounded-xl p-4 text-center sm:mx-1">
+          <span class="material-symbols-outlined text-2xl text-brisk-purple-800 mb-2 block">description</span>
+          <p class="text-sm font-semibold text-brisk-gray-950">Checked JSON plan</p>
+        </div>
+        <div class="hidden sm:flex items-center text-brisk-purple-400"><span class="material-symbols-outlined">arrow_forward</span></div>
+        <div class="flex sm:hidden justify-center text-brisk-purple-400"><span class="material-symbols-outlined rotate-90">arrow_forward</span></div>
+        <div class="pipeline-node flex-1 bg-white border-2 border-brisk-purple-100 rounded-xl p-4 text-center sm:mx-1">
+          <span class="material-symbols-outlined text-2xl text-brisk-purple-800 mb-2 block">precision_manufacturing</span>
+          <p class="text-sm font-semibold text-brisk-gray-950">UI / API / Contract engines</p>
+        </div>
+        <div class="hidden sm:flex items-center text-brisk-purple-400"><span class="material-symbols-outlined">arrow_forward</span></div>
+        <div class="flex sm:hidden justify-center text-brisk-purple-400"><span class="material-symbols-outlined rotate-90">arrow_forward</span></div>
+        <div class="pipeline-node flex-1 bg-brisk-yellow-50 border-2 border-brisk-yellow-400 rounded-xl p-4 text-center sm:ml-1">
+          <span class="material-symbols-outlined text-2xl text-brisk-yellow-900 mb-2 block">verified</span>
+          <p class="text-sm font-semibold text-brisk-gray-950">Evidence result</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- The Promise -->
+<section class="bg-brisk-purple-900 py-12 sm:py-16" aria-labelledby="promise-heading">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 id="promise-heading" class="text-2xl sm:text-3xl font-bold text-white text-center mb-10">The Promise</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="flex items-start gap-3 p-4 bg-white/10 rounded-lg"><span class="material-symbols-outlined text-brisk-yellow-400 mt-0.5 shrink-0">chat</span><p class="text-white/90 text-sm">Say what should be tested</p></div>
+      <div class="flex items-start gap-3 p-4 bg-white/10 rounded-lg"><span class="material-symbols-outlined text-brisk-yellow-400 mt-0.5 shrink-0">travel_explore</span><p class="text-white/90 text-sm">Brisk discovers what exists</p></div>
+      <div class="flex items-start gap-3 p-4 bg-white/10 rounded-lg"><span class="material-symbols-outlined text-brisk-yellow-400 mt-0.5 shrink-0">alt_route</span><p class="text-white/90 text-sm">It chooses the right test path</p></div>
+      <div class="flex items-start gap-3 p-4 bg-white/10 rounded-lg"><span class="material-symbols-outlined text-brisk-yellow-400 mt-0.5 shrink-0">checklist</span><p class="text-white/90 text-sm">It creates a checked plan</p></div>
+      <div class="flex items-start gap-3 p-4 bg-white/10 rounded-lg"><span class="material-symbols-outlined text-brisk-yellow-400 mt-0.5 shrink-0">play_arrow</span><p class="text-white/90 text-sm">It runs the right engines</p></div>
+      <div class="flex items-start gap-3 p-4 bg-white/10 rounded-lg"><span class="material-symbols-outlined text-brisk-yellow-400 mt-0.5 shrink-0">verified</span><p class="text-white/90 text-sm">It returns evidence your product can use</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== WHY BRISK ===== -->
+<section id="why-brisk" class="py-16 sm:py-20 bg-white" aria-labelledby="why-heading">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 id="why-heading" class="text-3xl sm:text-4xl font-extrabold text-brisk-gray-950 mb-6">Software creation is accelerating. <span class="text-brisk-purple-800">Verification is still fragmented.</span></h2>
+    <p class="text-lg text-brisk-gray-600 max-w-3xl mb-12">AI-assisted development increases the speed and volume of change; it does not remove the need to verify behaviour. Testing remains expensive, spread across manual interpretation, separate tools, inconsistent evidence, and repeated engineering effort.</p>
+
+    <!-- Market Stat Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+      <div class="bg-brisk-purple-50 rounded-xl p-5 text-center"><p class="text-3xl sm:text-4xl font-extrabold text-brisk-purple-900">$54.44B</p><p class="text-sm text-brisk-gray-600 mt-1">Software testing market</p><p class="text-xs text-brisk-gray-600 mt-1">2026</p></div>
+      <div class="bg-brisk-purple-50 rounded-xl p-5 text-center"><p class="text-3xl sm:text-4xl font-extrabold text-brisk-purple-900">$99.94B</p><p class="text-sm text-brisk-gray-600 mt-1">Projected</p><p class="text-xs text-brisk-gray-600 mt-1">by 2031</p></div>
+      <div class="bg-brisk-yellow-50 rounded-xl p-5 text-center"><p class="text-3xl sm:text-4xl font-extrabold text-brisk-yellow-900">$20.60B</p><p class="text-sm text-brisk-gray-600 mt-1">Automation testing market</p><p class="text-xs text-brisk-gray-600 mt-1">2025</p></div>
+      <div class="bg-brisk-yellow-50 rounded-xl p-5 text-center"><p class="text-3xl sm:text-4xl font-extrabold text-brisk-yellow-900">$84.22B</p><p class="text-sm text-brisk-gray-600 mt-1">Projected</p><p class="text-xs text-brisk-gray-600 mt-1">by 2034</p></div>
+    </div>
+    <p class="text-xs text-brisk-gray-600 mb-8">Sources: <a href="https://www.mordorintelligence.com/industry-reports/software-testing-market" class="underline hover:text-brisk-purple-800">Mordor Intelligence</a> &middot; <a href="https://www.fortunebusinessinsights.com/automation-testing-market-107180" class="underline hover:text-brisk-purple-800">Fortune Business Insights</a>. Projections are sourced forecasts, not present-day revenue.</p>
+
+    <!-- Market Growth Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+      <div class="bg-white border border-brisk-gray-300 rounded-xl p-6">
+        <h3 class="text-lg font-bold text-brisk-gray-950 mb-2">Software Testing Market</h3>
+        <p class="text-xs text-brisk-gray-600 mb-4">Source: Mordor Intelligence. Line between 2026 and 2031 is linear interpolation.</p>
+        <div class="relative h-48 flex items-stretch gap-8 px-4" aria-label="Bar chart: Software testing market, $54.44B in 2026 projected to $99.94B by 2031">
+          <div class="flex-1 h-full flex flex-col items-center justify-end"><div class="w-full bg-brisk-purple-400 rounded-t relative" style="height:54%"><span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-brisk-purple-900 whitespace-nowrap">$54.44B</span></div><p class="text-xs text-brisk-gray-600 mt-2">2026</p></div>
+          <div class="flex-1 h-full flex flex-col items-center justify-end"><div class="w-full bg-brisk-purple-400/60 rounded-t relative" style="height:80%"><span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-brisk-purple-800 whitespace-nowrap">$72B est.</span></div><p class="text-xs text-brisk-gray-600 mt-2">2028*</p></div>
+          <div class="flex-1 h-full flex flex-col items-center justify-end"><div class="w-full bg-brisk-purple-900 rounded-t relative" style="height:100%"><span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-brisk-purple-900 whitespace-nowrap">$99.94B</span></div><p class="text-xs text-brisk-gray-600 mt-2">2031</p></div>
+        </div>
+        <p class="text-xs text-brisk-gray-600 mt-3">* Intermediate values are linear interpolation between known source endpoints.</p>
+        <details class="mt-2"><summary class="text-xs text-brisk-purple-800 cursor-pointer hover:underline">View data table</summary><table class="mt-2 text-xs border-collapse w-full max-w-xs"><thead><tr class="bg-brisk-gray-100"><th class="p-1 text-left border">Year</th><th class="p-1 text-left border">Value</th><th class="p-1 text-left border">Note</th></tr></thead><tbody><tr><td class="p-1 border">2026</td><td class="p-1 border">$54.44B</td><td class="p-1 border">Source: Mordor Intelligence</td></tr><tr><td class="p-1 border">2028</td><td class="p-1 border">$72B est.</td><td class="p-1 border">Linear interpolation</td></tr><tr><td class="p-1 border">2031</td><td class="p-1 border">$99.94B</td><td class="p-1 border">Projected (Mordor Intelligence)</td></tr></tbody></table></details>
+      </div>
+      <div class="bg-white border border-brisk-gray-300 rounded-xl p-6">
+        <h3 class="text-lg font-bold text-brisk-gray-950 mb-2">Automation Testing Market</h3>
+        <p class="text-xs text-brisk-gray-600 mb-4">Source: Fortune Business Insights. Line between 2025 and 2034 is linear interpolation.</p>
+        <div class="relative h-48 flex items-stretch gap-6 px-4" aria-label="Bar chart: Automation testing market, $20.60B in 2025 projected to $84.22B by 2034">
+          <div class="flex-1 h-full flex flex-col items-center justify-end"><div class="w-full bg-brisk-yellow-400 rounded-t relative" style="height:24%"><span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-brisk-yellow-900 whitespace-nowrap">$20.60B</span></div><p class="text-xs text-brisk-gray-600 mt-2">2025</p></div>
+          <div class="flex-1 h-full flex flex-col items-center justify-end"><div class="w-full bg-brisk-yellow-400/60 rounded-t relative" style="height:55%"><span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-brisk-yellow-800 whitespace-nowrap">$48.88B est.</span></div><p class="text-xs text-brisk-gray-600 mt-2">2029*</p></div>
+          <div class="flex-1 h-full flex flex-col items-center justify-end"><div class="w-full bg-brisk-yellow-600 rounded-t relative" style="height:100%"><span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-brisk-yellow-900 whitespace-nowrap">$84.22B</span></div><p class="text-xs text-brisk-gray-600 mt-2">2034</p></div>
+        </div>
+        <p class="text-xs text-brisk-gray-600 mt-3">* Intermediate values are linear interpolation between known source endpoints.</p>
+        <details class="mt-2"><summary class="text-xs text-brisk-purple-800 cursor-pointer hover:underline">View data table</summary><table class="mt-2 text-xs border-collapse w-full max-w-xs"><thead><tr class="bg-brisk-gray-100"><th class="p-1 text-left border">Year</th><th class="p-1 text-left border">Value</th><th class="p-1 text-left border">Note</th></tr></thead><tbody><tr><td class="p-1 border">2025</td><td class="p-1 border">$20.60B</td><td class="p-1 border">Source: Fortune Business Insights</td></tr><tr><td class="p-1 border">2029</td><td class="p-1 border">$48.88B est.</td><td class="p-1 border">Linear interpolation</td></tr><tr><td class="p-1 border">2034</td><td class="p-1 border">$84.22B</td><td class="p-1 border">Projected (Fortune Business Insights)</td></tr></tbody></table></details>
+      </div>
+    </div>
+
+    <!-- Why Now Infographic -->
+    <div class="bg-brisk-purple-50 rounded-2xl p-6 sm:p-10 mb-12">
+      <h3 class="text-xl font-bold text-brisk-purple-900 mb-6">Why now</h3>
+      <div class="relative">
+        <div class="hidden lg:block absolute top-1/2 left-[12%] right-[12%] h-0.5 bg-brisk-purple-200 -translate-y-1/2" aria-hidden="true"></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="text-center relative"><div class="w-14 h-14 mx-auto mb-3 rounded-full bg-brisk-purple-100 flex items-center justify-center ring-4 ring-white relative z-10"><span class="material-symbols-outlined text-2xl text-brisk-purple-800">rocket_launch</span></div><p class="text-sm font-semibold text-brisk-gray-950 mb-1">Faster software creation</p><p class="text-xs text-brisk-gray-600">AI-assisted development accelerates code production and change volume</p></div>
+        <div class="text-center relative"><div class="w-14 h-14 mx-auto mb-3 rounded-full bg-brisk-yellow-100 flex items-center justify-center ring-4 ring-white relative z-10"><span class="material-symbols-outlined text-2xl text-brisk-yellow-900">trending_up</span></div><p class="text-sm font-semibold text-brisk-gray-950 mb-1">Expanding testing demand</p><p class="text-xs text-brisk-gray-600">$54B+ market growing toward $100B as software surfaces multiply</p></div>
+        <div class="text-center relative"><div class="w-14 h-14 mx-auto mb-3 rounded-full bg-brisk-purple-100 flex items-center justify-center ring-4 ring-white relative z-10"><span class="material-symbols-outlined text-2xl text-brisk-purple-800">broken_image</span></div><p class="text-sm font-semibold text-brisk-gray-950 mb-1">Fragmented verification</p><p class="text-xs text-brisk-gray-600">Separate tools, manual translation, inconsistent evidence, repeated engineering</p></div>
+        <div class="text-center relative"><div class="w-14 h-14 mx-auto mb-3 rounded-full bg-brisk-yellow-100 flex items-center justify-center ring-4 ring-white relative z-10"><span class="material-symbols-outlined text-2xl text-brisk-yellow-900">enterprise</span></div><p class="text-sm font-semibold text-brisk-gray-950 mb-1">Enterprise evidence gap</p><p class="text-xs text-brisk-gray-600">Enterprises need controlled, reusable evidence they own and can integrate</p></div>
+      </div>
+      </div>
+    </div>
+
+    <!-- Executive Quotes -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <blockquote class="bg-white border border-brisk-gray-300 rounded-xl p-6">
+        <p class="text-sm text-brisk-gray-800 italic mb-3">"AI could write <strong>90% of code</strong> in a short time window and eventually nearly all code."</p>
+        <footer class="text-xs text-brisk-gray-600">&mdash; <strong>Dario Amodei</strong>, Anthropic CEO<br><a href="https://www.cfr.org/event/ceo-speaker-series-dario-amodei-anthropic" class="underline hover:text-brisk-purple-800">Council on Foreign Relations</a></footer>
+      </blockquote>
+      <blockquote class="bg-white border border-brisk-gray-300 rounded-xl p-6">
+        <p class="text-sm text-brisk-gray-800 italic mb-3">"More than a <strong>quarter of new Google code</strong> was already AI-generated and then reviewed by engineers."</p>
+        <footer class="text-xs text-brisk-gray-600">&mdash; <strong>Sundar Pichai</strong>, Google CEO<br><a href="https://www.theverge.com/2024/10/29/24282757/google-new-code-generated-ai-q3-2024" class="underline hover:text-brisk-purple-800">The Verge</a></footer>
+      </blockquote>
+      <blockquote class="bg-white border border-brisk-gray-300 rounded-xl p-6">
+        <p class="text-sm text-brisk-gray-800 italic mb-3">"A <strong>very large share</strong> of code will be AI-generated within five years."</p>
+        <footer class="text-xs text-brisk-gray-600">&mdash; <strong>Kevin Scott</strong>, Microsoft CTO<br><a href="https://www.businessinsider.com/microsoft-cto-ai-generated-code-software-developer-job-change-2025-4" class="underline hover:text-brisk-purple-800">Business Insider</a></footer>
+      </blockquote>
+    </div>
+
+    <!-- Workflow Comparator -->
+    <h3 class="text-2xl font-bold text-brisk-gray-950 mb-6">Two workflows, one difference</h3>
+    <!-- Desktop: side-by-side -->
+    <div class="comparison-desktop grid grid-cols-2 gap-8">
+      <div class="bg-red-50/50 border border-red-100 rounded-2xl p-6">
+        <h4 class="text-lg font-bold text-red-800 mb-4 flex items-center gap-2"><span class="material-symbols-outlined">history</span> Traditional workflow</h4>
+        <ol class="space-y-4">
+          <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-red-100 text-red-800 flex items-center justify-center text-xs font-bold shrink-0">1</span><div><p class="text-sm font-semibold text-brisk-gray-950">Product teams explain what should be tested</p><p class="text-xs text-brisk-gray-600">Human language, no machine structure</p></div></li>
+          <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-red-100 text-red-800 flex items-center justify-center text-xs font-bold shrink-0">2</span><div><p class="text-sm font-semibold text-brisk-gray-950">Testers translate into manual UAT steps</p><p class="text-xs text-brisk-gray-600">Manual interpretation, no automation</p></div></li>
+          <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-red-100 text-red-800 flex items-center justify-center text-xs font-bold shrink-0">3</span><div><p class="text-sm font-semibold text-brisk-gray-950">Automation engineers write scripts</p><p class="text-xs text-brisk-gray-600">Playwright, API, contract, or custom scripts—separately</p></div></li>
+          <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-red-100 text-red-800 flex items-center justify-center text-xs font-bold shrink-0">4</span><div><p class="text-sm font-semibold text-brisk-gray-950">Different tools produce different reports</p><p class="text-xs text-brisk-gray-600">Inconsistent evidence across systems</p></div></li>
+          <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-red-100 text-red-800 flex items-center justify-center text-xs font-bold shrink-0">5</span><div><p class="text-sm font-semibold text-brisk-gray-950">Developers investigate failures</p><p class="text-xs text-brisk-gray-600">Time spent finding what failed and why</p></div></li>
+          <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-red-100 text-red-800 flex items-center justify-center text-xs font-bold shrink-0">6</span><div><p class="text-sm font-semibold text-brisk-gray-950">Teams rebuild the pipeline</p><p class="text-xs text-brisk-gray-600">Repeat for every product, every cycle</p></div></li>
+        </ol>
+      </div>
+      <div class="bg-green-50/50 border border-green-100 rounded-2xl p-6">
+        <h4 class="text-lg font-bold text-green-800 mb-4 flex items-center gap-2"><span class="material-symbols-outlined">bolt</span> Brisk workflow</h4>
+        <ol class="space-y-4">
+          <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-xs font-bold shrink-0">1</span><div><p class="text-sm font-semibold text-brisk-gray-950">State the goal in human language</p><p class="text-xs text-brisk-gray-600">Natural language, structured output</p></div></li>
+          <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-xs font-bold shrink-0">2</span><div><p class="text-sm font-semibold text-brisk-gray-950">Discover the application surfaces</p><p class="text-xs text-brisk-gray-600">Automated repo, UI, API, and contract inspection</p></div></li>
+          <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-xs font-bold shrink-0">3</span><div><p class="text-sm font-semibold text-brisk-gray-950">Create a structured JSON plan</p><p class="text-xs text-brisk-gray-600">AI proposes; Brisk checks before execution</p></div></li>
+          <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-xs font-bold shrink-0">4</span><div><p class="text-sm font-semibold text-brisk-gray-950">Validate and repair the plan</p><p class="text-xs text-brisk-gray-600">Schema gate + execution checks + repair loop</p></div></li>
+          <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-xs font-bold shrink-0">5</span><div><p class="text-sm font-semibold text-brisk-gray-950">Ground UI actions in evidence</p><p class="text-xs text-brisk-gray-600">Real page evidence, not invented selectors</p></div></li>
+          <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-xs font-bold shrink-0">6</span><div><p class="text-sm font-semibold text-brisk-gray-950">Route to the right engines</p><p class="text-xs text-brisk-gray-600">UI, API, Contract—one pipeline, one result</p></div></li>
+          <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-xs font-bold shrink-0">7</span><div><p class="text-sm font-semibold text-brisk-gray-950">Return one stable handover object</p><p class="text-xs text-brisk-gray-600">Versioned JSON for CI, dashboards, databases</p></div></li>
+        </ol>
+      </div>
+    </div>
+    <!-- Mobile: segmented tabs -->
+    <div class="comparison-mobile">
+      <div class="flex rounded-lg bg-brisk-gray-300/50 p-1 mb-6" role="tablist">
+        <button type="button" class="comparison-tab flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors bg-white text-brisk-gray-950 shadow-sm" role="tab" aria-selected="true" data-tab="old" aria-controls="comp-old">Traditional</button>
+        <button type="button" class="comparison-tab flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors text-brisk-gray-600" role="tab" aria-selected="false" data-tab="brisk" aria-controls="comp-brisk">Brisk</button>
+      </div>
+      <div id="comp-old" role="tabpanel" class="comparison-panel bg-red-50/50 border border-red-100 rounded-2xl p-5 active">
+        <ol class="space-y-3">
+          <li class="flex gap-2 text-sm"><span class="w-6 h-6 rounded-full bg-red-100 text-red-800 flex items-center justify-center text-xs font-bold shrink-0">1</span>Product teams explain what should be tested</li>
+          <li class="flex gap-2 text-sm"><span class="w-6 h-6 rounded-full bg-red-100 text-red-800 flex items-center justify-center text-xs font-bold shrink-0">2</span>Testers translate into manual UAT steps</li>
+          <li class="flex gap-2 text-sm"><span class="w-6 h-6 rounded-full bg-red-100 text-red-800 flex items-center justify-center text-xs font-bold shrink-0">3</span>Automation engineers write multiple scripts</li>
+          <li class="flex gap-2 text-sm"><span class="w-6 h-6 rounded-full bg-red-100 text-red-800 flex items-center justify-center text-xs font-bold shrink-0">4</span>Different tools produce different reports</li>
+          <li class="flex gap-2 text-sm"><span class="w-6 h-6 rounded-full bg-red-100 text-red-800 flex items-center justify-center text-xs font-bold shrink-0">5</span>Developers investigate failures</li>
+          <li class="flex gap-2 text-sm"><span class="w-6 h-6 rounded-full bg-red-100 text-red-800 flex items-center justify-center text-xs font-bold shrink-0">6</span>Teams rebuild the pipeline</li>
+        </ol>
+      </div>
+      <div id="comp-brisk" role="tabpanel" class="comparison-panel bg-green-50/50 border border-green-100 rounded-2xl p-5 hidden">
+        <ol class="space-y-3">
+          <li class="flex gap-2 text-sm"><span class="w-6 h-6 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-xs font-bold shrink-0">1</span>State the goal in human language</li>
+          <li class="flex gap-2 text-sm"><span class="w-6 h-6 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-xs font-bold shrink-0">2</span>Discover the application surfaces</li>
+          <li class="flex gap-2 text-sm"><span class="w-6 h-6 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-xs font-bold shrink-0">3</span>Create a structured JSON plan</li>
+          <li class="flex gap-2 text-sm"><span class="w-6 h-6 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-xs font-bold shrink-0">4</span>Validate and repair the plan</li>
+          <li class="flex gap-2 text-sm"><span class="w-6 h-6 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-xs font-bold shrink-0">5</span>Ground UI actions in observed evidence</li>
+          <li class="flex gap-2 text-sm"><span class="w-6 h-6 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-xs font-bold shrink-0">6</span>Route scenarios to the right engines</li>
+          <li class="flex gap-2 text-sm"><span class="w-6 h-6 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-xs font-bold shrink-0">7</span>Return one stable handover object</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== COMPARE ===== -->
+<section id="compare" class="py-16 sm:py-20 bg-white" aria-labelledby="compare-heading">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 id="compare-heading" class="text-3xl sm:text-4xl font-extrabold text-brisk-gray-950 mb-4">Compare</h2>
+    <p class="text-lg text-brisk-gray-600 max-w-3xl mb-6">Established platforms have customers, support teams, integrations, market history, and commercial trust. <strong>Most testing products sell you a testing platform. Brisk gives you a testing engine you can embed into your own platform.</strong> Brisk is built for a different role: a local, embeddable testing control layer.</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <div class="bg-brisk-purple-50 border border-brisk-purple-100 rounded-2xl p-6"><div class="w-12 h-12 rounded-xl bg-brisk-purple-100 flex items-center justify-center mb-4"><span class="material-symbols-outlined text-2xl text-brisk-purple-800">integration_instructions</span></div><h3 class="text-lg font-bold text-brisk-gray-950 mb-2">Embeddable by design</h3><p class="text-sm text-brisk-gray-600">Brisk can sit inside a SaaS product, internal platform, developer portal, or CI pipeline. The host owns storage and presentation.</p></div>
+      <div class="bg-brisk-yellow-50 border border-brisk-yellow-100 rounded-2xl p-6"><div class="w-12 h-12 rounded-xl bg-brisk-yellow-100 flex items-center justify-center mb-4"><span class="material-symbols-outlined text-2xl text-brisk-yellow-900">shield</span></div><h3 class="text-lg font-bold text-brisk-gray-950 mb-2">AI with control</h3><p class="text-sm text-brisk-gray-600">AI proposes the plan. Brisk validates, normalizes, routes, and executes through engines. Unsafe plans are blocked before execution.</p></div>
+      <div class="bg-brisk-purple-50 border border-brisk-purple-100 rounded-2xl p-6"><div class="w-12 h-12 rounded-xl bg-brisk-purple-100 flex items-center justify-center mb-4"><span class="material-symbols-outlined text-2xl text-brisk-purple-800">data_object</span></div><h3 class="text-lg font-bold text-brisk-gray-950 mb-2">One evidence shape</h3><p class="text-sm text-brisk-gray-600">UI, API, OpenAPI, adapters, artifacts, assertions, diagnostics, and final results return through a stable versioned contract.</p></div>
+    </div>
+    <div class="flex flex-wrap gap-1 mb-8 border-b border-brisk-gray-300" role="tablist">
+      <button type="button" class="comp-view-tab px-4 py-3 text-sm font-medium border-b-2 border-brisk-purple-800 text-brisk-purple-800 transition-colors" role="tab" aria-selected="true" data-tab="market" aria-controls="comp-market"><span class="material-symbols-outlined text-base align-middle mr-1">business</span> Market snapshot</button>
+      <button type="button" class="comp-view-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent text-brisk-gray-600 hover:text-brisk-purple-800 transition-colors" role="tab" aria-selected="false" data-tab="capability" aria-controls="comp-capability"><span class="material-symbols-outlined text-base align-middle mr-1">build</span> Capability map</button>
+      <button type="button" class="comp-view-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent text-brisk-gray-600 hover:text-brisk-purple-800 transition-colors" role="tab" aria-selected="false" data-tab="benchmark" aria-controls="comp-benchmark"><span class="material-symbols-outlined text-base align-middle mr-1">lab_profile</span> Benchmark readiness</button>
+    </div>
+    <div id="comp-market" role="tabpanel" class="comp-view active"><div class="overflow-x-auto"><table class="w-full text-sm border-collapse"><thead><tr class="bg-brisk-gray-50"><th class="text-left p-3 font-semibold text-brisk-gray-950 border-b border-brisk-gray-300">Product</th><th class="text-left p-3 font-semibold text-brisk-gray-950 border-b border-brisk-gray-300">Since</th><th class="text-left p-3 font-semibold text-brisk-gray-950 border-b border-brisk-gray-300">Customer base</th><th class="text-left p-3 font-semibold text-brisk-gray-950 border-b border-brisk-gray-300">Revenue</th><th class="text-left p-3 font-semibold text-brisk-gray-950 border-b border-brisk-gray-300">Positioning</th></tr></thead><tbody><tr class="border-b border-brisk-gray-300 bg-brisk-purple-50/50"><td class="p-3 font-bold text-brisk-purple-900">Brisk</td><td class="p-3">New open-source product</td><td class="p-3">Early-stage public package</td><td class="p-3">Not revenue-generating yet</td><td class="p-3 text-xs">Local, embeddable AI testing control layer</td></tr><tr class="border-b border-brisk-gray-300"><td class="p-3 font-semibold">mabl</td><td class="p-3">Founded 2017</td><td class="p-3">Public customer stories across SaaS, retail, travel, media</td><td class="p-3">Est. ~$34.5M <span class="text-xs text-brisk-gray-600">(Growjo estimate)</span></td><td class="p-3 text-xs">AI-native low-code test automation, self-healing</td></tr><tr class="border-b border-brisk-gray-300"><td class="p-3 font-semibold">Katalon</td><td class="p-3">Founded 2016</td><td class="p-3">30,000+ teams (per Katalon)</td><td class="p-3">Est. ~$62.2M <span class="text-xs text-brisk-gray-600">(Growjo estimate)</span></td><td class="p-3 text-xs">Broad quality platform: web, API, mobile, desktop</td></tr><tr class="border-b border-brisk-gray-300"><td class="p-3 font-semibold">Tricentis Tosca</td><td class="p-3">Tricentis founded 2007</td><td class="p-3">3,000+ customers (per Tricentis)</td><td class="p-3">ARR above $500M <span class="text-xs text-brisk-gray-600">(reported)</span></td><td class="p-3 text-xs">Enterprise model-based automation, SAP testing</td></tr><tr class="border-b border-brisk-gray-300"><td class="p-3 font-semibold">testRigor</td><td class="p-3">Founded 2015</td><td class="p-3">Enterprise and digital product teams</td><td class="p-3">Est. ~$15M ARR <span class="text-xs text-brisk-gray-600">(GetLatka estimate)</span></td><td class="p-3 text-xs">Plain-English test automation, web, mobile, API</td></tr><tr><td class="p-3 font-semibold">Functionize</td><td class="p-3">Founded 2014</td><td class="p-3">Enterprise and large digital teams</td><td class="p-3">Est. ~$38.6M <span class="text-xs text-brisk-gray-600">(Growjo estimate)</span></td><td class="p-3 text-xs">AI testing agents for authoring, execution, diagnosis</td></tr></tbody></table></div><p class="text-xs text-brisk-gray-600 mt-3">Private-company revenue figures are third-party estimates where stated. Competitor capabilities are based on public evidence.</p></div>
+    <div id="comp-capability" role="tabpanel" class="comp-view hidden"><div class="mb-4 flex flex-wrap gap-2 items-center"><input type="text" id="capability-search" placeholder="Search capabilities..." class="px-3 py-1.5 text-sm border border-brisk-gray-300 rounded-lg w-64 focus:outline-none focus:border-brisk-purple-400" aria-label="Search capabilities"><label class="inline-flex items-center gap-1 text-xs text-brisk-gray-600"><input type="checkbox" id="filter-check" checked class="rounded"> ✅ Native/public</label><label class="inline-flex items-center gap-1 text-xs text-brisk-gray-600"><input type="checkbox" id="filter-wrench" checked class="rounded"> 🔧 Extensible</label><label class="inline-flex items-center gap-1 text-xs text-brisk-gray-600"><input type="checkbox" id="filter-cross" checked class="rounded"> ❌ Unsupported</label><label class="inline-flex items-center gap-1 text-xs text-brisk-gray-600"><input type="checkbox" id="filter-bench" checked class="rounded"> ⚫ Not yet benchmarked</label></div><div class="overflow-x-auto"><table class="w-full text-sm border-collapse"><thead><tr class="bg-brisk-gray-50"><th class="text-left p-3 font-semibold text-brisk-gray-950 border-b border-brisk-gray-300 w-48">Capability</th><th class="text-center p-3 font-semibold border-b border-brisk-gray-300 bg-brisk-purple-50">Brisk</th><th class="text-center p-3 font-semibold border-b border-brisk-gray-300">mabl</th><th class="text-center p-3 font-semibold border-b border-brisk-gray-300">Katalon</th><th class="text-center p-3 font-semibold border-b border-brisk-gray-300">Tosca</th><th class="text-center p-3 font-semibold border-b border-brisk-gray-300">testRigor</th><th class="text-center p-3 font-semibold border-b border-brisk-gray-300">Functionize</th></tr></thead><tbody id="capability-tbody"></tbody></table></div><div class="mt-8"><h3 class="text-lg font-bold text-brisk-gray-950 mb-4">Editorial public-capability assessment (0–10)</h3><p class="text-xs text-brisk-gray-600 mb-4">Comparative scores are editorial assessments from public capability evidence. They are not vendor-certified results or shared-lab benchmarks.</p><div class="space-y-3 max-w-2xl" id="score-bars"></div></div><p class="text-xs text-brisk-gray-600 mt-4">Brisk checkmarks indicate current implementation, not independently proven superiority. Scores are editorial capability assessments.</p></div>
+    <div id="comp-benchmark" role="tabpanel" class="comp-view hidden"><div class="overflow-x-auto"><table class="w-full text-sm border-collapse"><thead><tr class="bg-brisk-gray-50"><th class="text-left p-3 font-semibold text-brisk-gray-950 border-b border-brisk-gray-300">#</th><th class="text-left p-3 font-semibold text-brisk-gray-950 border-b border-brisk-gray-300">Mandatory benchmark scenario</th><th class="text-center p-3 font-semibold border-b border-brisk-gray-300 bg-brisk-purple-50">Brisk</th><th class="text-center p-3 font-semibold border-b border-brisk-gray-300">mabl</th><th class="text-center p-3 font-semibold border-b border-brisk-gray-300">Katalon</th><th class="text-center p-3 font-semibold border-b border-brisk-gray-300">Tosca</th><th class="text-center p-3 font-semibold border-b border-brisk-gray-300">testRigor</th><th class="text-center p-3 font-semibold border-b border-brisk-gray-300">Functionize</th></tr></thead><tbody id="benchmark-tbody"></tbody></table></div><div class="mt-8"><h3 class="text-lg font-bold text-brisk-gray-950 mb-4">Editorial benchmark-readiness assessment (0–10)</h3><p class="text-xs text-brisk-gray-600 mb-4">Benchmark-readiness scores are not shared-lab benchmark results. Competitor cells are public-capability mapping.</p><div class="space-y-3 max-w-2xl" id="benchmark-score-bars"></div></div><p class="text-xs text-brisk-gray-600 mt-4">Not yet independently benchmarked in a shared public lab. Scores are editorial capability assessments, not lab results.</p></div>
+  </div>
+</section>
+
+<!-- Section Transition -->
+<div class="bg-brisk-purple-900 py-8 text-center">
+  <p class="text-white/80 text-lg font-medium max-w-2xl mx-auto px-4">That's the competitive picture. Here is how Brisk actually works.</p>
+</div>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section id="how-it-works" class="py-16 sm:py-20 bg-brisk-gray-50" aria-labelledby="how-heading">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 id="how-heading" class="text-3xl sm:text-4xl font-extrabold text-brisk-gray-950 mb-4">How It Works</h2>
+    <p class="text-xl text-brisk-purple-800 font-semibold mb-10">AI suggests the plan. Brisk checks the plan. Engines run the tests. Evidence shows what happened.</p>
+
+    <!-- 10-Stage Pipeline -->
+    <div class="relative" id="process-explorer">
+      <div class="hidden lg:block absolute left-8 top-0 bottom-0 w-0.5 bg-brisk-purple-100" aria-hidden="true"></div>
+      <ol class="space-y-6">
+        <li class="process-step flex gap-5 lg:gap-8" data-step="1">
+          <div class="hidden lg:flex w-16 shrink-0 items-start justify-center relative"><span class="w-8 h-8 rounded-full bg-brisk-purple-800 text-white flex items-center justify-center text-sm font-bold z-10">1</span></div>
+          <div class="flex-1 bg-white border border-brisk-gray-300 rounded-xl p-5 lg:p-6">
+            <span class="lg:hidden inline-flex w-7 h-7 rounded-full bg-brisk-purple-800 text-white items-center justify-center text-xs font-bold mr-2 mb-2">1</span>
+            <h3 class="text-lg font-bold text-brisk-gray-950">Understand the application</h3>
+            <p class="text-sm text-brisk-gray-600 mt-1">Read configuration, determine what surfaces to inspect, and set up the discovery scope.</p>
+          </div>
+        </li>
+        <li class="process-step flex gap-5 lg:gap-8" data-step="2">
+          <div class="hidden lg:flex w-16 shrink-0 items-start justify-center relative"><span class="w-8 h-8 rounded-full bg-brisk-purple-800 text-white flex items-center justify-center text-sm font-bold z-10">2</span></div>
+          <div class="flex-1 bg-white border border-brisk-gray-300 rounded-xl p-5 lg:p-6">
+            <span class="lg:hidden inline-flex w-7 h-7 rounded-full bg-brisk-purple-800 text-white items-center justify-center text-xs font-bold mr-2 mb-2">2</span>
+            <h3 class="text-lg font-bold text-brisk-gray-950">Discover pages, APIs, routes, contracts, and schemas</h3>
+            <p class="text-sm text-brisk-gray-600 mt-1">Inspect the repository, UI routes, API routes, and OpenAPI files. Identify framework signals and correlate implementation with contracts.</p>
+          </div>
+        </li>
+        <li class="process-step flex gap-5 lg:gap-8" data-step="3">
+          <div class="hidden lg:flex w-16 shrink-0 items-start justify-center relative"><span class="w-8 h-8 rounded-full bg-brisk-purple-800 text-white flex items-center justify-center text-sm font-bold z-10">3</span></div>
+          <div class="flex-1 bg-white border border-brisk-gray-300 rounded-xl p-5 lg:p-6">
+            <span class="lg:hidden inline-flex w-7 h-7 rounded-full bg-brisk-purple-800 text-white items-center justify-center text-xs font-bold mr-2 mb-2">3</span>
+            <h3 class="text-lg font-bold text-brisk-gray-950">Create a structured test plan</h3>
+            <p class="text-sm text-brisk-gray-600 mt-1">AI returns a JSON plan shaped as <code class="bg-brisk-purple-50 px-1.5 py-0.5 rounded text-xs font-mono text-brisk-purple-800">brisk-aitesting.plan.v1</code>. A built-in planner also generates contract scenarios from OpenAPI operations.</p>
+          </div>
+        </li>
+        <li class="process-step flex gap-5 lg:gap-8" data-step="4">
+          <div class="hidden lg:flex w-16 shrink-0 items-start justify-center relative"><span class="w-8 h-8 rounded-full bg-brisk-purple-800 text-white flex items-center justify-center text-sm font-bold z-10">4</span></div>
+          <div class="flex-1 bg-white border border-brisk-gray-300 rounded-xl p-5 lg:p-6">
+            <span class="lg:hidden inline-flex w-7 h-7 rounded-full bg-brisk-purple-800 text-white items-center justify-center text-xs font-bold mr-2 mb-2">4</span>
+            <h3 class="text-lg font-bold text-brisk-gray-950">Normalize and validate the plan</h3>
+            <p class="text-sm text-brisk-gray-600 mt-1">Apply the public JSON Schema gate with AJV, then run Brisk-specific executability checks. Reject anything unsafe.</p>
+          </div>
+        </li>
+        <li class="process-step flex gap-5 lg:gap-8" data-step="5">
+          <div class="hidden lg:flex w-16 shrink-0 items-start justify-center relative"><span class="w-8 h-8 rounded-full bg-brisk-purple-800 text-white flex items-center justify-center text-sm font-bold z-10">5</span></div>
+          <div class="flex-1 bg-white border border-brisk-gray-300 rounded-xl p-5 lg:p-6">
+            <span class="lg:hidden inline-flex w-7 h-7 rounded-full bg-brisk-purple-800 text-white items-center justify-center text-xs font-bold mr-2 mb-2">5</span>
+            <h3 class="text-lg font-bold text-brisk-gray-950">Repair invalid plans when possible</h3>
+            <p class="text-sm text-brisk-gray-600 mt-1">Feed validation issues back to the AI planner for structured repair. Plans that cannot be repaired are blocked from execution.</p>
+          </div>
+        </li>
+        <li class="process-step flex gap-5 lg:gap-8" data-step="6">
+          <div class="hidden lg:flex w-16 shrink-0 items-start justify-center relative"><span class="w-8 h-8 rounded-full bg-brisk-purple-800 text-white flex items-center justify-center text-sm font-bold z-10">6</span></div>
+          <div class="flex-1 bg-white border border-brisk-gray-300 rounded-xl p-5 lg:p-6">
+            <span class="lg:hidden inline-flex w-7 h-7 rounded-full bg-brisk-purple-800 text-white items-center justify-center text-xs font-bold mr-2 mb-2">6</span>
+            <h3 class="text-lg font-bold text-brisk-gray-950">Ground UI steps using observed page evidence</h3>
+            <p class="text-sm text-brisk-gray-600 mt-1">Capture real page elements (roles, labels, text, test IDs, stable selectors) and let AI enrich UI actions from observed evidence only.</p>
+          </div>
+        </li>
+        <li class="process-step flex gap-5 lg:gap-8" data-step="7">
+          <div class="hidden lg:flex w-16 shrink-0 items-start justify-center relative"><span class="w-8 h-8 rounded-full bg-brisk-purple-800 text-white flex items-center justify-center text-sm font-bold z-10">7</span></div>
+          <div class="flex-1 bg-white border border-brisk-gray-300 rounded-xl p-5 lg:p-6">
+            <span class="lg:hidden inline-flex w-7 h-7 rounded-full bg-brisk-purple-800 text-white items-center justify-center text-xs font-bold mr-2 mb-2">7</span>
+            <h3 class="text-lg font-bold text-brisk-gray-950">Route scenarios to the correct engine</h3>
+            <p class="text-sm text-brisk-gray-600 mt-1">Each scenario type is dispatched to the appropriate built-in engine: Playwright for UI, API engine for HTTP checks, Contract engine for OpenAPI.</p>
+          </div>
+        </li>
+        <li class="process-step flex gap-5 lg:gap-8" data-step="8">
+          <div class="hidden lg:flex w-16 shrink-0 items-start justify-center relative"><span class="w-8 h-8 rounded-full bg-brisk-purple-800 text-white flex items-center justify-center text-sm font-bold z-10">8</span></div>
+          <div class="flex-1 bg-white border border-brisk-gray-300 rounded-xl p-5 lg:p-6">
+            <span class="lg:hidden inline-flex w-7 h-7 rounded-full bg-brisk-purple-800 text-white items-center justify-center text-xs font-bold mr-2 mb-2">8</span>
+            <h3 class="text-lg font-bold text-brisk-gray-950">Execute the scenarios</h3>
+            <p class="text-sm text-brisk-gray-600 mt-1">Engines run the validated scenarios. Browser workflows through Playwright, HTTP checks through the API engine, contract summaries through the contract engine.</p>
+          </div>
+        </li>
+        <li class="process-step flex gap-5 lg:gap-8" data-step="9">
+          <div class="hidden lg:flex w-16 shrink-0 items-start justify-center relative"><span class="w-8 h-8 rounded-full bg-brisk-purple-800 text-white flex items-center justify-center text-sm font-bold z-10">9</span></div>
+          <div class="flex-1 bg-white border border-brisk-gray-300 rounded-xl p-5 lg:p-6">
+            <span class="lg:hidden inline-flex w-7 h-7 rounded-full bg-brisk-purple-800 text-white items-center justify-center text-xs font-bold mr-2 mb-2">9</span>
+            <h3 class="text-lg font-bold text-brisk-gray-950">Collect evidence</h3>
+            <p class="text-sm text-brisk-gray-600 mt-1">Gather logs, traces, screenshots, request/response data, and contract evidence from every engine execution.</p>
+          </div>
+        </li>
+        <li class="process-step flex gap-5 lg:gap-8" data-step="10">
+          <div class="hidden lg:flex w-16 shrink-0 items-start justify-center relative"><span class="w-8 h-8 rounded-full bg-brisk-yellow-600 text-brisk-gray-950 flex items-center justify-center text-sm font-bold z-10">10</span></div>
+          <div class="flex-1 bg-brisk-yellow-50 border-2 border-brisk-yellow-400 rounded-xl p-5 lg:p-6">
+            <span class="lg:hidden inline-flex w-7 h-7 rounded-full bg-brisk-yellow-600 text-brisk-gray-950 items-center justify-center text-xs font-bold mr-2 mb-2">10</span>
+            <h3 class="text-lg font-bold text-brisk-gray-950">Return one final result envelope</h3>
+            <p class="text-sm text-brisk-gray-600 mt-1">Package everything into <code class="bg-brisk-yellow-100 px-1.5 py-0.5 rounded text-xs font-mono text-brisk-yellow-900">brisk-aitesting.result.v1</code>—one stable object for CI, dashboards, databases, or internal platforms.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+
+    <!-- Business Intent Example -->
+    <div class="mt-16 bg-white border border-brisk-gray-300 rounded-2xl p-6 sm:p-10">
+      <h3 class="text-xl font-bold text-brisk-gray-950 mb-2">Business intent becomes executable evidence</h3>
+      <p class="text-sm text-brisk-gray-600 mb-6">Here is how a real business rule flows through the Brisk pipeline:</p>
+      <div class="bg-brisk-gray-50 rounded-xl p-4 sm:p-6 mb-6">
+        <p class="text-sm font-mono text-brisk-gray-800"><span class="text-brisk-purple-800 font-semibold">Given</span> a booking date after vessel departure,<br><span class="text-brisk-purple-800 font-semibold">when</span> a booking is created,<br><span class="text-brisk-purple-800 font-semibold">then</span> the API must reject it with <code class="bg-brisk-purple-50 px-1 rounded text-xs">VESSEL_ALREADY_DEPARTED</code>.</p>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-brisk-purple-50 rounded-lg p-4 text-center"><span class="material-symbols-outlined text-brisk-purple-800 mb-1 block">contextual_token</span><p class="text-xs font-semibold text-brisk-gray-950">Context</p><p class="text-xs text-brisk-gray-600 mt-1">Booking date after vessel departure</p></div>
+        <div class="bg-brisk-purple-50 rounded-lg p-4 text-center"><span class="material-symbols-outlined text-brisk-purple-800 mb-1 block">play_arrow</span><p class="text-xs font-semibold text-brisk-gray-950">Action</p><p class="text-xs text-brisk-gray-600 mt-1">Booking is created</p></div>
+        <div class="bg-brisk-purple-50 rounded-lg p-4 text-center"><span class="material-symbols-outlined text-brisk-purple-800 mb-1 block">gavel</span><p class="text-xs font-semibold text-brisk-gray-950">Expected outcome</p><p class="text-xs text-brisk-gray-600 mt-1">API rejects with error code</p></div>
+        <div class="bg-brisk-yellow-50 rounded-lg p-4 text-center"><span class="material-symbols-outlined text-brisk-yellow-900 mb-1 block">verified</span><p class="text-xs font-semibold text-brisk-gray-950">Evidence</p><p class="text-xs text-brisk-gray-600 mt-1">Request, response, status, schema check</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section Transition -->
+<div class="bg-brisk-purple-50 py-8 text-center border-y border-brisk-purple-100">
+  <p class="text-brisk-purple-800 text-lg font-medium max-w-2xl mx-auto px-4">The pipeline is controlled. Now see what each stage can actually do.</p>
+</div>
+
+<!-- ===== CAPABILITIES ===== -->
+<section id="capabilities" class="py-16 sm:py-20 bg-white" aria-labelledby="capabilities-heading">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 id="capabilities-heading" class="text-3xl sm:text-4xl font-extrabold text-brisk-gray-950 mb-4">Capabilities</h2>
+    <p class="text-lg text-brisk-gray-600 max-w-3xl mb-10">What the current product can do, organized by pipeline stage.</p>
+
+    <!-- Capability Tabs -->
+    <div class="flex flex-wrap gap-1 mb-8 border-b border-brisk-gray-300" role="tablist">
+      <button type="button" class="cap-tab px-4 py-3 text-sm font-medium border-b-2 border-brisk-purple-800 text-brisk-purple-800 transition-colors" role="tab" aria-selected="true" data-tab="discover" aria-controls="cap-discover"><span class="material-symbols-outlined text-base align-middle mr-1">travel_explore</span> Discover</button>
+      <button type="button" class="cap-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent text-brisk-gray-600 hover:text-brisk-purple-800 transition-colors" role="tab" aria-selected="false" data-tab="plan" aria-controls="cap-plan"><span class="material-symbols-outlined text-base align-middle mr-1">description</span> Plan &amp; Validate</button>
+      <button type="button" class="cap-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent text-brisk-gray-600 hover:text-brisk-purple-800 transition-colors" role="tab" aria-selected="false" data-tab="execute" aria-controls="cap-execute"><span class="material-symbols-outlined text-base align-middle mr-1">play_arrow</span> Execute</button>
+      <button type="button" class="cap-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent text-brisk-gray-600 hover:text-brisk-purple-800 transition-colors" role="tab" aria-selected="false" data-tab="handover" aria-controls="cap-handover"><span class="material-symbols-outlined text-base align-middle mr-1">move_to_inbox</span> Hand over</button>
+    </div>
+    <div id="cap-discover" role="tabpanel" class="cap-panel active grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">folder_open</span><div><p class="text-sm font-semibold text-brisk-gray-950">Inspect a repository</p><p class="text-xs text-brisk-gray-600">Identify framework signals and package metadata</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">account_tree</span><div><p class="text-sm font-semibold text-brisk-gray-950">Identify application structure</p><p class="text-xs text-brisk-gray-600">Supported JS/TS backend framework detection</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">alt_route</span><div><p class="text-sm font-semibold text-brisk-gray-950">Discover backend routes</p><p class="text-xs text-brisk-gray-600">Express, nested routers, route chains, Nest decorators</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">web</span><div><p class="text-sm font-semibold text-brisk-gray-950">Discover UI routes</p><p class="text-xs text-brisk-gray-600">Separate from backend route discovery</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">description</span><div><p class="text-sm font-semibold text-brisk-gray-950">Locate OpenAPI files</p><p class="text-xs text-brisk-gray-600">JSON and YAML contract discovery</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">compare_arrows</span><div><p class="text-sm font-semibold text-brisk-gray-950">Correlate routes &amp; contracts</p><p class="text-xs text-brisk-gray-600">Report matched, undocumented, and missing routes</p></div></div>
+    </div>
+    <div id="cap-plan" role="tabpanel" class="cap-panel hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">psychology</span><div><p class="text-sm font-semibold text-brisk-gray-950">Business intent to scenarios</p><p class="text-xs text-brisk-gray-600">Turn user-supplied intent into executable scenarios</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">data_object</span><div><p class="text-sm font-semibold text-brisk-gray-950">Structured JSON plans</p><p class="text-xs text-brisk-gray-600">AI returns <code class="bg-white px-1 rounded text-xs font-mono">brisk-aitesting.plan.v1</code></p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">verified</span><div><p class="text-sm font-semibold text-brisk-gray-950">Validate against contract</p><p class="text-xs text-brisk-gray-600">AJV-backed public JSON Schema gate</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">build</span><div><p class="text-sm font-semibold text-brisk-gray-950">Repair invalid plans</p><p class="text-xs text-brisk-gray-600">Validation feedback loop with AI planner</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">track_changes</span><div><p class="text-sm font-semibold text-brisk-gray-950">Preserve objectives</p><p class="text-xs text-brisk-gray-600">Business meaning stays visible in the result</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">gps_fixed</span><div><p class="text-sm font-semibold text-brisk-gray-950">Ground UI actions</p><p class="text-xs text-brisk-gray-600">Observed page evidence, not invented selectors</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-yellow-50 rounded-xl sm:col-span-2 lg:col-span-3"><span class="material-symbols-outlined text-brisk-yellow-900 mt-0.5">block</span><div><p class="text-sm font-semibold text-brisk-gray-950">Block unsafe execution</p><p class="text-xs text-brisk-gray-600">Invalid or unsafe plans are rejected before any engine runs</p></div></div>
+    </div>
+    <div id="cap-execute" role="tabpanel" class="cap-panel hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">stadia_controller</span><div><p class="text-sm font-semibold text-brisk-gray-950">Browser workflows</p><p class="text-xs text-brisk-gray-600">Through Playwright engine</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">http</span><div><p class="text-sm font-semibold text-brisk-gray-950">HTTP and API checks</p><p class="text-xs text-brisk-gray-600">Status, body, headers, schema validation</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">contract</span><div><p class="text-sm font-semibold text-brisk-gray-950">OpenAPI parsing</p><p class="text-xs text-brisk-gray-600">JSON/YAML contracts with response-schema validation</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">add_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">Positive API scenarios</p><p class="text-xs text-brisk-gray-600">Generated from OpenAPI request schemas</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">remove_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">Negative API scenarios</p><p class="text-xs text-brisk-gray-600">Generated from OpenAPI request schemas</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">account_tree</span><div><p class="text-sm font-semibold text-brisk-gray-950">Multi-engine routing</p><p class="text-xs text-brisk-gray-600">Scenarios dispatched to the right engine</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-yellow-50 rounded-xl"><span class="material-symbols-outlined text-brisk-yellow-900 mt-0.5">science</span><div><p class="text-sm font-semibold text-brisk-gray-950">Schemathesis (optional)</p><p class="text-xs text-brisk-gray-600">Optional deep OpenAPI checking via Python adapter</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">extension</span><div><p class="text-sm font-semibold text-brisk-gray-950">Custom engine extension</p><p class="text-xs text-brisk-gray-600">Plug in engines for databases, messaging, mobile, desktop, enterprise systems</p></div></div>
+    </div>
+    <div id="cap-handover" role="tabpanel" class="cap-panel hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="flex items-start gap-3 p-4 bg-brisk-yellow-50 rounded-xl"><span class="material-symbols-outlined text-brisk-yellow-900 mt-0.5">data_object</span><div><p class="text-sm font-semibold text-brisk-gray-950">One versioned result</p><p class="text-xs text-brisk-gray-600">Machine-readable <code class="bg-white px-1 rounded text-xs font-mono">brisk-aitesting.result.v1</code></p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">screenshot</span><div><p class="text-sm font-semibold text-brisk-gray-950">Screenshots</p><p class="text-xs text-brisk-gray-600">Browser evidence from UI workflows</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">timeline</span><div><p class="text-sm font-semibold text-brisk-gray-950">Traces</p><p class="text-xs text-brisk-gray-600">Playwright trace evidence</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">article</span><div><p class="text-sm font-semibold text-brisk-gray-950">Logs</p><p class="text-xs text-brisk-gray-600">Execution logs from every engine</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">swap_horiz</span><div><p class="text-sm font-semibold text-brisk-gray-950">Request/response evidence</p><p class="text-xs text-brisk-gray-600">API call data preserved</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">contract_edit</span><div><p class="text-sm font-semibold text-brisk-gray-950">Contract evidence</p><p class="text-xs text-brisk-gray-600">OpenAPI operation summaries and validation</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-yellow-50 rounded-xl"><span class="material-symbols-outlined text-brisk-yellow-900 mt-0.5">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">CI-compatible status</p><p class="text-xs text-brisk-gray-600">Exit codes and machine-readable summary</p></div></div>
+      <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl"><span class="material-symbols-outlined text-brisk-purple-800 mt-0.5">dns</span><div><p class="text-sm font-semibold text-brisk-gray-950">Host-owned persistence</p><p class="text-xs text-brisk-gray-600">Your database, dashboard, CI, or observability pipeline</p></div></div>
+    </div>
+
+    <!-- Engine Cards + Routing Diagram -->
+    <h3 class="text-2xl font-bold text-brisk-gray-950 mt-16 mb-6">Built-in engines</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <div class="bg-white border-2 border-brisk-purple-100 rounded-2xl p-6 hover:border-brisk-purple-400 hover:shadow-lg transition-all">
+        <div class="w-12 h-12 rounded-xl bg-brisk-purple-100 flex items-center justify-center mb-4"><span class="material-symbols-outlined text-2xl text-brisk-purple-800">stadia_controller</span></div>
+        <h4 class="text-lg font-bold text-brisk-gray-950 mb-2">Playwright Engine</h4>
+        <p class="text-xs text-brisk-gray-600 mb-3"><code class="bg-brisk-gray-50 px-1 rounded font-mono">BuiltinPlaywrightEngine</code></p>
+        <p class="text-sm text-brisk-gray-600">Runs browser workflows and grounded UI actions. Captures screenshots, traces, and page evidence.</p>
+        <div class="mt-4 flex gap-2"><span class="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs rounded-full"><span class="material-symbols-outlined text-xs">check</span> Built-in</span></div>
+      </div>
+      <div class="bg-white border-2 border-brisk-purple-100 rounded-2xl p-6 hover:border-brisk-purple-400 hover:shadow-lg transition-all">
+        <div class="w-12 h-12 rounded-xl bg-brisk-purple-100 flex items-center justify-center mb-4"><span class="material-symbols-outlined text-2xl text-brisk-purple-800">http</span></div>
+        <h4 class="text-lg font-bold text-brisk-gray-950 mb-2">API Engine</h4>
+        <p class="text-xs text-brisk-gray-600 mb-3"><code class="bg-brisk-gray-50 px-1 rounded font-mono">BuiltinApiEngine</code></p>
+        <p class="text-sm text-brisk-gray-600">Runs HTTP checks, validates response schemas when OpenAPI schemas exist. Captures request/response evidence.</p>
+        <div class="mt-4 flex gap-2"><span class="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs rounded-full"><span class="material-symbols-outlined text-xs">check</span> Built-in</span></div>
+      </div>
+      <div class="bg-white border-2 border-brisk-purple-100 rounded-2xl p-6 hover:border-brisk-purple-400 hover:shadow-lg transition-all">
+        <div class="w-12 h-12 rounded-xl bg-brisk-purple-100 flex items-center justify-center mb-4"><span class="material-symbols-outlined text-2xl text-brisk-purple-800">contract</span></div>
+        <h4 class="text-lg font-bold text-brisk-gray-950 mb-2">Contract Engine</h4>
+        <p class="text-xs text-brisk-gray-600 mb-3"><code class="bg-brisk-gray-50 px-1 rounded font-mono">BuiltinContractEngine</code></p>
+        <p class="text-sm text-brisk-gray-600">Reads OpenAPI JSON/YAML and emits operation summaries. Connects contracts with runtime execution.</p>
+        <div class="mt-4 flex gap-2"><span class="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs rounded-full"><span class="material-symbols-outlined text-xs">check</span> Built-in</span></div>
+      </div>
+    </div>
+
+    <!-- Routing Diagram -->
+    <div class="bg-brisk-gray-50 rounded-2xl p-6 sm:p-10" aria-label="Engine routing diagram: Checked plan enters router, scenarios flow to UI/API/Contract engines, all converge into one result envelope">
+      <div class="flex flex-col lg:flex-row items-center gap-4 lg:gap-6">
+        <div class="bg-brisk-purple-800 text-white rounded-xl px-6 py-4 text-center shrink-0"><p class="text-sm font-bold">Checked Plan</p><p class="text-xs text-white/70">brisk-aitesting.plan.v1</p></div>
+        <div class="hidden lg:block text-brisk-purple-400 text-2xl">→</div>
+        <div class="lg:hidden text-brisk-purple-400 text-2xl rotate-90">→</div>
+        <div class="bg-brisk-yellow-100 border-2 border-brisk-yellow-400 rounded-xl px-6 py-4 text-center shrink-0"><p class="text-sm font-bold text-brisk-gray-950">Engine Router</p></div>
+        <div class="flex flex-col lg:flex-row gap-3 flex-1 w-full lg:w-auto">
+          <div class="hidden lg:flex flex-col items-center"><span class="text-brisk-purple-400">→</span></div>
+          <div class="bg-white border border-brisk-purple-200 rounded-xl px-4 py-3 text-center flex-1"><span class="material-symbols-outlined text-brisk-purple-800 block mb-1">stadia_controller</span><p class="text-xs font-semibold">UI Scenarios</p></div>
+          <div class="hidden lg:flex flex-col items-center"><span class="text-brisk-purple-400">→</span></div>
+          <div class="bg-white border border-brisk-purple-200 rounded-xl px-4 py-3 text-center flex-1"><span class="material-symbols-outlined text-brisk-purple-800 block mb-1">http</span><p class="text-xs font-semibold">API Scenarios</p></div>
+          <div class="hidden lg:flex flex-col items-center"><span class="text-brisk-purple-400">→</span></div>
+          <div class="bg-white border border-brisk-purple-200 rounded-xl px-4 py-3 text-center flex-1"><span class="material-symbols-outlined text-brisk-purple-800 block mb-1">contract</span><p class="text-xs font-semibold">Contract Scenarios</p></div>
+        </div>
+        <div class="hidden lg:block text-brisk-purple-400 text-2xl">→</div>
+        <div class="lg:hidden text-brisk-purple-400 text-2xl rotate-90">→</div>
+        <div class="bg-brisk-yellow-50 border-2 border-brisk-yellow-400 rounded-xl px-6 py-4 text-center shrink-0"><p class="text-sm font-bold text-brisk-gray-950">Result Envelope</p><p class="text-xs text-brisk-gray-600">brisk-aitesting.result.v1</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section Transition -->
+<div class="bg-brisk-purple-900 py-8 text-center">
+  <p class="text-white/80 text-lg font-medium max-w-2xl mx-auto px-4">Capabilities need control. Here is where AI suggestions meet Brisk validation.</p>
+</div>
+
+<!-- ===== AI CONTROL ===== -->
+<section id="ai-control" class="py-16 sm:py-20 bg-white" aria-labelledby="ai-control-heading">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 id="ai-control-heading" class="text-3xl sm:text-4xl font-extrabold text-brisk-gray-950 mb-4">AI Control</h2>
+    <p class="text-xl text-brisk-purple-800 font-semibold mb-10">AI proposes. Brisk decides what is allowed to run.</p>
+
+    <!-- Control Stages -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+      <div class="bg-brisk-purple-50 rounded-xl p-5 text-center"><span class="text-3xl font-extrabold text-brisk-purple-400 mb-2 block">1</span><p class="text-sm font-semibold text-brisk-gray-950">Extract JSON</p><p class="text-xs text-brisk-gray-600 mt-1">Extract structured plan from AI response</p></div>
+      <div class="bg-brisk-purple-50 rounded-xl p-5 text-center"><span class="text-3xl font-extrabold text-brisk-purple-400 mb-2 block">2</span><p class="text-sm font-semibold text-brisk-gray-950">Normalize aliases</p><p class="text-xs text-brisk-gray-600 mt-1">Resolve safe shorthand references</p></div>
+      <div class="bg-brisk-purple-50 rounded-xl p-5 text-center"><span class="text-3xl font-extrabold text-brisk-purple-400 mb-2 block">3</span><p class="text-sm font-semibold text-brisk-gray-950">Inject routes</p><p class="text-xs text-brisk-gray-600 mt-1">Add discovered routes when needed</p></div>
+      <div class="bg-brisk-purple-50 rounded-xl p-5 text-center"><span class="text-3xl font-extrabold text-brisk-purple-400 mb-2 block">4</span><p class="text-sm font-semibold text-brisk-gray-950">Validate structure</p><p class="text-xs text-brisk-gray-600 mt-1">Schema gate + executability checks</p></div>
+      <div class="bg-brisk-purple-50 rounded-xl p-5 text-center"><span class="text-3xl font-extrabold text-brisk-purple-400 mb-2 block">5</span><p class="text-sm font-semibold text-brisk-gray-950">Repair</p><p class="text-xs text-brisk-gray-600 mt-1">Feedback loop fixes invalid plans</p></div>
+      <div class="bg-brisk-purple-50 rounded-xl p-5 text-center"><span class="text-3xl font-extrabold text-brisk-purple-400 mb-2 block">6</span><p class="text-sm font-semibold text-brisk-gray-950">Ground UI</p><p class="text-xs text-brisk-gray-600 mt-1">Real page evidence only</p></div>
+      <div class="bg-brisk-purple-50 rounded-xl p-5 text-center sm:col-span-2 lg:col-span-2"><span class="text-3xl font-extrabold text-brisk-purple-400 mb-2 block">7</span><p class="text-sm font-semibold text-brisk-gray-950">Route to engines</p><p class="text-xs text-brisk-gray-600 mt-1">Dispatch validated scenarios to the correct built-in engine</p></div>
+    </div>
+
+    <!-- Allowed / Blocked / Required Matrix -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-green-50 border border-green-200 rounded-2xl p-6">
+        <div class="flex items-center gap-2 mb-4"><span class="material-symbols-outlined text-green-700">check_circle</span><h3 class="text-lg font-bold text-green-800">Allowed</h3></div>
+        <ul class="space-y-3">
+          <li class="flex gap-2 text-sm text-brisk-gray-800"><span class="material-symbols-outlined text-green-600 text-base shrink-0">check</span>AI can suggest what should be tested</li>
+          <li class="flex gap-2 text-sm text-brisk-gray-800"><span class="material-symbols-outlined text-green-600 text-base shrink-0">check</span>AI can classify scenarios by supported execution path</li>
+          <li class="flex gap-2 text-sm text-brisk-gray-800"><span class="material-symbols-outlined text-green-600 text-base shrink-0">check</span>AI can enrich UI actions from captured page evidence</li>
+        </ul>
+      </div>
+      <div class="bg-red-50 border border-red-200 rounded-2xl p-6">
+        <div class="flex items-center gap-2 mb-4"><span class="material-symbols-outlined text-red-700">block</span><h3 class="text-lg font-bold text-red-800">Blocked</h3></div>
+        <ul class="space-y-3">
+          <li class="flex gap-2 text-sm text-brisk-gray-800"><span class="material-symbols-outlined text-red-500 text-base shrink-0">close</span>Invented selectors being forced into execution</li>
+          <li class="flex gap-2 text-sm text-brisk-gray-800"><span class="material-symbols-outlined text-red-500 text-base shrink-0">close</span>Bypassing plan validation</li>
+          <li class="flex gap-2 text-sm text-brisk-gray-800"><span class="material-symbols-outlined text-red-500 text-base shrink-0">close</span>Executing malformed or unsupported plans</li>
+        </ul>
+      </div>
+      <div class="bg-brisk-yellow-50 border border-brisk-yellow-200 rounded-2xl p-6">
+        <div class="flex items-center gap-2 mb-4"><span class="material-symbols-outlined text-brisk-yellow-900">verified</span><h3 class="text-lg font-bold text-brisk-yellow-900">Required by contract</h3></div>
+        <ul class="space-y-3">
+          <li class="flex gap-2 text-sm text-brisk-gray-800"><span class="material-symbols-outlined text-brisk-yellow-700 text-base shrink-0">shield</span>Executable results carry evidence produced by engines</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section Transition -->
+<div class="bg-brisk-purple-50 py-8 text-center border-y border-brisk-purple-100">
+  <p class="text-brisk-purple-800 text-lg font-medium max-w-2xl mx-auto px-4">Control leads to evidence. Evidence is what your product can actually use.</p>
+</div>
+
+<!-- ===== EVIDENCE & INTEGRATION ===== -->
+<section id="evidence" class="py-16 sm:py-20 bg-brisk-gray-50" aria-labelledby="evidence-heading">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 id="evidence-heading" class="text-3xl sm:text-4xl font-extrabold text-brisk-gray-950 mb-4">Evidence &amp; Integration</h2>
+    <p class="text-xl text-brisk-purple-800 font-semibold mb-10">One result your product can store, render, compare, or send to CI.</p>
+
+    <!-- Mobile evidence toggle -->
+    <div class="lg:hidden flex rounded-lg bg-brisk-gray-300/50 p-1 mb-6" role="tablist" aria-label="Evidence view">
+      <button type="button" class="evidence-mobile-tab flex-1 py-2 px-3 text-sm font-medium rounded-md bg-white text-brisk-gray-950 shadow-sm" role="tab" aria-selected="true" data-view="result">Result</button>
+      <button type="button" class="evidence-mobile-tab flex-1 py-2 px-3 text-sm font-medium rounded-md text-brisk-gray-600" role="tab" aria-selected="false" data-view="evidence">Evidence</button>
+    </div>
+
+    <!-- Result Viewer -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12" id="evidence-grid">
+      <div class="evidence-result-panel">
+        <div class="bg-brisk-gray-950 rounded-xl overflow-hidden">
+          <div class="flex items-center justify-between px-4 py-2 bg-brisk-gray-800">
+            <span class="text-xs text-brisk-gray-300 font-mono">brisk-aitesting.result.v1</span>
+            <button id="copy-result" class="text-brisk-gray-300 hover:text-white transition-colors" aria-label="Copy result JSON"><span class="material-symbols-outlined text-sm">content_copy</span></button>
+          </div>
+          <pre class="p-4 text-xs sm:text-sm text-green-300 font-mono overflow-x-auto leading-relaxed"><code>{
+  "schemaVersion": "brisk-aitesting.result.v1",
+  "runId": "run_abc123...",
+  "status": "passed",
+  "summary": {
+    "total": 12,
+    "passed": 10,
+    "failed": 1,
+    "skipped": 1,
+    "errors": 0,
+    "passRate": 0.833,
+    "durationMs": 45200
+  },
+  "plan": { /* structured test plan */ },
+  "tests": [
+    {
+      "id": "scenario_01",
+      "type": "ui",
+      "status": "passed",
+      "assertions": [...],
+      "evidence": { ... }
+    }
+  ],
+  "artifacts": [
+    { "type": "screenshot", "path": "..." },
+    { "type": "trace", "path": "..." }
+  ],
+  "diagnosis": [],
+  "handover": {
+    "schemaVersion": "brisk-aitesting.handover.v1",
+    "consumableBy": ["ci", "dashboard", "database"]
+  }
+}</code></pre>
+        </div>
+        <p id="copy-confirm" class="text-xs text-green-600 mt-2 hidden" role="status">Copied to clipboard</p>
+      </div>
+      <!-- Evidence Inspector -->
+      <div class="evidence-evidence-panel bg-white border border-brisk-gray-300 rounded-xl p-6">
+        <h3 class="text-lg font-bold text-brisk-gray-950 mb-4">Evidence branches</h3>
+        <div class="space-y-3">
+          <div class="evidence-branch p-3 rounded-lg border border-brisk-gray-300 hover:border-brisk-purple-400 cursor-pointer transition-colors" data-highlight="summary">
+            <div class="flex items-center gap-2"><span class="material-symbols-outlined text-brisk-purple-800">analytics</span><p class="text-sm font-semibold text-brisk-gray-950">Summary</p></div>
+            <p class="text-xs text-brisk-gray-600 mt-1">Total, passed, failed, skipped, errors, pass rate, and duration. The top-level status for CI gates.</p>
+          </div>
+          <div class="evidence-branch p-3 rounded-lg border border-brisk-gray-300 hover:border-brisk-purple-400 cursor-pointer transition-colors" data-highlight="tests">
+            <div class="flex items-center gap-2"><span class="material-symbols-outlined text-brisk-purple-800">checklist</span><p class="text-sm font-semibold text-brisk-gray-950">Tests</p></div>
+            <p class="text-xs text-brisk-gray-600 mt-1">Each scenario with its type, status, assertions, and linked evidence artifacts.</p>
+          </div>
+          <div class="evidence-branch p-3 rounded-lg border border-brisk-gray-300 hover:border-brisk-purple-400 cursor-pointer transition-colors" data-highlight="artifacts">
+            <div class="flex items-center gap-2"><span class="material-symbols-outlined text-brisk-purple-800">folder</span><p class="text-sm font-semibold text-brisk-gray-950">Artifacts</p></div>
+            <p class="text-xs text-brisk-gray-600 mt-1">Screenshots, traces, logs, request/response data, and contract evidence.</p>
+          </div>
+          <div class="evidence-branch p-3 rounded-lg border border-brisk-gray-300 hover:border-brisk-purple-400 cursor-pointer transition-colors" data-highlight="handover">
+            <div class="flex items-center gap-2"><span class="material-symbols-outlined text-brisk-purple-800">move_to_inbox</span><p class="text-sm font-semibold text-brisk-gray-950">Handover</p></div>
+            <p class="text-xs text-brisk-gray-600 mt-1">Metadata about which systems can consume this result: CI, dashboards, databases, and more.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Integration Consumers -->
+    <h3 class="text-xl font-bold text-brisk-gray-950 mb-4">Your product can use this result for</h3>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-12">
+      <div class="bg-white border border-brisk-gray-300 rounded-lg p-3 text-center"><span class="material-symbols-outlined text-brisk-purple-800 mb-1 block">sync</span><p class="text-xs font-medium text-brisk-gray-950">CI pass/fail gates</p></div>
+      <div class="bg-white border border-brisk-gray-300 rounded-lg p-3 text-center"><span class="material-symbols-outlined text-brisk-purple-800 mb-1 block">dashboard</span><p class="text-xs font-medium text-brisk-gray-950">Dashboard cards</p></div>
+      <div class="bg-white border border-brisk-gray-300 rounded-lg p-3 text-center"><span class="material-symbols-outlined text-brisk-purple-800 mb-1 block">history</span><p class="text-xs font-medium text-brisk-gray-950">Test history</p></div>
+      <div class="bg-white border border-brisk-gray-300 rounded-lg p-3 text-center"><span class="material-symbols-outlined text-brisk-purple-800 mb-1 block">dns</span><p class="text-xs font-medium text-brisk-gray-950">Database persistence</p></div>
+      <div class="bg-white border border-brisk-gray-300 rounded-lg p-3 text-center"><span class="material-symbols-outlined text-brisk-purple-800 mb-1 block">receipt_long</span><p class="text-xs font-medium text-brisk-gray-950">Audit logs</p></div>
+      <div class="bg-white border border-brisk-gray-300 rounded-lg p-3 text-center"><span class="material-symbols-outlined text-brisk-purple-800 mb-1 block">screenshot</span><p class="text-xs font-medium text-brisk-gray-950">Traces &amp; screenshots</p></div>
+      <div class="bg-white border border-brisk-gray-300 rounded-lg p-3 text-center"><span class="material-symbols-outlined text-brisk-purple-800 mb-1 block">trending_up</span><p class="text-xs font-medium text-brisk-gray-950">Analytics</p></div>
+      <div class="bg-white border border-brisk-gray-300 rounded-lg p-3 text-center"><span class="material-symbols-outlined text-brisk-purple-800 mb-1 block">task_alt</span><p class="text-xs font-medium text-brisk-gray-950">Release approval</p></div>
+    </div>
+    <p class="text-xs text-brisk-gray-600 mb-8">Example integrations described in the README include BigQuery, Cloud Storage, GitHub Actions, internal test portals, release approval workflows, incident-management systems, and host-owned dashboards. These are examples, not prebuilt or certified integrations.</p>
+
+    <!-- Host Config Bridge -->
+    <h3 class="text-xl font-bold text-brisk-gray-950 mb-4">Host application config bridge</h3>
+    <div class="bg-white border border-brisk-gray-300 rounded-2xl p-6 sm:p-8">
+      <div class="flex flex-col lg:flex-row items-center gap-4 lg:gap-8 mb-6">
+        <div class="bg-brisk-purple-50 rounded-xl p-5 text-center shrink-0">
+          <p class="text-sm font-semibold text-brisk-gray-950 mb-2">Host Application</p>
+          <p class="text-xs text-brisk-gray-600">Your source of truth</p>
+          <div class="mt-2 text-xs text-brisk-gray-800 space-y-1"><p>productName</p><p>urls.staging</p><p>paths.repo</p><p>testing.auth</p><p>ai.*</p></div>
+        </div>
+        <div class="text-brisk-purple-400 text-2xl hidden lg:block">→</div>
+        <div class="text-brisk-purple-400 text-2xl lg:hidden rotate-90">→</div>
+        <div class="bg-brisk-yellow-50 border-2 border-brisk-yellow-400 rounded-xl p-5 text-center shrink-0">
+          <p class="text-sm font-semibold text-brisk-gray-950 mb-2">defineConfigFromHost</p>
+          <p class="text-xs text-brisk-gray-600">Maps host config → Brisk config</p>
+        </div>
+        <div class="text-brisk-purple-400 text-2xl hidden lg:block">→</div>
+        <div class="text-brisk-purple-400 text-2xl lg:hidden rotate-90">→</div>
+        <div class="bg-brisk-purple-50 rounded-xl p-5 text-center shrink-0">
+          <p class="text-sm font-semibold text-brisk-gray-950 mb-2">Brisk Testing Config</p>
+          <p class="text-xs text-brisk-gray-600">Only the values needed</p>
+        </div>
+      </div>
+      <details class="group">
+        <summary class="text-sm font-medium text-brisk-purple-800 cursor-pointer hover:text-brisk-purple-900">View code example</summary>
+        <pre class="mt-3 p-4 bg-brisk-gray-950 rounded-lg text-xs text-green-300 font-mono overflow-x-auto"><code>import { defineConfigFromHost, mergeConfig } from 'brisk-aitesting';
+
+const testingConfig = defineConfigFromHost(
+  hostConfig,
+  (host) => ({
+    app: {
+      name: host.productName,
+      baseUrl: host.urls.staging,
+      repoPath: host.paths.repo,
+    },
+    auth: host.testing.auth,
+    ai: {
+      provider: host.ai.provider,
+      endpoint: host.ai.endpoint,
+      model: host.ai.model,
+      apiKey: host.ai.apiKey,
+    },
+  })
+);
+
+export default mergeConfig(testingConfig, {
+  runtime: {
+    artifactsDir: '.brisk-aitesting/artifacts',
+    timeoutMs: 120000,
+    retries: 1,
+    headless: true,
+  },
+});</code></pre>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- Section Transition -->
+<div class="bg-brisk-purple-900 py-8 text-center">
+  <p class="text-white/80 text-lg font-medium max-w-2xl mx-auto px-4">Control and evidence set the foundation. Here is exactly what is built today.</p>
+</div>
+
+<!-- ===== PRODUCT STATUS ===== -->
+<section id="status" class="py-16 sm:py-20 bg-white" aria-labelledby="status-heading">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Alpha Banner -->
+    <div class="bg-brisk-yellow-50 border border-brisk-yellow-200 rounded-xl p-4 mb-10 flex items-start gap-3">
+      <span class="material-symbols-outlined text-brisk-yellow-900 mt-0.5">info</span>
+      <div><p class="text-sm font-semibold text-brisk-yellow-900">Brisk is an early-stage open-source project.</p><p class="text-xs text-brisk-gray-600">Current capability and future work are deliberately separated. Alpha status means the product works but is still maturing.</p></div>
+    </div>
+
+    <h2 id="status-heading" class="text-3xl sm:text-4xl font-extrabold text-brisk-gray-950 mb-4">Product Status</h2>
+    <p class="text-lg text-brisk-gray-600 max-w-3xl mb-8">What is built now versus what remains future work—clearly separated.</p>
+
+    <!-- Status Tabs -->
+    <div class="flex gap-1 mb-8 border-b border-brisk-gray-300" role="tablist">
+      <button type="button" class="status-tab px-4 py-3 text-sm font-medium border-b-2 border-green-600 text-green-700 transition-colors" role="tab" aria-selected="true" data-tab="built" aria-controls="status-built"><span class="material-symbols-outlined text-base align-middle mr-1">check_circle</span> Built now</button>
+      <button type="button" class="status-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent text-brisk-gray-600 hover:text-brisk-purple-800 transition-colors" role="tab" aria-selected="false" data-tab="not-built" aria-controls="status-not-built"><span class="material-symbols-outlined text-base align-middle mr-1">pending</span> Not built yet</button>
+    </div>
+
+    <!-- Built Now -->
+    <div id="status-built" role="tabpanel" class="status-panel active">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">UI testing</p><p class="text-xs text-brisk-gray-600">Browser workflows through Playwright</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">API testing</p><p class="text-xs text-brisk-gray-600">HTTP checks, status, body, headers</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">OpenAPI testing</p><p class="text-xs text-brisk-gray-600">JSON/YAML parsing, response schema validation</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">Contract drift reporting</p><p class="text-xs text-brisk-gray-600">OpenAPI vs. implementation comparison</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">Checked AI planning</p><p class="text-xs text-brisk-gray-600">AI returns JSON; Brisk validates before execution</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">Result handover</p><p class="text-xs text-brisk-gray-600">Versioned JSON for CI, dashboards, databases</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">Local SDK and CLI</p><p class="text-xs text-brisk-gray-600">Use inside your app or from command line</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+        <div class="flex items-center gap-2 p-3 bg-brisk-yellow-50 border border-brisk-yellow-100 rounded-lg"><span class="material-symbols-outlined text-brisk-yellow-700 text-base">science</span><div><p class="text-sm font-semibold text-brisk-gray-950">Schemathesis engine</p><p class="text-xs text-brisk-gray-600">Optional Python-based OpenAPI deep checking</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-brisk-yellow-100 text-brisk-yellow-800 text-xs rounded-full">Optional adapter</span></div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">Serious SaaS proof app</p><p class="text-xs text-brisk-gray-600">Real product for testing auth, roles, UI, API</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">Engine quality checks</p><p class="text-xs text-brisk-gray-600">Built-in and external engine conformance</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">Public plan contract gate</p><p class="text-xs text-brisk-gray-600">AJV-backed JSON Schema validation</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">Golden expected outputs</p><p class="text-xs text-brisk-gray-600">Known-good plans and results for regression</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">Adapter readiness gate</p><p class="text-xs text-brisk-gray-600">Checklist for adapters marked "built"</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">Built-in schema fuzzing</p><p class="text-xs text-brisk-gray-600">Fast malformed-request checks from OpenAPI schemas</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">Built-in replay engine</p><p class="text-xs text-brisk-gray-600">Rerun declared HTTP interactions for regression</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">JUnit &amp; HTML reports</p><p class="text-xs text-brisk-gray-600">Report artifacts for every run</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">Non-engine extension QC</p><p class="text-xs text-brisk-gray-600">Checks discoverers, planners, validators, UI grounders, and AI providers</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">More proof apps</p><p class="text-xs text-brisk-gray-600">API-only, Todo, and multi-tenant proof apps</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg"><span class="material-symbols-outlined text-green-600 text-base">check_circle</span><div><p class="text-sm font-semibold text-brisk-gray-950">Release readiness</p><p class="text-xs text-brisk-gray-600">Release check and versioned changelog</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Built-in</span></div>
+      </div>
+    </div>
+
+    <!-- Not Built Yet -->
+    <div id="status-not-built" role="tabpanel" class="status-panel hidden">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div class="flex items-center gap-2 p-3 bg-brisk-gray-50 border border-brisk-gray-300 rounded-lg"><span class="material-symbols-outlined text-brisk-gray-600 text-base">pending</span><div><p class="text-sm font-semibold text-brisk-gray-950">AsyncAPI/Pact/message testing</p><p class="text-xs text-brisk-gray-600">Event and message contract testing</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-brisk-gray-300 text-brisk-gray-700 text-xs rounded-full">Planned</span></div>
+        <div class="flex items-center gap-2 p-3 bg-brisk-gray-50 border border-brisk-gray-300 rounded-lg"><span class="material-symbols-outlined text-brisk-gray-600 text-base">pending</span><div><p class="text-sm font-semibold text-brisk-gray-950">Formal UI healing</p><p class="text-xs text-brisk-gray-600">Before/after evidence diffing</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-brisk-gray-300 text-brisk-gray-700 text-xs rounded-full">Planned</span></div>
+        <div class="flex items-center gap-2 p-3 bg-brisk-gray-50 border border-brisk-gray-300 rounded-lg"><span class="material-symbols-outlined text-brisk-gray-600 text-base">pending</span><div><p class="text-sm font-semibold text-brisk-gray-950">Hosted dashboard</p><p class="text-xs text-brisk-gray-600">Built-in long-term test-history storage</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-brisk-gray-300 text-brisk-gray-700 text-xs rounded-full">Planned</span></div>
+        <div class="flex items-center gap-2 p-3 bg-brisk-gray-50 border border-brisk-gray-300 rounded-lg"><span class="material-symbols-outlined text-brisk-gray-600 text-base">pending</span><div><p class="text-sm font-semibold text-brisk-gray-950">Native mobile testing</p><p class="text-xs text-brisk-gray-600">Without a custom engine</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-brisk-gray-300 text-brisk-gray-700 text-xs rounded-full">Planned</span></div>
+        <div class="flex items-center gap-2 p-3 bg-brisk-gray-50 border border-brisk-gray-300 rounded-lg"><span class="material-symbols-outlined text-brisk-gray-600 text-base">pending</span><div><p class="text-sm font-semibold text-brisk-gray-950">Desktop testing</p><p class="text-xs text-brisk-gray-600">Without a custom engine</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-brisk-gray-300 text-brisk-gray-700 text-xs rounded-full">Planned</span></div>
+        <div class="flex items-center gap-2 p-3 bg-brisk-gray-50 border border-brisk-gray-300 rounded-lg"><span class="material-symbols-outlined text-brisk-gray-600 text-base">pending</span><div><p class="text-sm font-semibold text-brisk-gray-950">Deep non-HTTP testing</p><p class="text-xs text-brisk-gray-600">Database, queue, stream without custom engines</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-brisk-gray-300 text-brisk-gray-700 text-xs rounded-full">Planned</span></div>
+        <div class="flex items-center gap-2 p-3 bg-brisk-gray-50 border border-brisk-gray-300 rounded-lg"><span class="material-symbols-outlined text-brisk-gray-600 text-base">pending</span><div><p class="text-sm font-semibold text-brisk-gray-950">Additional proof apps</p><p class="text-xs text-brisk-gray-600">E-commerce and event apps</p></div><span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 bg-brisk-gray-300 text-brisk-gray-700 text-xs rounded-full">Planned</span></div>
+      </div>
+      <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="flex items-center gap-2 text-xs text-brisk-gray-600"><span class="inline-block w-3 h-3 rounded-full bg-green-100 border border-green-300"></span> Built-in</div>
+        <div class="flex items-center gap-2 text-xs text-brisk-gray-600"><span class="inline-block w-3 h-3 rounded-full bg-brisk-yellow-100 border border-brisk-yellow-300"></span> Optional adapter</div>
+        <div class="flex items-center gap-2 text-xs text-brisk-gray-600"><span class="inline-block w-3 h-3 rounded-full bg-brisk-purple-100 border border-brisk-purple-300"></span> Extension point</div>
+        <div class="flex items-center gap-2 text-xs text-brisk-gray-600"><span class="inline-block w-3 h-3 rounded-full bg-brisk-gray-300"></span> Planned</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== GET STARTED ===== -->
+<section id="get-started" class="py-16 sm:py-20 bg-brisk-gray-50" aria-labelledby="get-started-heading">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 id="get-started-heading" class="text-3xl sm:text-4xl font-extrabold text-brisk-gray-950 mb-4">Get Started</h2>
+    <p class="text-lg text-brisk-gray-600 max-w-3xl mb-10">From install to first run without searching the README.</p>
+
+    <!-- Install Tabs -->
+    <h3 class="text-xl font-bold text-brisk-gray-950 mb-4">Install</h3>
+    <p class="text-sm text-brisk-gray-600 mb-4">After installing, create your config with <code class="bg-brisk-gray-200 px-1.5 py-0.5 rounded text-xs font-mono">npx brisk-aitesting init</code>.</p>
+    <div class="flex flex-wrap gap-1 mb-4" role="tablist">
+      <button type="button" class="install-tab px-4 py-2 text-sm font-medium rounded-t-lg bg-white text-brisk-purple-800 border border-brisk-gray-300 border-b-white transition-colors" role="tab" aria-selected="true" data-tab="npm" aria-controls="install-npm">npm install</button>
+      <button type="button" class="install-tab px-4 py-2 text-sm font-medium rounded-t-lg text-brisk-gray-600 border border-transparent hover:text-brisk-purple-800 transition-colors" role="tab" aria-selected="false" data-tab="link" aria-controls="install-link">npm link</button>
+      <button type="button" class="install-tab px-4 py-2 text-sm font-medium rounded-t-lg text-brisk-gray-600 border border-transparent hover:text-brisk-purple-800 transition-colors" role="tab" aria-selected="false" data-tab="github" aria-controls="install-github">GitHub install</button>
+    </div>
+    <div class="bg-brisk-gray-950 rounded-xl rounded-tl-none overflow-hidden mb-8" id="install-panels">
+      <div role="tabpanel" class="install-panel active p-4" id="install-npm">
+        <div class="flex items-center justify-between mb-2"><span class="text-xs text-brisk-gray-300 font-mono">terminal</span><button type="button" class="copy-btn text-brisk-gray-300 hover:text-white transition-colors" data-copy="npm install brisk-aitesting" aria-label="Copy install command"><span class="material-symbols-outlined text-sm">content_copy</span></button></div>
+        <pre class="text-sm text-green-300 font-mono"><code>$ npm install brisk-aitesting</code></pre>
+      </div>
+      <div role="tabpanel" class="install-panel hidden p-4" id="install-link">
+        <div class="flex items-center justify-between mb-2"><span class="text-xs text-brisk-gray-300 font-mono">terminal</span><button type="button" class="copy-btn text-brisk-gray-300 hover:text-white transition-colors" data-copy="git clone https://github.com/oshjain/brisk-aitesting.git
+cd brisk-aitesting
+npm install
+npm run build
+npm link" aria-label="Copy link commands"><span class="material-symbols-outlined text-sm">content_copy</span></button></div>
+        <pre class="text-sm text-green-300 font-mono"><code>$ git clone https://github.com/oshjain/brisk-aitesting.git
+$ cd brisk-aitesting
+$ npm install
+$ npm run build
+$ npm link
+
+# Inside a host app:
+$ npm link brisk-aitesting</code></pre>
+      </div>
+      <div role="tabpanel" class="install-panel hidden p-4" id="install-github">
+        <div class="flex items-center justify-between mb-2"><span class="text-xs text-brisk-gray-300 font-mono">terminal</span><button type="button" class="copy-btn text-brisk-gray-300 hover:text-white transition-colors" data-copy="npm install github:oshjain/brisk-aitesting" aria-label="Copy GitHub install command"><span class="material-symbols-outlined text-sm">content_copy</span></button></div>
+        <pre class="text-sm text-green-300 font-mono"><code>$ npm install github:oshjain/brisk-aitesting</code></pre>
+      </div>
+    </div>
+
+    <!-- Config -->
+    <h3 class="text-xl font-bold text-brisk-gray-950 mb-4">Configuration</h3>
+    <div class="bg-brisk-gray-950 rounded-xl overflow-hidden mb-8">
+      <div class="flex items-center justify-between px-4 py-2 bg-brisk-gray-800"><span class="text-xs text-brisk-gray-300 font-mono">brisk-aitesting.config.ts</span><button type="button" class="copy-btn text-brisk-gray-300 hover:text-white transition-colors" data-copy="import { defineConfig } from 'brisk-aitesting';
+
+export default defineConfig({
+  app: {
+    name: 'My SaaS',
+    baseUrl: 'http://localhost:3000',
+    repoPath: '.',
+  },
+  auth: { type: 'none' },
+  ai: {
+    provider: 'openai',
+    model: requiredEnv('BRISK_AITESTING_AI_MODEL'),
+    apiKeyEnv: 'BRISK_AITESTING_AI_API_KEY',
+    repairAttempts: 2,
+    maxTokens: 4096,
+    temperature: 0.1,
+  },
+  runtime: {
+    artifactsDir: '.brisk-aitesting/artifacts',
+    timeoutMs: 120000,
+    retries: 1,
+    headless: true,
+    dryRun: false,
+  },
+  discovery: {
+    includeRepo: true,
+    includeUi: true,
+    includeApi: true,
+    includeContracts: true,
+  },
+  security: {
+    networkPolicy: 'localhost-only',
+    allowedHosts: ['localhost', '127.0.0.1', '::1'],
+    redactSecrets: true,
+  },
+});
+
+function requiredEnv(name: string): string {
+  const value = process.env[name];
+  if (value === undefined || value.trim().length === 0) {
+    throw new Error(name + ' is required');
+  }
+  return value;
+}" aria-label="Copy configuration"><span class="material-symbols-outlined text-sm">content_copy</span></button></div>
+      <pre class="p-4 text-xs sm:text-sm text-green-300 font-mono overflow-x-auto leading-relaxed"><code>import { defineConfig } from 'brisk-aitesting';
+
+export default defineConfig({
+  app: {
+    name: 'My SaaS',
+    baseUrl: 'http://localhost:3000',
+    repoPath: '.',
+  },
+  auth: { type: 'none' },
+  ai: {
+    provider: 'openai',
+    model: requiredEnv('BRISK_AITESTING_AI_MODEL'),
+    apiKeyEnv: 'BRISK_AITESTING_AI_API_KEY',
+    repairAttempts: 2,
+    maxTokens: 4096,
+    temperature: 0.1,
+  },
+  runtime: {
+    artifactsDir: '.brisk-aitesting/artifacts',
+    timeoutMs: 120000,
+    retries: 1,
+    headless: true,
+    dryRun: false,
+  },
+  discovery: {
+    includeRepo: true,
+    includeUi: true,
+    includeApi: true,
+    includeContracts: true,
+  },
+  security: {
+    networkPolicy: 'localhost-only',
+    allowedHosts: ['localhost', '127.0.0.1', '::1'],
+    redactSecrets: true,
+  },
+});
+
+function requiredEnv(name: string): string {
+  const value = process.env[name];
+  if (value === undefined || value.trim().length === 0) {
+    throw new Error(name + ' is required');
+  }
+  return value;
+}</code></pre>
+    </div>
+
+    <!-- Run & Output -->
+    <h3 class="text-xl font-bold text-brisk-gray-950 mb-4">Run a test goal</h3>
+    <div class="bg-brisk-gray-950 rounded-xl overflow-hidden mb-4">
+      <div class="flex items-center justify-between px-4 py-2 bg-brisk-gray-800"><span class="text-xs text-brisk-gray-300 font-mono">terminal</span><button type="button" class="copy-btn text-brisk-gray-300 hover:text-white transition-colors" data-copy="npx brisk-aitesting run --goal &quot;Test login, permissions, dashboard, API contracts, and critical workflows&quot; --scenarios 15 --mode automatic --ui-action-feedback when-missing" aria-label="Copy run command"><span class="material-symbols-outlined text-sm">content_copy</span></button></div>
+      <pre class="p-4 text-sm text-green-300 font-mono"><code>$ npx brisk-aitesting run \
+  --goal "Test login, permissions, dashboard, API contracts, and critical workflows" \
+  --scenarios 15 \
+  --mode automatic \
+  --ui-action-feedback when-missing</code></pre>
+    </div>
+
+    <h3 class="text-xl font-bold text-brisk-gray-950 mb-4 mt-8">Machine-readable output</h3>
+    <div class="bg-brisk-gray-950 rounded-xl overflow-hidden mb-8">
+      <div class="flex items-center justify-between px-4 py-2 bg-brisk-gray-800"><span class="text-xs text-brisk-gray-300 font-mono">terminal</span><button type="button" class="copy-btn text-brisk-gray-300 hover:text-white transition-colors" data-copy="npx brisk-aitesting run --goal &quot;Test OpenAPI contracts and critical API paths&quot; --scenarios 10 --json --output .brisk-aitesting/latest-result.json" aria-label="Copy JSON output command"><span class="material-symbols-outlined text-sm">content_copy</span></button></div>
+      <pre class="p-4 text-sm text-green-300 font-mono"><code>$ npx brisk-aitesting run \
+  --goal "Test OpenAPI contracts and critical API paths" \
+  --scenarios 10 \
+  --json \
+  --output .brisk-aitesting/latest-result.json</code></pre>
+    </div>
+
+    <!-- Exit Codes -->
+    <h3 class="text-xl font-bold text-brisk-gray-950 mb-4">CLI exit codes</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div class="bg-green-50 border border-green-200 rounded-xl p-5 text-center"><p class="text-3xl font-extrabold text-green-700 mb-2">0</p><p class="text-sm font-semibold text-brisk-gray-950">Run completed and passed</p></div>
+      <div class="bg-red-50 border border-red-200 rounded-xl p-5 text-center"><p class="text-3xl font-extrabold text-red-700 mb-2">1</p><p class="text-sm font-semibold text-brisk-gray-950">Run completed but failed, errored, or skipped</p></div>
+      <div class="bg-brisk-yellow-50 border border-brisk-yellow-200 rounded-xl p-5 text-center"><p class="text-3xl font-extrabold text-brisk-yellow-700 mb-2">2</p><p class="text-sm font-semibold text-brisk-gray-950">Usage, config, provider, or runtime setup error</p></div>
+    </div>
+
+    <!-- CTA -->
+    <div class="flex flex-wrap gap-3">
+      <a href="https://github.com/oshjain/brisk-aitesting" class="inline-flex items-center gap-2 px-6 py-3 text-base font-semibold bg-brisk-purple-800 text-white rounded-lg hover:bg-brisk-purple-900 transition-colors">View on GitHub <span class="material-symbols-outlined">open_in_new</span></a>
+      <a href="https://github.com/oshjain/brisk-aitesting/blob/main/docs/GETTING_STARTED.md" class="inline-flex items-center gap-2 px-6 py-3 text-base font-medium text-brisk-gray-800 bg-white border border-brisk-gray-300 rounded-lg hover:border-brisk-purple-400 transition-colors">Full documentation <span class="material-symbols-outlined">arrow_forward</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ROADMAP ===== -->
+<section id="roadmap" class="py-16 sm:py-20 bg-white" aria-labelledby="roadmap-heading">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 id="roadmap-heading" class="text-3xl sm:text-4xl font-extrabold text-brisk-gray-950 mb-4">Roadmap</h2>
+    <p class="text-lg text-brisk-gray-600 max-w-3xl mb-4">Transparent direction. No delivery dates—the repository supplies none.</p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+      <div class="roadmap-card bg-brisk-purple-50 rounded-xl p-6" data-category="engines">
+        <div class="flex items-center gap-2 mb-3"><span class="material-symbols-outlined text-brisk-purple-800">precision_manufacturing</span><h3 class="text-lg font-bold text-brisk-gray-950">Broader test engines</h3></div>
+        <ul class="space-y-2 text-sm text-brisk-gray-600">
+          <li class="flex gap-2"><span class="material-symbols-outlined text-brisk-purple-400 text-base">arrow_right</span>AsyncAPI / Pact / message-contract adapters</li>
+          <li class="flex gap-2"><span class="material-symbols-outlined text-brisk-purple-400 text-base">arrow_right</span>Specmatic / Keploy adapters</li>
+        </ul>
+      </div>
+      <div class="roadmap-card bg-brisk-purple-50 rounded-xl p-6" data-category="reporting">
+        <div class="flex items-center gap-2 mb-3"><span class="material-symbols-outlined text-brisk-purple-800">monitoring</span><h3 class="text-lg font-bold text-brisk-gray-950">Reporting and analytics</h3></div>
+        <ul class="space-y-2 text-sm text-brisk-gray-600">
+          <li class="flex gap-2"><span class="material-symbols-outlined text-brisk-purple-400 text-base">arrow_right</span>Multi-provider benchmark scoring</li>
+          <li class="flex gap-2"><span class="material-symbols-outlined text-brisk-purple-400 text-base">arrow_right</span>Built-in analytics module</li>
+        </ul>
+      </div>
+      <div class="roadmap-card bg-brisk-purple-50 rounded-xl p-6" data-category="proof">
+        <div class="flex items-center gap-2 mb-3"><span class="material-symbols-outlined text-brisk-purple-800">science</span><h3 class="text-lg font-bold text-brisk-gray-950">Product proof</h3></div>
+        <ul class="space-y-2 text-sm text-brisk-gray-600">
+          <li class="flex gap-2"><span class="material-symbols-outlined text-brisk-purple-400 text-base">arrow_right</span>Full proof app collection</li>
+          <li class="flex gap-2"><span class="material-symbols-outlined text-brisk-purple-400 text-base">arrow_right</span>Framework-specific examples</li>
+        </ul>
+      </div>
+      <div class="roadmap-card bg-brisk-purple-50 rounded-xl p-6" data-category="maturity">
+        <div class="flex items-center gap-2 mb-3"><span class="material-symbols-outlined text-brisk-purple-800">rocket_launch</span><h3 class="text-lg font-bold text-brisk-gray-950">Release maturity</h3></div>
+        <ul class="space-y-2 text-sm text-brisk-gray-600">
+          <li class="flex gap-2"><span class="material-symbols-outlined text-brisk-purple-400 text-base">arrow_right</span>npm publish workflow automation</li>
+        </ul>
+      </div>
+      <div class="roadmap-card bg-brisk-purple-50 rounded-xl p-6" data-category="extension">
+        <div class="flex items-center gap-2 mb-3"><span class="material-symbols-outlined text-brisk-purple-800">extension</span><h3 class="text-lg font-bold text-brisk-gray-950">Extension quality</h3></div>
+        <ul class="space-y-2 text-sm text-brisk-gray-600">
+          <li class="flex gap-2"><span class="material-symbols-outlined text-brisk-purple-400 text-base">arrow_right</span>Deeper behavior checks for future extension types</li>
+        </ul>
+      </div>
+      <div class="roadmap-card bg-brisk-purple-50 rounded-xl p-6" data-category="coverage">
+        <div class="flex items-center gap-2 mb-3"><span class="material-symbols-outlined text-brisk-purple-800">gavel</span><h3 class="text-lg font-bold text-brisk-gray-950">Business-rule coverage</h3></div>
+        <ul class="space-y-2 text-sm text-brisk-gray-600">
+          <li class="flex gap-2"><span class="material-symbols-outlined text-brisk-purple-400 text-base">arrow_right</span>Scenario/rule coverage and contradiction checks</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Participate -->
+    <div class="bg-brisk-yellow-50 border border-brisk-yellow-200 rounded-2xl p-8 text-center">
+      <h3 class="text-xl font-bold text-brisk-gray-950 mb-3">PRs welcome</h3>
+      <p class="text-sm text-brisk-gray-600 mb-4 max-w-xl mx-auto">Brisk is open source under the MIT licence. Review the current status, pick an area, and contribute.</p>
+      <div class="flex flex-wrap justify-center gap-3">
+        <a href="https://github.com/oshjain/brisk-aitesting" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-brisk-purple-800 text-white rounded-lg hover:bg-brisk-purple-900 transition-colors">View repository</a>
+        <a href="#status" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-brisk-gray-800 bg-white border border-brisk-gray-300 rounded-lg hover:border-brisk-purple-400 transition-colors">Review current status</a>
+      </div>
+      <p class="text-xs text-brisk-gray-600 mt-4">MIT &copy; Hasmukh Jain — Main contributor &amp; product visionary</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer class="bg-brisk-gray-950 text-white py-12" role="contentinfo">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div>
+        <div class="flex items-center gap-3 mb-4">
+          <img src="assets/logo_transparent.png" alt="Brisk logo" class="h-8 w-8" width="32" height="32">
+          <span class="font-bold text-lg">brisk-aitesting</span>
+        </div>
+        <p class="text-sm text-brisk-gray-300">Fast, No-nonsense and Effective.</p>
+        <p class="text-xs text-brisk-gray-600 mt-2">Local-first &middot; Embeddable &middot; Evidence-first</p>
+      </div>
+      <div>
+        <h4 class="text-sm font-semibold mb-3">Documentation</h4>
+        <ul class="space-y-2 text-sm text-brisk-gray-300">
+          <li><a href="https://github.com/oshjain/brisk-aitesting/blob/main/docs/GETTING_STARTED.md" class="hover:text-white transition-colors">Getting Started</a></li>
+          <li><a href="https://github.com/oshjain/brisk-aitesting/blob/main/docs/CONFIGURATION.md" class="hover:text-white transition-colors">Configuration</a></li>
+          <li><a href="https://github.com/oshjain/brisk-aitesting/blob/main/docs/API_REFERENCE.md" class="hover:text-white transition-colors">API Reference</a></li>
+          <li><a href="https://github.com/oshjain/brisk-aitesting/blob/main/docs/SECURITY.md" class="hover:text-white transition-colors">Security</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-sm font-semibold mb-3">Project</h4>
+        <ul class="space-y-2 text-sm text-brisk-gray-300">
+          <li><a href="https://github.com/oshjain/brisk-aitesting" class="hover:text-white transition-colors">GitHub</a></li>
+          <li><a href="https://github.com/oshjain/brisk-aitesting/blob/main/docs/COMPETITIVE_COMPARISON.md" class="hover:text-white transition-colors">Competitive Comparison</a></li>
+          <li><a href="https://github.com/oshjain/brisk-aitesting/blob/main/docs/ROADMAP.md" class="hover:text-white transition-colors">Roadmap</a></li>
+          <li><a href="https://github.com/oshjain/brisk-aitesting/issues" class="hover:text-white transition-colors">Issues</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-sm font-semibold mb-3">Status</h4>
+        <ul class="space-y-2 text-sm text-brisk-gray-300">
+          <li class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brisk-yellow-400"></span> Alpha</li>
+          <li class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-400"></span> MIT Licence</li>
+          <li>Contributor: Hasmukh Jain</li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-brisk-gray-800 mt-8 pt-8 text-xs text-brisk-gray-600 text-center">
+      <p>This website describes the open-source project brisk-aitesting. Revenue estimates for competitors are third-party estimates. Capability scores are editorial assessments. &copy; Hasmukh Jain.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- ===== SCRIPTS ===== -->
+<script>
+'use strict';
+
+// ── Mobile Drawer ──────────────────────────────────
+(function(){
+  const toggle = document.getElementById('menu-toggle');
+  const close = document.getElementById('drawer-close');
+  const backdrop = document.getElementById('drawer-backdrop');
+  const drawer = document.getElementById('mobile-drawer');
+  const panel = drawer;
+  const links = drawer.querySelectorAll('.mobile-nav-link');
+  let lastFocused = null;
+
+  function open() {
+    lastFocused = document.activeElement;
+    backdrop.classList.add('open');
+    panel.classList.add('open');
+    toggle.setAttribute('aria-expanded','true');
+    toggle.querySelector('.material-symbols-outlined').textContent = 'close';
+    document.body.style.overflow = 'hidden';
+    const firstLink = drawer.querySelector('a');
+    if (firstLink) setTimeout(() => firstLink.focus(), 100);
+  }
+
+  function closeDrawer() {
+    backdrop.classList.remove('open');
+    panel.classList.remove('open');
+    toggle.setAttribute('aria-expanded','false');
+    toggle.querySelector('.material-symbols-outlined').textContent = 'menu';
+    document.body.style.overflow = '';
+    if (lastFocused) lastFocused.focus();
+  }
+
+  toggle.addEventListener('click', () => {
+    panel.classList.contains('open') ? closeDrawer() : open();
+  });
+  close.addEventListener('click', closeDrawer);
+  backdrop.addEventListener('click', closeDrawer);
+  links.forEach(link => link.addEventListener('click', closeDrawer));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && panel.classList.contains('open')) closeDrawer();
+  });
+
+  // Trap focus
+  drawer.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+    const focusable = drawer.querySelectorAll('a,button,[tabindex]:not([tabindex="-1"])');
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length-1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+})();
+
+// ── Reading Progress Bar ────────────────────────────
+(function(){
+  const bar = document.getElementById('progress-bar');
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docHeight > 0 ? Math.min((scrollTop / docHeight) * 100, 100) : 0;
+    bar.style.width = pct + '%';
+  }, {passive:true});
+})();
+
+// ── Capability Tabs ─────────────────────────────────
+(function(){
+  const tabs = document.querySelectorAll('.cap-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => { t.setAttribute('aria-selected','false'); t.classList.remove('border-brisk-purple-800','text-brisk-purple-800'); t.classList.add('border-transparent','text-brisk-gray-600'); });
+      tab.setAttribute('aria-selected','true');
+      tab.classList.add('border-brisk-purple-800','text-brisk-purple-800');
+      tab.classList.remove('border-transparent','text-brisk-gray-600');
+      document.querySelectorAll('.cap-panel').forEach(p => { p.classList.add('hidden'); p.classList.remove('active'); });
+      const panel = document.getElementById('cap-' + tab.dataset.tab);
+      if (panel) { panel.classList.remove('hidden'); panel.classList.add('active'); }
+    });
+  });
+})();
+
+// ── Workflow Comparator (mobile) ────────────────────
+(function(){
+  const tabs = document.querySelectorAll('.comparison-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => { t.setAttribute('aria-selected','false'); t.classList.remove('bg-white','text-brisk-gray-950','shadow-sm'); t.classList.add('text-brisk-gray-600'); });
+      tab.setAttribute('aria-selected','true');
+      tab.classList.add('bg-white','text-brisk-gray-950','shadow-sm');
+      tab.classList.remove('text-brisk-gray-600');
+      document.querySelectorAll('.comparison-panel').forEach(p => { p.classList.add('hidden'); p.classList.remove('active'); });
+      const panel = document.getElementById('comp-' + tab.dataset.tab);
+      if (panel) { panel.classList.remove('hidden'); panel.classList.add('active'); }
+    });
+  });
+})();
+
+// ── Compare View Tabs ───────────────────────────────
+(function(){
+  const tabs = document.querySelectorAll('.comp-view-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => { t.setAttribute('aria-selected','false'); t.classList.remove('border-brisk-purple-800','text-brisk-purple-800'); t.classList.add('border-transparent','text-brisk-gray-600'); });
+      tab.setAttribute('aria-selected','true');
+      tab.classList.add('border-brisk-purple-800','text-brisk-purple-800');
+      tab.classList.remove('border-transparent','text-brisk-gray-600');
+      document.querySelectorAll('.comp-view').forEach(v => { v.classList.add('hidden'); v.classList.remove('active'); });
+      const view = document.getElementById('comp-' + tab.dataset.tab);
+      if (view) { view.classList.remove('hidden'); view.classList.add('active'); }
+    });
+  });
+})();
+
+// ── Status Tabs ─────────────────────────────────────
+(function(){
+  const tabs = document.querySelectorAll('.status-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => { t.setAttribute('aria-selected','false'); t.classList.remove('border-green-600','text-green-700'); t.classList.add('border-transparent','text-brisk-gray-600'); });
+      tab.setAttribute('aria-selected','true');
+      tab.classList.add('border-green-600','text-green-700');
+      tab.classList.remove('border-transparent','text-brisk-gray-600');
+      document.querySelectorAll('.status-panel').forEach(p => { p.classList.add('hidden'); p.classList.remove('active'); });
+      const panel = document.getElementById('status-' + tab.dataset.tab);
+      if (panel) { panel.classList.remove('hidden'); panel.classList.add('active'); }
+    });
+  });
+})();
+
+// ── Install Tabs ────────────────────────────────────
+(function(){
+  const tabs = document.querySelectorAll('.install-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => { t.setAttribute('aria-selected','false'); t.classList.remove('bg-white','text-brisk-purple-800','border','border-brisk-gray-300','border-b-white'); t.classList.add('text-brisk-gray-600','border-transparent'); });
+      tab.setAttribute('aria-selected','true');
+      tab.classList.add('bg-white','text-brisk-purple-800','border','border-brisk-gray-300','border-b-white');
+      tab.classList.remove('text-brisk-gray-600','border-transparent');
+      document.querySelectorAll('.install-panel').forEach(p => { p.classList.add('hidden'); p.classList.remove('active'); });
+      const panel = document.getElementById('install-' + tab.dataset.tab);
+      if (panel) { panel.classList.remove('hidden'); panel.classList.add('active'); }
+    });
+  });
+})();
+
+// ── Evidence Inspector with JSON highlighting ──────
+(function(){
+  const branches = document.querySelectorAll('.evidence-branch');
+  branches.forEach(branch => {
+    branch.addEventListener('click', () => {
+      document.querySelectorAll('.evidence-branch').forEach(b => b.classList.remove('border-brisk-purple-400','bg-brisk-purple-50'));
+      branch.classList.add('border-brisk-purple-400','bg-brisk-purple-50');
+      // Highlight corresponding JSON node
+      const key = branch.dataset.highlight;
+      const codeBlock = document.querySelector('#copy-result')?.closest('div')?.nextElementSibling?.querySelector('code');
+      if (codeBlock && key) {
+        let html = codeBlock.innerHTML;
+        html = html.replace(/<mark class="evidence-json-highlight">([^<]*)<\/mark>/g, '$1');
+        const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        html = html.replace(new RegExp('("'+escapedKey+'")', 'g'), '<mark class="evidence-json-highlight">$1</mark>');
+        codeBlock.innerHTML = html;
+      }
+    });
+    branch.setAttribute('tabindex','0');
+    branch.setAttribute('role','button');
+    branch.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); branch.click(); }
+    });
+  });
+})();
+
+// ── Copy Buttons ────────────────────────────────────
+(function(){
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const text = btn.dataset.copy;
+      try {
+        await navigator.clipboard.writeText(text);
+        const icon = btn.querySelector('.material-symbols-outlined');
+        const orig = icon.textContent;
+        icon.textContent = 'check';
+        btn.classList.add('text-green-400');
+        setTimeout(() => { icon.textContent = orig; btn.classList.remove('text-green-400'); }, 2000);
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.style.position='fixed';ta.style.opacity='0';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
+      }
+    });
+  });
+
+  const copyResult = document.getElementById('copy-result');
+  if (copyResult) {
+    copyResult.addEventListener('click', async () => {
+      const pre = copyResult.closest('div').nextElementSibling;
+      const text = pre ? pre.textContent : '';
+      try {
+        await navigator.clipboard.writeText(text);
+        const confirm = document.getElementById('copy-confirm');
+        if (confirm) { confirm.classList.remove('hidden'); setTimeout(() => confirm.classList.add('hidden'), 2000); }
+      } catch {}
+    });
+  }
+})();
+
+// ── Comparison Data Grids ───────────────────────────
+(function(){
+  const capabilities = [
+    {name:'Plain-language test intent',brisk:'✅',mabl:'✅',katalon:'✅',tosca:'🔧',testrigor:'✅',functionize:'✅'},
+    {name:'UI testing',brisk:'✅',mabl:'✅',katalon:'✅',tosca:'✅',testrigor:'✅',functionize:'✅'},
+    {name:'API testing',brisk:'✅',mabl:'✅',katalon:'✅',tosca:'✅',testrigor:'✅',functionize:'✅'},
+    {name:'OpenAPI parsing & schema validation',brisk:'✅',mabl:'🔧',katalon:'✅',tosca:'✅',testrigor:'🔧',functionize:'🔧'},
+    {name:'Implementation-contract drift detection',brisk:'✅',mabl:'🔧',katalon:'🔧',tosca:'🔧',testrigor:'🔧',functionize:'🔧'},
+    {name:'Repo and route discovery',brisk:'✅',mabl:'❌',katalon:'❌',tosca:'❌',testrigor:'❌',functionize:'❌'},
+    {name:'Validated AI plan before execution',brisk:'✅',mabl:'⚫',katalon:'⚫',tosca:'⚫',testrigor:'⚫',functionize:'⚫'},
+    {name:'Multi-engine orchestration',brisk:'✅',mabl:'🔧',katalon:'✅',tosca:'✅',testrigor:'🔧',functionize:'✅'},
+    {name:'Embeddable SDK & host-owned UI',brisk:'✅',mabl:'❌',katalon:'🔧',tosca:'🔧',testrigor:'❌',functionize:'🔧'},
+    {name:'Stable result handover contract',brisk:'✅',mabl:'🔧',katalon:'🔧',tosca:'🔧',testrigor:'🔧',functionize:'🔧'},
+    {name:'Local-first operation',brisk:'✅',mabl:'❌',katalon:'🔧',tosca:'🔧',testrigor:'❌',functionize:'❌'}
+  ];
+
+  const benchmarkScenarios = [
+    {num:1,name:'Discover an undocumented frontend application',brisk:'🔧',mabl:'🔧',katalon:'🔧',tosca:'🔧',testrigor:'🔧',functionize:'🔧'},
+    {num:2,name:'Discover backend routes from source',brisk:'✅',mabl:'❌',katalon:'❌',tosca:'❌',testrigor:'❌',functionize:'❌'},
+    {num:3,name:'Parse an OpenAPI contract',brisk:'✅',mabl:'🔧',katalon:'✅',tosca:'✅',testrigor:'🔧',functionize:'🔧'},
+    {num:4,name:'Identify mismatch between implementation and contract',brisk:'✅',mabl:'🔧',katalon:'🔧',tosca:'🔧',testrigor:'🔧',functionize:'🔧'},
+    {num:5,name:'Generate positive and negative API scenarios',brisk:'✅',mabl:'🔧',katalon:'✅',tosca:'✅',testrigor:'🔧',functionize:'🔧'},
+    {num:6,name:'Execute a multi-step authenticated UI workflow',brisk:'✅',mabl:'✅',katalon:'✅',tosca:'✅',testrigor:'✅',functionize:'✅'},
+    {num:7,name:'Validate an exact calculated business value',brisk:'🔧',mabl:'🔧',katalon:'✅',tosca:'✅',testrigor:'🔧',functionize:'✅'},
+    {num:8,name:'Validate a rejected action and unchanged state',brisk:'🔧',mabl:'🔧',katalon:'✅',tosca:'✅',testrigor:'🔧',functionize:'✅'},
+    {num:9,name:'Handle a changed UI selector',brisk:'🔧',mabl:'✅',katalon:'✅',tosca:'✅',testrigor:'✅',functionize:'✅'},
+    {num:10,name:'Reject malformed/unsupported AI plans',brisk:'✅',mabl:'⚫',katalon:'⚫',tosca:'⚫',testrigor:'⚫',functionize:'⚫'},
+    {num:11,name:'Run UI, API, and contract tests in one execution',brisk:'✅',mabl:'🔧',katalon:'✅',tosca:'✅',testrigor:'🔧',functionize:'✅'},
+    {num:12,name:'Produce machine-readable evidence for CI',brisk:'✅',mabl:'🔧',katalon:'✅',tosca:'✅',testrigor:'🔧',functionize:'🔧'}
+  ];
+
+  const iconMap = {
+    '✅':'<span class="text-green-600 font-bold" aria-label="Native or public capability">✅</span>',
+    '🔧':'<span class="text-brisk-yellow-700" aria-label="Extensible or adjacent">🔧</span>',
+    '❌':'<span class="text-red-500" aria-label="Unsupported or not found">❌</span>',
+    '⚫':'<span class="text-brisk-gray-600" aria-label="Not yet independently benchmarked">⚫</span>'
+  };
+
+  function renderIcon(v) { return iconMap[v] || v; }
+
+  function renderCapabilities(filtered) {
+    const tbody = document.getElementById('capability-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = (filtered || capabilities).map((c,i) =>
+      `<tr class="border-b border-brisk-gray-300 ${i%2===0?'bg-white':'bg-brisk-gray-50'}">
+        <td class="p-3 text-xs">${c.name}</td>
+        <td class="text-center p-3 bg-brisk-purple-50/50">${renderIcon(c.brisk)}</td>
+        <td class="text-center p-3">${renderIcon(c.mabl)}</td>
+        <td class="text-center p-3">${renderIcon(c.katalon)}</td>
+        <td class="text-center p-3">${renderIcon(c.tosca)}</td>
+        <td class="text-center p-3">${renderIcon(c.testrigor)}</td>
+        <td class="text-center p-3">${renderIcon(c.functionize)}</td>
+      </tr>`
+    ).join('');
+  }
+
+  function renderBenchmarks() {
+    const tbody = document.getElementById('benchmark-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = benchmarkScenarios.map((s,i) =>
+      `<tr class="border-b border-brisk-gray-300 ${i%2===0?'bg-white':'bg-brisk-gray-50'}">
+        <td class="p-3 text-xs font-bold">${s.num}</td>
+        <td class="p-3 text-xs">${s.name}</td>
+        <td class="text-center p-3 bg-brisk-purple-50/50">${renderIcon(s.brisk)}</td>
+        <td class="text-center p-3">${renderIcon(s.mabl)}</td>
+        <td class="text-center p-3">${renderIcon(s.katalon)}</td>
+        <td class="text-center p-3">${renderIcon(s.tosca)}</td>
+        <td class="text-center p-3">${renderIcon(s.testrigor)}</td>
+        <td class="text-center p-3">${renderIcon(s.functionize)}</td>
+      </tr>`
+    ).join('');
+  }
+
+  function renderScores() {
+    const barsEl = document.getElementById('score-bars');
+    if (!barsEl) return;
+    const scores = [
+      {name:'Brisk',score:9.0,color:'bg-green-500'},
+      {name:'Katalon',score:8.2,color:'bg-green-400'},
+      {name:'Functionize',score:8.0,color:'bg-green-400'},
+      {name:'Tricentis Tosca',score:7.6,color:'bg-brisk-yellow-500'},
+      {name:'mabl',score:6.8,color:'bg-brisk-yellow-500'},
+      {name:'testRigor',score:6.8,color:'bg-brisk-yellow-500'}
+    ];
+    barsEl.innerHTML = scores.map(s =>
+      `<div class="flex items-center gap-3">
+        <span class="w-28 text-xs font-medium text-brisk-gray-800 shrink-0">${s.name}</span>
+        <div class="flex-1 bg-brisk-gray-300 rounded-full h-5 overflow-hidden" role="progressbar" aria-valuenow="${s.score}" aria-valuemin="0" aria-valuemax="10" aria-label="${s.name}: ${s.score} out of 10">
+          <div class="h-full rounded-full ${s.color} flex items-center justify-end pr-2 score-bar" style="width:${s.score*10}%">
+            <span class="text-xs font-bold text-white drop-shadow">${s.score.toFixed(1)}</span>
+          </div>
+        </div>
+        <span class="text-xs text-brisk-gray-600 w-20 shrink-0">/ 10</span>
+      </div>`
+    ).join('');
+
+    const bBarsEl = document.getElementById('benchmark-score-bars');
+    if (!bBarsEl) return;
+    const bScores = [
+      {name:'Brisk',score:8.3,color:'bg-green-500'},
+      {name:'Katalon',score:7.5,color:'bg-green-400'},
+      {name:'Tricentis Tosca',score:7.5,color:'bg-green-400'},
+      {name:'Functionize',score:6.3,color:'bg-brisk-yellow-500'},
+      {name:'testRigor',score:5.8,color:'bg-brisk-yellow-500'},
+      {name:'mabl',score:5.0,color:'bg-brisk-yellow-500'}
+    ];
+    bBarsEl.innerHTML = bScores.map(s =>
+      `<div class="flex items-center gap-3">
+        <span class="w-28 text-xs font-medium text-brisk-gray-800 shrink-0">${s.name}</span>
+        <div class="flex-1 bg-brisk-gray-300 rounded-full h-5 overflow-hidden" role="progressbar" aria-valuenow="${s.score}" aria-valuemin="0" aria-valuemax="10" aria-label="${s.name}: ${s.score} out of 10">
+          <div class="h-full rounded-full ${s.color} flex items-center justify-end pr-2 score-bar" style="width:${s.score*10}%">
+            <span class="text-xs font-bold text-white drop-shadow">${s.score.toFixed(1)}</span>
+          </div>
+        </div>
+        <span class="text-xs text-brisk-gray-600 w-20 shrink-0">/ 10</span>
+      </div>`
+    ).join('');
+  }
+
+  // Search and status filter
+  const searchInput = document.getElementById('capability-search');
+  const filterCheck = document.getElementById('filter-check');
+  const filterWrench = document.getElementById('filter-wrench');
+  const filterCross = document.getElementById('filter-cross');
+  const filterBench = document.getElementById('filter-bench');
+
+  function applyFilters() {
+    const q = searchInput ? searchInput.value.toLowerCase() : '';
+    const showCheck = filterCheck ? filterCheck.checked : true;
+    const showWrench = filterWrench ? filterWrench.checked : true;
+    const showCross = filterCross ? filterCross.checked : true;
+    const showBench = filterBench ? filterBench.checked : true;
+
+    const typeMap = {'✅':'check','🔧':'wrench','❌':'cross','⚫':'bench'};
+
+    renderCapabilities(capabilities.filter(c => {
+      if (q && !c.name.toLowerCase().includes(q)) return false;
+      // Check if ANY cell for this capability row matches enabled types
+      const cells = [c.brisk, c.mabl, c.katalon, c.tosca, c.testrigor, c.functionize];
+      const hasVisible = cells.some(v => {
+        const t = typeMap[v] || 'check';
+        if (t === 'check' && showCheck) return true;
+        if (t === 'wrench' && showWrench) return true;
+        if (t === 'cross' && showCross) return true;
+        if (t === 'bench' && showBench) return true;
+        return false;
+      });
+      if (!showCheck && !showWrench && !showCross && !showBench) return true;
+      return hasVisible;
+    }));
+  }
+
+  if (searchInput) searchInput.addEventListener('input', applyFilters);
+  [filterCheck, filterWrench, filterCross, filterBench].forEach(cb => {
+    if (cb) cb.addEventListener('change', applyFilters);
+  });
+
+  renderCapabilities();
+  renderBenchmarks();
+  renderScores();
+})();
+
+// ── Smooth Scroll ──────────────────────────────────
+(function(){
+  document.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener('click', function(e) {
+      const href = this.getAttribute('href');
+      if (href === '#') return;
+      const target = document.querySelector(href);
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({behavior:'smooth'});
+        history.pushState(null, '', href);
+      }
+    });
+  });
+})();
+
+// ── Scroll-aware navigation state ───────────────────
+(function(){
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => {
+          link.classList.remove('nav-current');
+          if (link.getAttribute('href') === '#' + entry.target.id) {
+            link.classList.add('nav-current');
+          }
+        });
+      }
+    });
+  }, { threshold: 0.3, rootMargin: '-80px 0px -50% 0px' });
+  sections.forEach(s => { if (s.id) observer.observe(s); });
+})();
+
+// ── Process Explorer scroll-aware activation ────────
+(function(){
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const steps = document.querySelectorAll('.process-step');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('process-step-active');
+    });
+  }, { threshold: 0.4 });
+  steps.forEach(s => observer.observe(s));
+})();
+
+// ── Mobile evidence toggle ──────────────────────────
+(function(){
+  const tabs = document.querySelectorAll('.evidence-mobile-tab');
+  const resultPanel = document.querySelector('.evidence-result-panel');
+  const evidencePanel = document.querySelector('.evidence-evidence-panel');
+  if (!tabs.length) return;
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => { t.setAttribute('aria-selected','false'); t.classList.remove('bg-white','text-brisk-gray-950','shadow-sm'); t.classList.add('text-brisk-gray-600'); });
+      tab.setAttribute('aria-selected','true');
+      tab.classList.add('bg-white','text-brisk-gray-950','shadow-sm');
+      tab.classList.remove('text-brisk-gray-600');
+      if (tab.dataset.view === 'result') {
+        if (resultPanel) resultPanel.style.display = '';
+        if (evidencePanel) evidencePanel.style.display = 'none';
+      } else {
+        if (resultPanel) resultPanel.style.display = 'none';
+        if (evidencePanel) evidencePanel.style.display = '';
+      }
+    });
+  });
+})();
+
+// ── Roadmap category filters ────────────────────────
+(function(){
+  const roadmap = document.getElementById('roadmap');
+  if (!roadmap) return;
+  const cards = roadmap.querySelectorAll('.roadmap-card');
+  if (!cards.length) return;
+  // Insert filter buttons before roadmap cards
+  const filters = document.createElement('div');
+  filters.className = 'flex flex-wrap gap-2 mb-6';
+  filters.innerHTML = `
+    <button type="button" class="roadmap-filter px-3 py-1.5 text-xs font-medium rounded-full bg-brisk-purple-800 text-white" data-filter="all">All</button>
+    <button type="button" class="roadmap-filter px-3 py-1.5 text-xs font-medium rounded-full bg-brisk-gray-300 text-brisk-gray-800 hover:bg-brisk-purple-100" data-filter="engines">Engines</button>
+    <button type="button" class="roadmap-filter px-3 py-1.5 text-xs font-medium rounded-full bg-brisk-gray-300 text-brisk-gray-800 hover:bg-brisk-purple-100" data-filter="reporting">Reporting</button>
+    <button type="button" class="roadmap-filter px-3 py-1.5 text-xs font-medium rounded-full bg-brisk-gray-300 text-brisk-gray-800 hover:bg-brisk-purple-100" data-filter="proof">Proof</button>
+    <button type="button" class="roadmap-filter px-3 py-1.5 text-xs font-medium rounded-full bg-brisk-gray-300 text-brisk-gray-800 hover:bg-brisk-purple-100" data-filter="maturity">Maturity</button>
+    <button type="button" class="roadmap-filter px-3 py-1.5 text-xs font-medium rounded-full bg-brisk-gray-300 text-brisk-gray-800 hover:bg-brisk-purple-100" data-filter="extension">Extension</button>
+    <button type="button" class="roadmap-filter px-3 py-1.5 text-xs font-medium rounded-full bg-brisk-gray-300 text-brisk-gray-800 hover:bg-brisk-purple-100" data-filter="coverage">Coverage</button>
+  `;
+  const grid = roadmap.querySelector('.grid');
+  if (grid) grid.parentNode.insertBefore(filters, grid);
+
+  document.querySelectorAll('.roadmap-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.roadmap-filter').forEach(b => { b.classList.remove('bg-brisk-purple-800','text-white'); b.classList.add('bg-brisk-gray-300','text-brisk-gray-800'); });
+      btn.classList.add('bg-brisk-purple-800','text-white');
+      btn.classList.remove('bg-brisk-gray-300','text-brisk-gray-800');
+      const filter = btn.dataset.filter;
+      cards.forEach(card => {
+        if (filter === 'all' || card.dataset.category === filter) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
+
+
