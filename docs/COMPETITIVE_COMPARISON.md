@@ -24,6 +24,8 @@ The comparison is split into three views:
 
 Private-company revenue is not audited public revenue. Where the company does not disclose revenue, this page uses cited third-party estimates and labels them as estimates.
 
+Brisk checkmarks represent capabilities present in the current codebase. They are not performance or reliability scores until executed in a shared benchmark lab.
+
 ## Market Snapshot
 
 <table>
@@ -87,6 +89,23 @@ Private-company revenue is not audited public revenue. Where the company does no
 | &#10060; | Unsupported or not found as a clear public capability |
 | &#9899; | Not yet independently benchmarked in a shared public lab |
 
+Score highlights:
+
+<table>
+  <tr>
+    <td align="center" bgcolor="#dcfce7"><strong>8-10</strong></td>
+    <td>Strong</td>
+  </tr>
+  <tr>
+    <td align="center" bgcolor="#fef3c7"><strong>6-7</strong></td>
+    <td>Competitive but limited</td>
+  </tr>
+  <tr>
+    <td align="center" bgcolor="#fee2e2"><strong>0-5</strong></td>
+    <td>Weak or unclear</td>
+  </tr>
+</table>
+
 ## Product Capability Map
 
 This is a public-evidence map. It does not claim private product internals.
@@ -129,16 +148,25 @@ This is a public-evidence map. It does not claim private product internals.
     <td align="center">&#9989;</td>
   </tr>
   <tr>
-    <td><strong>OpenAPI and contract validation</strong><br />Parse specs, validate runtime responses, and catch contract drift.</td>
+    <td><strong>OpenAPI parsing and runtime schema validation</strong><br />Parse API specs and validate runtime responses against declared schemas.</td>
     <td align="center">&#9989;</td>
     <td align="center">&#128295;</td>
     <td align="center">&#9989;</td>
     <td align="center">&#9989;</td>
     <td align="center">&#128295;</td>
-    <td align="center">&#9989;</td>
+    <td align="center">&#128295;</td>
   </tr>
   <tr>
-    <td><strong>Repo and route discovery</strong><br />Inspect source code and implemented routes before planning tests.</td>
+    <td><strong>Implementation-contract drift detection</strong><br />Identify implemented-but-undocumented and documented-but-missing routes.</td>
+    <td align="center">&#128295;</td>
+    <td align="center">&#128295;</td>
+    <td align="center">&#128295;</td>
+    <td align="center">&#128295;</td>
+    <td align="center">&#128295;</td>
+    <td align="center">&#128295;</td>
+  </tr>
+  <tr>
+    <td><strong>Repo and route discovery</strong><br />Inspect supported source patterns and implemented route candidates before planning tests.</td>
     <td align="center">&#9989;</td>
     <td align="center">&#10060;</td>
     <td align="center">&#10060;</td>
@@ -191,7 +219,23 @@ This is a public-evidence map. It does not claim private product internals.
     <td align="center">&#10060;</td>
     <td align="center">&#10060;</td>
   </tr>
+  <tr>
+    <td><strong>Comparative product capability score</strong><br />Public capability score, not a lab benchmark result.</td>
+    <td align="center" bgcolor="#dcfce7"><strong>8.7 / 10</strong></td>
+    <td align="center" bgcolor="#fef3c7"><strong>6.8 / 10</strong></td>
+    <td align="center" bgcolor="#dcfce7"><strong>8.2 / 10</strong></td>
+    <td align="center" bgcolor="#fef3c7"><strong>7.6 / 10</strong></td>
+    <td align="center" bgcolor="#fef3c7"><strong>6.8 / 10</strong></td>
+    <td align="center" bgcolor="#dcfce7"><strong>8.0 / 10</strong></td>
+  </tr>
 </table>
+
+Notes:
+
+- Brisk route discovery is native for supported JavaScript/TypeScript repository patterns; coverage varies by framework and may miss dynamic routes, decorators, generated routes, nested prefixes, and non-JS/TS backends.
+- Katalon has native OpenAPI/schema validation capabilities, but its own documentation currently notes a validation limitation in `WS.validateOpenApiAgainstSpecification`.
+- Functionize has public API Explorer/API testing documentation, but direct public evidence for native OpenAPI scenario generation and implementation-contract drift detection was not found.
+- Scores are comparative editorial scores from public capability evidence and Brisk's current implementation. They are not vendor-certified results.
 
 ## Mandatory Benchmark Scenario Map
 
@@ -213,7 +257,7 @@ For competitors, the icons are based on public product capabilities. They are no
   <tr>
     <td>1</td>
     <td>Discover an undocumented frontend application</td>
-    <td align="center">&#9989;</td>
+    <td align="center">&#128295;</td>
     <td align="center">&#128295;</td>
     <td align="center">&#128295;</td>
     <td align="center">&#128295;</td>
@@ -238,17 +282,17 @@ For competitors, the icons are based on public product capabilities. They are no
     <td align="center">&#9989;</td>
     <td align="center">&#9989;</td>
     <td align="center">&#128295;</td>
-    <td align="center">&#9989;</td>
+    <td align="center">&#128295;</td>
   </tr>
   <tr>
     <td>4</td>
     <td>Identify mismatch between implementation and contract</td>
-    <td align="center">&#9989;</td>
     <td align="center">&#128295;</td>
-    <td align="center">&#9989;</td>
-    <td align="center">&#9989;</td>
     <td align="center">&#128295;</td>
-    <td align="center">&#9989;</td>
+    <td align="center">&#128295;</td>
+    <td align="center">&#128295;</td>
+    <td align="center">&#128295;</td>
+    <td align="center">&#128295;</td>
   </tr>
   <tr>
     <td>5</td>
@@ -258,7 +302,7 @@ For competitors, the icons are based on public product capabilities. They are no
     <td align="center">&#9989;</td>
     <td align="center">&#9989;</td>
     <td align="center">&#128295;</td>
-    <td align="center">&#9989;</td>
+    <td align="center">&#128295;</td>
   </tr>
   <tr>
     <td>6</td>
@@ -302,7 +346,7 @@ For competitors, the icons are based on public product capabilities. They are no
   </tr>
   <tr>
     <td>10</td>
-    <td>Reject malformed or unsafe AI output</td>
+    <td>Reject malformed, unsupported, or policy-violating AI plans</td>
     <td align="center">&#9989;</td>
     <td align="center">&#9899;</td>
     <td align="center">&#9899;</td>
@@ -328,7 +372,16 @@ For competitors, the icons are based on public product capabilities. They are no
     <td align="center">&#9989;</td>
     <td align="center">&#9989;</td>
     <td align="center">&#128295;</td>
-    <td align="center">&#9989;</td>
+    <td align="center">&#128295;</td>
+  </tr>
+  <tr>
+    <td colspan="2"><strong>Comparative benchmark-readiness score</strong><br />Coverage against mandatory scenarios; competitor cells are public-capability mapping, not lab results.</td>
+    <td align="center" bgcolor="#dcfce7"><strong>8.1 / 10</strong></td>
+    <td align="center" bgcolor="#fef3c7"><strong>6.7 / 10</strong></td>
+    <td align="center" bgcolor="#dcfce7"><strong>8.3 / 10</strong></td>
+    <td align="center" bgcolor="#dcfce7"><strong>8.3 / 10</strong></td>
+    <td align="center" bgcolor="#fef3c7"><strong>6.8 / 10</strong></td>
+    <td align="center" bgcolor="#fef3c7"><strong>7.1 / 10</strong></td>
   </tr>
 </table>
 
@@ -389,11 +442,14 @@ Product and capability sources:
 - mabl customer stories: https://www.mabl.com/customer-stories
 - Katalon: https://katalon.com/
 - Katalon about/customer base: https://katalon.com/about-us
+- Katalon OpenAPI import: https://docs.katalon.com/katalon-studio/test-objects/api-test-objects/import-web-service-objects/import-rest-request-from-openapi
+- Katalon OpenAPI validation limitation: https://docs.katalon.com/katalon-studio/keywords/keyword-description-in-katalon-studio/web-service-keywords/ws-validate-openapi-against-specification
 - Tricentis Tosca: https://www.tricentis.com/products/automate-continuous-testing-tosca
 - testRigor: https://testrigor.com/
 - testRigor API testing: https://testrigor.com/how-to-articles/how-to-do-api-testing-using-testrigor/
 - Functionize: https://www.functionize.com/
 - Functionize FAQ: https://www.functionize.com/faq
+- Functionize API Explorer: https://support.functionize.com/hc/en-us/articles/33001094588567-Using-the-API-Explorer
 
 Revenue and company sources:
 
