@@ -226,6 +226,7 @@ function validateEngineOutput(output, scenario, record) {
   record('result.type matches scenario', result.type === scenario.type);
   record('result.engine is non-empty', typeof result.engine === 'string' && result.engine.length > 0);
   record('result.status is valid', ['passed', 'failed', 'error', 'skipped'].includes(result.status));
+  record('valid scenario passes', result.status === 'passed', result.status);
   record('result.durationMs is a number', typeof result.durationMs === 'number' && Number.isFinite(result.durationMs));
   record('result.assertions is an array', Array.isArray(result.assertions));
   record('result.artifacts is an array', Array.isArray(result.artifacts));
