@@ -24,12 +24,12 @@
 
 <br />
 
-`brisk-aitesting` is an **AI-native, provider-agnostic testing engine** for SaaS products, APIs, UI workflows, OpenAPI contracts, and custom systems.
+`brisk-aitesting` helps teams turn a plain testing goal into real, runnable checks for SaaS products, APIs, UI flows, OpenAPI contracts, and custom systems.
 
 <div align="center">
-  <h3>The world's most unique embeddable AI testing control plane</h3>
+  <h3>A local AI testing layer developers can actually embed</h3>
   <p>
-    It looks at your app, asks AI for a structured test plan, checks that plan, runs the right test tools, and returns proof.
+    It studies your app, asks AI for a structured test plan, checks that plan, runs the right tools, and returns evidence your product can use.
   </p>
 </div>
 
@@ -46,10 +46,10 @@
         It chooses the right test type.<br />
         It generates a safe test plan.<br />
         It runs the right engines.<br />
-        It returns clean evidence your product can consume.</em>
+        It returns clean evidence your product can use.</em>
       </blockquote>
       <br />
-      <sub>⚡ This is <strong>not</strong> just a wrapper around Playwright. Playwright is <em>one</em> built-in engine. API checks, OpenAPI contract checks, schema validation, route discovery, AI planning, validation, repair, evidence capture, and handover are first-class parts of the product.</sub>
+      <sub>This is <strong>not</strong> just a wrapper around Playwright. Playwright is one built-in engine. API checks, OpenAPI contract checks, schema validation, route discovery, AI planning, validation, repair, evidence capture, and result handover are also part of the product.</sub>
     </td>
   </tr>
 </table>
@@ -58,16 +58,16 @@
 
 `brisk-aitesting` is not "AI writes random Playwright code and runs it."
 
-It is closer to a controlled testing factory:
+It is closer to a careful testing assistant with a factory line behind it:
 
 | Step | What happens |
 |:----:|:-------------|
 | 1 | It looks at your repo, routes, UI pages, and OpenAPI files. |
 | 2 | It asks AI to create a structured test plan in JSON. |
-| 3 | It checks and repairs that plan before anything runs. |
+| 3 | It checks and repairs that plan before anything is allowed to run. |
 | 4 | It sends each test to the right built-in engine: browser, API, or OpenAPI contract. |
 | 5 | It collects screenshots, traces, request/response data, logs, and final results. |
-| 6 | It gives your app one stable JSON result that you can store or show anywhere. |
+| 6 | It gives your app one stable JSON result that you can store, show, or send to CI. |
 
 The most important idea is simple:
 
@@ -75,7 +75,7 @@ The most important idea is simple:
 AI suggests the plan.
 Brisk checks the plan.
 Engines run the tests.
-Evidence proves what happened.
+Evidence shows what actually happened.
 ```
 
 ## Built Now vs Not Built Yet
@@ -101,13 +101,13 @@ This section exists so there is no confusion.
 | Engine plugin conformance suite | Built | External engines must prove scenario routing, result shape, artifact shape, timeout handling, and secret safety before being trusted. |
 | Non-engine plugin conformance | Not built yet | Planned: conformance for custom discoverers, planners, validators, UI grounders, and AI providers. |
 
-Future work is not there to look impressive. It has to improve something measurable:
+Future work is only worth adding when it clearly helps users:
 
 | Future work | User impact |
 |:------------|:------------|
-| Reference apps | More trust that Brisk works on real app shapes. |
-| Golden fixtures | Less chance that future changes silently weaken plans. |
-| Plugin conformance | Safer third-party and internal engines. |
+| Reference apps | More confidence that Brisk works on real app shapes. |
+| Golden fixtures | Less chance that future changes quietly weaken plans. |
+| Plugin conformance | Safer third-party and internal engines, before they are trusted. |
 | Schema fuzz engine | More API bugs caught without slow browser tests. |
 | Replay engine | Faster regression checks from known traffic. |
 | Message adapters | Coverage beyond HTTP and browser workflows. |
@@ -259,7 +259,7 @@ Yet testing remains **expensive and fragmented**.
 
 ## 🚀 What It Can Do
 
-`brisk-aitesting` is designed to be the **embedded testing control plane** that a product team can plug into its own SaaS, repo, CI, or internal platform.
+`brisk-aitesting` is designed to be the **embedded testing layer** that a product team can plug into its own SaaS, repo, CI, or internal platform.
 
 <br />
 
@@ -364,7 +364,7 @@ when a booking is created,
 then the API must reject it with VESSEL_ALREADY_DEPARTED.
 ```
 
-That is already a business rule expressed as an executable scenario. A formal rule registry can come later for governance and coverage, but the first-class unit is the scenario: given context, action, expected outcome, and evidence.
+That is already a business rule expressed as an executable scenario. A formal rule registry can come later, but the first useful unit is simple: context, action, expected outcome, and evidence.
 
 ### 📦 Output & Integration
 
@@ -978,7 +978,7 @@ The product is built around a controlled execution line:
 10. Return one final result envelope
 ```
 
-That is the precision model: AI proposes, validators constrain, engines execute, evidence records.
+That is the reliability model: AI proposes, Brisk checks, engines run, evidence records.
 
 ## 📋 Handover Contract
 
@@ -1141,7 +1141,7 @@ npm run typecheck  &&  npm run build  &&  npm run smoke:ci  &&  npm run benchmar
 <table>
   <tr>
     <td>🧠</td>
-    <td>AI planning with JSON plan boundary</td>
+    <td>AI planning with checked JSON plans</td>
     <td>🔄</td>
     <td>Validation and repair loop</td>
   </tr>

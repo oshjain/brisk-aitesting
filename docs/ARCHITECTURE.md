@@ -1,22 +1,22 @@
 # brisk-aitesting Architecture
 
-This package is a provider-agnostic AI testing engine. The core promise is simple:
+This package turns a testing goal into checked plans, runnable tests, and evidence. The simple flow is:
 
 ```text
 goal -> discovery -> AI plan -> validation/repair -> grounding -> execution -> evidence -> handover
 ```
 
-The product must hide complexity from host apps while keeping every internal boundary explicit and testable.
+Host apps should not have to care about the moving parts. Developers should still be able to inspect each step when something fails.
 
-## Non-Negotiable Rules
+## Rules We Do Not Bend
 
 - AI providers do not execute code.
-- AI providers do not produce executable Playwright scripts.
-- UI selectors are never accepted directly from AI.
+- AI providers do not write executable Playwright scripts for us to run blindly.
+- UI selectors are not accepted directly from AI.
 - UI actions execute only through `ui_el_*` evidence IDs from `brisk-aitesting.ui-grounding.v1`.
 - Engines run only after the plan validates.
-- Broken plans repair through a structured validation feedback loop.
-- Every executable run must produce evidence artifacts.
+- Broken plans get a clear validation report and, when possible, a repair attempt.
+- Every real run must produce evidence artifacts.
 - Product configuration uses `BRISK_AITESTING_*` as the primary namespace. Provider-specific env vars are aliases only.
 - Host apps own storage. This package returns stable handover JSON and artifact references.
 
@@ -56,17 +56,18 @@ The product must hide complexity from host apps while keeping every internal bou
    `brisk-aitesting run --json` returns `brisk-aitesting.cli-result.v1`.
    Exit codes are stable: 0 passed, 1 completed non-passed, 2 setup/usage error.
 
-9. Benchmark Boundary
+9. Benchmark
    `npm run benchmark` emits `brisk-aitesting.benchmark.v1`.
-   Benchmark cases are deterministic adversarial checks for failure-mode stability.
+   Benchmark cases check known failure modes so regressions are easier to spot.
 
-10. Release Pack Boundary
+10. Release Pack Check
    `npm run pack:check` emits `brisk-aitesting.pack-check.v1`.
    Pack check verifies distributable files and blocks secrets, smoke fixtures, and generated artifacts from the npm tarball.
 
-11. Engine Plugin Conformance Boundary
+11. Engine Plugin Conformance
    `runEnginePluginConformance` emits `brisk-aitesting.plugin-conformance.v1`.
-   Engine plugins must prove they accept only their own scenarios, reject unrelated scenarios, return stable `ScenarioResult` objects, respect runtime timeout, avoid obvious secret leakage, and emit valid artifact shapes.
+   External engines must prove they behave like good citizens before we trust them.
+   They must accept only their own scenarios, reject unrelated scenarios, return stable `ScenarioResult` objects, respect runtime timeout, avoid obvious secret leakage, and emit valid artifact shapes.
 ```
 
 ## Schema Registry
@@ -81,7 +82,7 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.result.v1` | handover | Full run result |
 | `brisk-aitesting.handover.v1` | handover | Host consumption contract |
 | `brisk-aitesting.cli-result.v1` | CLI | Machine-readable CLI run summary |
-| `brisk-aitesting.benchmark.v1` | benchmark | Deterministic adversarial benchmark report |
+| `brisk-aitesting.benchmark.v1` | benchmark | Known failure-mode benchmark report |
 | `brisk-aitesting.pack-check.v1` | release | npm package tarball verification report |
 | `brisk-aitesting.engine-conformance.v1` | conformance | Built-in engine behavior report |
 | `brisk-aitesting.plugin-conformance.v1` | conformance | External engine plugin behavior report |
@@ -94,7 +95,7 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.ui-grounding.v1` | UI grounder/engine | Real page element evidence |
 | `brisk-aitesting.ui-actions.v1` | UI engine | Executed grounded action evidence |
 
-Any new schema must be documented here and covered by smoke tests before it is treated as stable.
+Any new schema must be documented here and covered by smoke tests before we call it stable.
 
 ## Extension Points
 
@@ -107,7 +108,7 @@ Host apps and integrators can replace these interfaces:
 - `Engine`
 - `UiRouteGrounder`
 
-The orchestrator should remain small. New domain behavior should usually enter through one of these extension points.
+The orchestrator should stay small. New domain behavior should usually come in through one of these extension points.
 
 ## UI Grounding Model
 
@@ -137,7 +138,7 @@ The engine resolves `evidenceId` to captured evidence. If the evidence ID is mis
 
 ## Stability Gates
 
-Before a change is considered product-safe, run:
+Before we call a change ready, run:
 
 ```bash
 npm run typecheck
@@ -154,9 +155,9 @@ npm run benchmark
 npm run pack:check
 ```
 
-`npm run smoke:ci` runs the deterministic gate used by GitHub Actions. It includes pack-check and excludes real provider calls.
+`npm run smoke:ci` runs the same deterministic gate used by GitHub Actions. It includes pack-check and excludes real provider calls.
 
-`smoke:real-ai` requires provider credentials and enterprise CA config when applicable. It is available through the manual `Real AI Smoke` workflow and proves the configured provider path works, but benchmark-level provider quality is a separate track.
+`smoke:real-ai` needs provider credentials and enterprise CA config when applicable. It proves the configured provider path works. It does not yet score provider quality across models.
 
 ## Current Boundaries
 
@@ -168,13 +169,13 @@ Built:
 - Grounded UI action execution.
 - OpenAPI JSON/YAML route discovery, schema extraction, generated API scenarios, and response schema validation.
 - Evidence-rich API/UI artifacts.
-- Host handover contract.
+- Stable result handover for host apps.
 - Engine conformance smoke for built-in engines.
 - Engine plugin conformance API and smoke gate for external `Engine` implementations.
 - Serious SaaS reference app smoke.
 - Golden fixture baseline for serious SaaS scenario/result stability.
 
-Still intentionally incomplete:
+Still missing:
 
 - Benchmark-level multi-provider scoring.
 - JUnit/HTML CI report generation.

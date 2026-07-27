@@ -1,6 +1,8 @@
 # brisk-aitesting Status
 
-This package is an alpha release. The foundation is intentionally strict: AI plans, validators constrain, engines execute, evidence records, and schemas define handover.
+This package is an alpha release. It already runs real checks, but we are still building toward the larger vision.
+
+The rule is simple: AI can suggest what to test, but Brisk checks the plan before anything runs. Engines do the execution. Evidence records what happened.
 
 ## Built
 
@@ -23,15 +25,15 @@ This package is an alpha release. The foundation is intentionally strict: AI pla
 - Golden fixture report: `brisk-aitesting.golden-fixtures.v1`.
 - npm package publication path.
 
-## Partially Built
+## Partly Built
 
-- UI workflow generation is grounded and executable, but complex multi-page journey planning still needs broader benchmark coverage.
-- OpenAPI scenario generation handles common request/response schemas, but full OpenAPI and JSON Schema coverage will keep expanding.
+- UI workflow generation is grounded and executable, but complex multi-page journeys still need broader benchmark coverage.
+- OpenAPI scenario generation handles common request/response schemas, but deeper OpenAPI and JSON Schema coverage will keep expanding.
 - Analytics exist as structured summaries and benchmark reports, but richer trend analytics are future work.
-- Business-intent scenarios can be expressed in goals/objectives/assertions, but reusable rule IDs, rule coverage, and contradiction analysis are future governance layers.
-- Scenario routing supports `schema`, `replay`, and `custom` types structurally, but schema fuzz and replay engines are extension points until built-in adapters are added.
+- Business-intent scenarios can be expressed in goals/objectives/assertions, but reusable rule IDs, rule coverage, and contradiction checks are future work.
+- Scenario routing already understands `schema`, `replay`, and `custom` types, but schema fuzz and replay engines still need real built-in adapters.
 
-## Not Built In Yet
+## Not Built Yet
 
 - AI does not execute code.
 - AI-generated Playwright code is not accepted.
@@ -44,14 +46,14 @@ This package is an alpha release. The foundation is intentionally strict: AI pla
 - Conformance suites for non-engine extension points: discoverers, planners, validators, UI grounders, and AI providers.
 - Formal UI selector healing stage with before/after evidence diffing.
 
-## Next Product Completeness Work
+## Next Work
 
 - Add reference apps: Todo, Auth SaaS, E-commerce, API-only, Multi-tenant SaaS, Event/messaging.
 - Add golden fixtures for stable plan/result comparison.
 - Extend conformance beyond engines to discoverers, planners, validators, UI grounders, and AI providers.
 - Add schema fuzz engine for OpenAPI/JSON Schema negative coverage.
-- Add replay adapter boundary and then Keploy-compatible implementation.
-- Add AsyncAPI/Pact/message-contract adapter boundary.
+- Add a replay adapter shape and then a Keploy-compatible implementation.
+- Add AsyncAPI/Pact/message-contract adapter support.
 - Add JUnit/HTML reporter support.
 - Add multi-provider benchmark scoring.
 - Add release notes and npm release automation.
