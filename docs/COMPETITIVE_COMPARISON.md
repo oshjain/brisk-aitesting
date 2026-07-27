@@ -1,130 +1,96 @@
-﻿# Competitive Comparison
+# Competitive Comparison
 
-This page compares `brisk-aitesting` with five recognized AI-based software testing products.
+This page compares `brisk-aitesting` with large, established software testing platforms that have serious market presence, long operating history, analyst visibility, and public revenue signals.
 
-It is intentionally honest:
+This is the correct comparison lens for Brisk:
 
-- revenue numbers are estimates unless the company disclosed them directly
-- a check means the feature is clearly built or publicly positioned
-- a cross means the feature was not found as a clear public capability in the cited sources
-- a partial mark means the product has an adjacent capability, but not the same shape
+- not just small AI testing startups
+- not only tools that say "plain English testing"
+- not only browser-testing tools
+- established testing companies with money, market trust, and enterprise reach
 
-## Products Compared
+Revenue notes:
 
-| Product | Public positioning | Revenue signal |
-|:--------|:-------------------|:---------------|
-| brisk-aitesting | Local SDK/CLI testing layer using AI planning, strict validation, multiple execution engines, and versioned evidence | New open-source product |
-| mabl | Agentic testing platform where coverage can build, run, and recover itself | Growjo estimates annual revenue at $34.5M |
-| testRigor | Generative AI test automation using free-flowing English instructions | GetLatka estimates 2024 revenue at $15M ARR |
-| Functionize | AI testing agents for UI, API, data layer, diagnosis, maintenance, and documentation | Growjo estimates annual revenue at $38.6M |
-| Applitools | AI-augmented testing platform with Visual AI, Autonomous, functional, visual, and API testing | Growjo estimates annual revenue at $21.7M |
-| Tricentis Testim | AI-powered test automation for Salesforce, web, and mobile inside the Tricentis portfolio | Tricentis disclosed about $400M total revenue and ARR above $400M in 2024; Testim standalone revenue is not separately disclosed |
+- some companies disclose total company revenue, not testing-product-only revenue
+- private-company revenue numbers are estimates unless clearly disclosed
+- where a product is part of a larger company, the table says so directly
 
-## The Five Big Capabilities A Serious AI Testing Product Needs
+## Enterprise Peer Set
 
-| Capability | Why it matters |
-|:-----------|:---------------|
-| Intent to execution | Users should describe what matters, not hand-code every test |
-| Multi-surface coverage | Modern products need UI, API, contract, schema, and workflow testing |
-| Trust boundary | AI output must be checked before anything runs |
-| Evidence handover | Results must be easy for CI, dashboards, and databases to consume |
-| Extensibility and control | Teams need local control, custom engines, security boundaries, and host-owned storage |
+| Product/company | Why it belongs in this comparison | Revenue signal |
+|:----------------|:----------------------------------|:---------------|
+| Tricentis | Enterprise test automation platform with Tosca, Testim, qTest, NeoLoad, and AI-assisted testing | Tricentis reported ARR above $400M for 2024 and later announced ARR above $500M |
+| OpenText | Large enterprise software company with OpenText Functional Testing and AI-augmented testing capabilities | OpenText reported $5.168B total revenue for fiscal 2025 |
+| Keysight Eggplant | Long-running model-based and AI-assisted testing product inside Keysight Technologies | Keysight reported $5.37B total revenue for fiscal 2025; Eggplant is part of the Keysight portfolio |
+| UiPath Test Cloud | Enterprise automation company with test automation, AI, RPA, and workflow automation reach | UiPath reported $1.430B revenue and $1.666B ARR for fiscal 2025 |
+| BrowserStack | Large cloud testing platform used by developer and QA teams, now adding AI-assisted test creation and execution | BrowserStack revenue is private; public estimates commonly place it in the hundreds of millions of dollars |
 
-## 55-Feature Matrix
+## What A Serious AI Testing Product Must Cover
 
-Legend: `✓` yes, `◐` partial or adjacent, `✗` not found as a clear public capability in cited sources.
+| Capability | Why buyers care |
+|:-----------|:----------------|
+| Natural-language test intent | Teams should describe what matters without hand-coding every test |
+| UI, API, and contract coverage | Real products are not only screens; they are screens, APIs, schemas, auth, data, and workflows |
+| AI safety boundary | AI should help plan tests, but should not be blindly trusted to execute arbitrary code |
+| Local or embeddable control | Enterprises often need tests to run inside their own product, CI, network, and security model |
+| Evidence handover | Results should come back as stable data that any dashboard, database, or CI system can consume |
 
-| # | Feature | Brisk | mabl | testRigor | Functionize | Applitools | Testim |
-|---:|:--------|:-----:|:----:|:---------:|:-----------:|:----------:|:------:|
-| 1 | Local embeddable SDK | ✓ | ✗ | ✗ | ◐ | ✗ | ✗ |
-| 2 | CLI execution path | ✓ | ◐ | ◐ | ✓ | ◐ | ◐ |
-| 3 | No hosted dashboard required | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 4 | Host app owns database and presentation | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 5 | Versioned result JSON contract | ✓ | ✗ | ✗ | ◐ | ✗ | ✗ |
-| 6 | Event stream callbacks for embedding | ✓ | ✗ | ✗ | ◐ | ✗ | ✗ |
-| 7 | AI produces structured plan, not executable code | ✓ | ◐ | ◐ | ◐ | ◐ | ◐ |
-| 8 | AI output is never directly executed | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 9 | Strict plan validation before execution | ✓ | ◐ | ◐ | ◐ | ◐ | ◐ |
-| 10 | Plan normalization before execution | ✓ | ◐ | ◐ | ◐ | ◐ | ◐ |
-| 11 | Validation feedback repair loop | ✓ | ◐ | ◐ | ✓ | ◐ | ◐ |
-| 12 | Deterministic fallback planner | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 13 | Required scenario-type enforcement | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 14 | Automatic routing across test engines | ✓ | ◐ | ◐ | ✓ | ◐ | ◐ |
-| 15 | Local repository inspection | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 16 | Framework/package signal detection | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 17 | UI route discovery | ✓ | ◐ | ◐ | ◐ | ◐ | ◐ |
-| 18 | API route discovery from source | ✓ | ◐ | ◐ | ◐ | ◐ | ◐ |
-| 19 | OpenAPI contract discovery | ✓ | ◐ | ◐ | ◐ | ◐ | ◐ |
-| 20 | OpenAPI JSON parsing | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ |
-| 21 | OpenAPI YAML parsing | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ |
-| 22 | OpenAPI operation extraction | ✓ | ◐ | ◐ | ✓ | ✓ | ◐ |
-| 23 | Local schema reference resolution | ✓ | ✗ | ✗ | ◐ | ◐ | ✗ |
-| 24 | Positive API scenario generation from schema | ✓ | ◐ | ✓ | ✓ | ✓ | ◐ |
-| 25 | Negative API scenario generation from schema | ✓ | ◐ | ◐ | ✓ | ◐ | ◐ |
-| 26 | HTTP status assertions | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 27 | Header assertions and request headers | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 28 | Query/body request construction | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 29 | Runtime response schema validation | ✓ | ◐ | ◐ | ✓ | ✓ | ◐ |
-| 30 | Undocumented status detection against contract | ✓ | ✗ | ✗ | ◐ | ◐ | ✗ |
-| 31 | Configurable network policy | ✓ | ◐ | ◐ | ◐ | ◐ | ◐ |
-| 32 | Secret redaction in artifacts | ✓ | ◐ | ◐ | ◐ | ◐ | ◐ |
-| 33 | No-auth mode | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 34 | Bearer-token auth mode | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 35 | Credentials/custom auth mode | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 36 | Playwright generated by engine, not random AI code | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 37 | Isolated Playwright workspaces | ✓ | ◐ | ◐ | ◐ | ◐ | ◐ |
-| 38 | Playwright JSON report parsing | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 39 | Screenshots, traces, logs, generated specs | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 40 | UI grounding evidence before action generation | ✓ | ◐ | ◐ | ✓ | ◐ | ✓ |
-| 41 | Evidence-ID based UI actions | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 42 | Reject AI-invented selectors | ✓ | ◐ | ◐ | ◐ | ◐ | ✓ |
-| 43 | UI action enrichment from observed page evidence | ✓ | ◐ | ◐ | ✓ | ◐ | ✓ |
-| 44 | Custom engine interface | ✓ | ✗ | ✗ | ◐ | ◐ | ◐ |
-| 45 | Engine quality/conformance check | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 46 | Adapter manifest for built adapters | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 47 | Adapter readiness gate | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 48 | Real Schemathesis OpenAPI adapter | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 49 | Third-party adapter results folded into one evidence contract | ✓ | ✗ | ✗ | ◐ | ◐ | ◐ |
-| 50 | Serious SaaS proof app | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 51 | Golden expected outputs | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 52 | npm pack gate that blocks generated artifacts/secrets | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 53 | Cross-OS and multi-Node CI matrix | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 54 | Cleanup/artifact lifecycle command | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 55 | Full public docs for setup, config, API, security, compatibility, troubleshooting, and release | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+## 10-Point Comparison Matrix
+
+Legend: `yes` means the capability is clearly offered or built. `partial` means the product has an adjacent capability, but not the same shape. `not clear` means the capability was not found as a clear public claim in the cited sources.
+
+| # | Capability | Brisk | Tricentis | OpenText | Keysight Eggplant | UiPath Test Cloud | BrowserStack |
+|---:|:-----------|:-----:|:---------:|:--------:|:-----------------:|:-----------------:|:------------:|
+| 1 | Human-language testing goal to executable test flow | yes | partial | partial | partial | partial | partial |
+| 2 | UI testing | yes | yes | yes | yes | yes | yes |
+| 3 | API testing | yes | yes | yes | partial | yes | yes |
+| 4 | OpenAPI/schema contract testing | yes | yes | partial | partial | partial | partial |
+| 5 | Repository, route, and contract discovery before planning | yes | not clear | not clear | partial | not clear | not clear |
+| 6 | AI output validated as a structured plan before execution | yes | not clear | not clear | not clear | not clear | not clear |
+| 7 | AI never directly executes arbitrary generated code | yes | not clear | not clear | not clear | not clear | not clear |
+| 8 | Local SDK/CLI that can be embedded into another product | yes | partial | partial | partial | partial | partial |
+| 9 | One versioned JSON result contract for host-owned dashboards and databases | yes | not clear | not clear | not clear | not clear | not clear |
+| 10 | Third-party engine/adaptor model under one evidence contract | yes | partial | partial | partial | partial | partial |
 
 ## What This Shows
 
-Most established products are strong hosted testing platforms. They usually win on mature dashboards, commercial execution grids, visual testing, self-healing, and enterprise support.
+The large platforms are powerful and mature. They usually win on enterprise sales, hosted execution, broad integrations, commercial support, and years of buyer trust.
 
-Brisk is different by design:
+Brisk is designed for a different job.
 
-- it is local and embeddable
-- it does not force a hosted database or dashboard
-- AI is used for planning, not unchecked execution
-- the host product receives one stable evidence object
-- engines and adapters can be added without changing the product contract
-- OpenAPI, API, UI, Playwright, Schemathesis, result JSON, and artifact evidence already share one pipeline
+It is not trying to be another hosted testing dashboard. It is a local, embeddable testing control layer that can sit inside a SaaS product, developer platform, internal tool, or CI pipeline.
 
-That makes Brisk a different category: not another hosted QA dashboard, but a local testing control layer that product teams can embed into their own software.
+That difference matters:
+
+- the host product owns the UI, database, users, permissions, and reporting
+- Brisk owns discovery, planning, validation, engine routing, execution, and evidence
+- AI helps decide what should be tested, but Brisk checks the plan before anything runs
+- UI, API, OpenAPI, Playwright, Schemathesis, artifacts, and final results can return through one stable handover shape
+
+In simple terms:
+
+> Established tools sell testing platforms. Brisk gives teams a testing engine they can embed into their own platform.
+
+That is the market opening.
 
 ## Sources
 
-Product capability sources:
+Product and capability sources:
 
-- mabl agentic testing platform: https://www.mabl.com/
-- testRigor AI-based test automation: https://testrigor.com/
-- testRigor features/API testing: https://testrigor.com/features/ and https://testrigor.com/how-to-articles/how-to-do-api-testing-using-testrigor/
-- Functionize FAQ and agent capabilities: https://www.functionize.com/faq
-- Applitools platform and Visual AI: https://applitools.com/ and https://applitools.com/platform/validate/visual-ai/
-- Tricentis Testim product page: https://www.tricentis.com/products/test-automation-web-apps-testim
+- Tricentis product portfolio and Testim: https://www.tricentis.com/products and https://www.tricentis.com/products/test-automation-web-apps-testim
+- Tricentis AI and 2024 growth: https://www.tricentis.com/news/tricentis-sustains-impressive-2024-growth
+- OpenText Functional Testing: https://www.opentext.com/products/functional-testing
+- OpenText AI-augmented testing recognition: https://www.opentext.com/about/press-releases/opentext-named-a-leader-in-the-2025-gartner-magic-quadrant-for-ai-augmented-software-testing-tools
+- Keysight Eggplant: https://www.keysight.com/us/en/products/software/software-testing/eggplant-test.html
+- Keysight AI-augmented testing recognition: https://www.keysight.com/us/en/about/newsroom/news-releases/2025/0716-nr25085-keysight-named-a-leader-in-the-2025-gartner-magic-quadrant-for-ai-augmented-software-testing-tools.html
+- UiPath Test Cloud: https://www.uipath.com/product/test-cloud
+- BrowserStack AI testing: https://www.browserstack.com/ai
 
 Revenue sources:
 
-- Growjo data method: https://growjo.com/about_our_data
-- mabl revenue estimate: https://growjo.com/company/mabl
-- testRigor revenue estimate: https://getlatka.com/companies/testrigor
-- Functionize revenue estimate: https://growjo.com/company/Functionize
-- Applitools revenue estimate: https://growjo.com/company/Applitools
-- Tricentis 2024 revenue/ARR disclosure: https://www.tricentis.com/news/tricentis-sustains-impressive-2024-growth
-
-
+- Tricentis 2024 ARR disclosure: https://www.tricentis.com/news/tricentis-sustains-impressive-2024-growth
+- Tricentis $500M ARR announcement: https://www.tricentis.com/news/tricentis-names-kevin-thompson-ceo
+- OpenText fiscal 2025 results: https://investors.opentext.com/press-releases/press-releases-details/2025/OpenText-Reports-Fourth-Quarter-and-Fiscal-Year-2025-Financial-Results/default.aspx
+- Keysight fiscal 2025 results: https://www.keysight.com/us/en/about/newsroom/news-releases/2025/1124-nr25123-keysight-reports-fourth-quarter-2025-results.html
+- UiPath fiscal 2025 results: https://ir.uipath.com/news/detail/349/uipath-reports-fourth-quarter-and-full-year-fiscal-2025-financial-results
+- BrowserStack revenue estimate: https://sacra.com/c/browserstack/

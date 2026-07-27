@@ -150,7 +150,7 @@ Yet testing remains **expensive and fragmented**.
 
 ## Competitive Position
 
-The AI testing market is already real. Products like mabl, testRigor, Functionize, Applitools, and Tricentis Testim prove that teams are spending heavily to reduce manual testing, flaky automation, and slow release cycles.
+The AI testing market is already real. Enterprise platforms like Tricentis, OpenText, Keysight Eggplant, UiPath Test Cloud, and BrowserStack prove that serious companies spend heavily to reduce manual testing, flaky automation, and slow release cycles.
 
 Brisk is designed differently: local, embeddable, evidence-first, and built around a strict AI safety boundary.
 
@@ -162,7 +162,7 @@ Brisk is designed differently: local, embeddable, evidence-first, and built arou
 | Evidence handover | Results come back as versioned JSON your product can store, render, or send to CI |
 | Extensible by design | Custom engines and adapters fit the same result contract |
 
-See the sourced 55-feature matrix: [Competitive Comparison](./docs/COMPETITIVE_COMPARISON.md).
+See the sourced enterprise comparison: [Competitive Comparison](./docs/COMPETITIVE_COMPARISON.md).
 
 ## How It Works
 
