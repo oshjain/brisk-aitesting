@@ -36,6 +36,7 @@ The strongest product idea is not "AI writes Playwright tests." The stronger ide
 - Built-in Playwright UI engine.
 - Built-in API engine.
 - Built-in OpenAPI contract engine.
+- Engine plugin conformance API and smoke gate.
 - UI grounding and evidence-ID action execution.
 - Versioned result and handover JSON.
 - Event stream callbacks.
@@ -50,7 +51,7 @@ The strongest product idea is not "AI writes Playwright tests." The stronger ide
 - No built-in Keploy adapter yet.
 - No built-in AsyncAPI, Pact, or message-contract engine yet.
 - No reference app matrix yet.
-- No plugin conformance suite yet.
+- No conformance suite yet for non-engine extension points: discoverers, planners, validators, UI grounders, and AI providers.
 - No formal UI healing stage with before/after evidence diffing yet.
 - No JUnit/HTML reporters yet.
 - No semantic rule registry yet.
@@ -93,7 +94,9 @@ This catches silent degradation after AI repair or planner changes.
 
 ### 3. Plugin Conformance Suite
 
-Every engine/plugin must prove:
+Engine plugin conformance is built for the `Engine` interface. The remaining work is to extend the same idea to every extension point.
+
+Every engine plugin must prove:
 
 - it declares which scenario types it can run
 - it rejects unsupported scenarios
@@ -102,6 +105,8 @@ Every engine/plugin must prove:
 - it respects runtime timeout/retry/security config
 - it never leaks secrets
 - it maps failures into diagnostics
+
+Future non-engine conformance suites should define the matching stable output contract for each extension type.
 
 ### 4. Schema Fuzz Engine
 

@@ -63,6 +63,10 @@ The product must hide complexity from host apps while keeping every internal bou
 10. Release Pack Boundary
    `npm run pack:check` emits `brisk-aitesting.pack-check.v1`.
    Pack check verifies distributable files and blocks secrets, smoke fixtures, and generated artifacts from the npm tarball.
+
+11. Engine Plugin Conformance Boundary
+   `runEnginePluginConformance` emits `brisk-aitesting.plugin-conformance.v1`.
+   Engine plugins must prove they accept only their own scenarios, reject unrelated scenarios, return stable `ScenarioResult` objects, respect runtime timeout, avoid obvious secret leakage, and emit valid artifact shapes.
 ```
 
 ## Schema Registry
@@ -79,7 +83,9 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.cli-result.v1` | CLI | Machine-readable CLI run summary |
 | `brisk-aitesting.benchmark.v1` | benchmark | Deterministic adversarial benchmark report |
 | `brisk-aitesting.pack-check.v1` | release | npm package tarball verification report |
-| `brisk-aitesting.engine-conformance.v1` | conformance | Built-in and plugin engine behavior report |
+| `brisk-aitesting.engine-conformance.v1` | conformance | Built-in engine behavior report |
+| `brisk-aitesting.plugin-conformance.v1` | conformance | External engine plugin behavior report |
+| `brisk-aitesting.plugin-conformance-smoke.v1` | conformance | Smoke proof that good plugins pass and bad plugins fail |
 | `brisk-aitesting.reference-serious-saas.v1` | reference app | Serious SaaS reference smoke report |
 | `brisk-aitesting.golden-fixtures.v1` | golden fixtures | Stable scenario/result baseline report |
 | `brisk-aitesting.api-evidence.v1` | API engine | Request/response evidence |
@@ -138,6 +144,7 @@ npm run typecheck
 npm run build
 npm run smoke:contracts
 npm run smoke:engine-conformance
+npm run smoke:plugin-conformance
 npm run smoke:reference-serious-saas
 npm run smoke:golden-fixtures
 npm run smoke:cli
@@ -163,6 +170,7 @@ Built:
 - Evidence-rich API/UI artifacts.
 - Host handover contract.
 - Engine conformance smoke for built-in engines.
+- Engine plugin conformance API and smoke gate for external `Engine` implementations.
 - Serious SaaS reference app smoke.
 - Golden fixture baseline for serious SaaS scenario/result stability.
 
@@ -172,3 +180,4 @@ Still intentionally incomplete:
 - JUnit/HTML CI report generation.
 - Public npm publishing automation.
 - Metrics/analytics module.
+- Conformance suites for external `Discoverer`, `Planner`, `PlanValidator`, `UiRouteGrounder`, and `AiPlannerProvider` implementations.

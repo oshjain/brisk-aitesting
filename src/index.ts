@@ -47,6 +47,10 @@ export {
 } from './providers.js';
 
 export {
+  runEnginePluginConformance,
+} from './conformance.js';
+
+export {
   BuiltinApiEngine,
   BuiltinContractEngine,
   BuiltinPlaywrightEngine,
@@ -98,6 +102,13 @@ export type {
   ValidationIssue,
   ValidationResult,
 } from './types.js';
+
+export type {
+  EnginePluginConformanceCase,
+  EnginePluginConformanceCheck,
+  EnginePluginConformanceEngineReport,
+  EnginePluginConformanceReport,
+} from './conformance.js';
 
 export type {
   SchemaValidationResult,

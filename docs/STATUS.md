@@ -18,6 +18,7 @@ This package is an alpha release. The foundation is intentionally strict: AI pla
 - Adversarial benchmark report: `brisk-aitesting.benchmark.v1`.
 - Release pack check: `brisk-aitesting.pack-check.v1`.
 - Engine conformance report: `brisk-aitesting.engine-conformance.v1`.
+- Engine plugin conformance API and smoke report: `brisk-aitesting.plugin-conformance.v1`.
 - Serious SaaS reference app report: `brisk-aitesting.reference-serious-saas.v1`.
 - Golden fixture report: `brisk-aitesting.golden-fixtures.v1`.
 - npm package publication path.
@@ -40,14 +41,14 @@ This package is an alpha release. The foundation is intentionally strict: AI pla
 - Built-in schema fuzz engine.
 - Built-in replay engine.
 - Full reference app matrix beyond serious-saas.
-- Plugin conformance suite beyond built-in engine conformance.
+- Conformance suites for non-engine extension points: discoverers, planners, validators, UI grounders, and AI providers.
 - Formal UI selector healing stage with before/after evidence diffing.
 
 ## Next Product Completeness Work
 
 - Add reference apps: Todo, Auth SaaS, E-commerce, API-only, Multi-tenant SaaS, Event/messaging.
 - Add golden fixtures for stable plan/result comparison.
-- Add plugin conformance suite for every engine/discoverer/provider extension.
+- Extend conformance beyond engines to discoverers, planners, validators, UI grounders, and AI providers.
 - Add schema fuzz engine for OpenAPI/JSON Schema negative coverage.
 - Add replay adapter boundary and then Keploy-compatible implementation.
 - Add AsyncAPI/Pact/message-contract adapter boundary.

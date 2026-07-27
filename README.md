@@ -98,7 +98,8 @@ This section exists so there is no confusion.
 | Serious SaaS reference app | Built | Proves auth, roles, UI, API, OpenAPI, negative cases, state change, and artifacts. |
 | Full reference app matrix | Not built yet | Planned: Todo, e-commerce, API-only, multi-tenant, and event/messaging apps. |
 | Built-in engine conformance suite | Built | Built-in engines must return stable result and artifact shapes. |
-| Plugin conformance suite | Not built yet | Planned: every custom engine must pass the same safety/result rules. |
+| Engine plugin conformance suite | Built | External engines must prove scenario routing, result shape, artifact shape, timeout handling, and secret safety before being trusted. |
+| Non-engine plugin conformance | Not built yet | Planned: conformance for custom discoverers, planners, validators, UI grounders, and AI providers. |
 
 Future work is not there to look impressive. It has to improve something measurable:
 
@@ -1057,6 +1058,8 @@ This may be the most valuable part of the product for enterprise teams. The resu
 | `brisk-aitesting.benchmark.v1` | 📊 Benchmark |
 | `brisk-aitesting.pack-check.v1` | 📦 Pack Check |
 | `brisk-aitesting.engine-conformance.v1` | Engine Conformance |
+| `brisk-aitesting.plugin-conformance.v1` | Plugin Conformance |
+| `brisk-aitesting.plugin-conformance-smoke.v1` | Plugin Conformance Smoke |
 | `brisk-aitesting.reference-serious-saas.v1` | Serious SaaS Reference |
 | `brisk-aitesting.golden-fixtures.v1` | Golden Fixtures |
 | `brisk-aitesting.api-evidence.v1` | 📡 API Evidence |
@@ -1110,6 +1113,7 @@ npm run typecheck  &&  npm run build  &&  npm run smoke:ci  &&  npm run benchmar
 |:-----:|:------------|
 | 📋 Contract/schema registry checks | Verify all schemas are valid |
 | Engine conformance checks | Verify built-in engines obey the same result and artifact rules |
+| Engine plugin conformance checks | Verify good external engines pass and unsafe external engines fail |
 | Serious SaaS reference checks | Verify auth, roles, UI, API, OpenAPI, negative cases, state change, and artifacts |
 | Golden fixture checks | Verify serious SaaS scenario inventory and result summary do not silently drift |
 | ⌨️ CLI checks | Ensure CLI exits with correct codes |
@@ -1206,7 +1210,7 @@ npm run typecheck  &&  npm run build  &&  npm run smoke:ci  &&  npm run benchmar
     <td>📚</td>
     <td>More framework-specific examples</td>
     <td>🧪</td>
-    <td>Reference apps and plugin conformance suite</td>
+    <td>More reference apps and non-engine plugin conformance suites</td>
   </tr>
   <tr>
     <td>🧬</td>
