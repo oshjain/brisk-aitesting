@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/badge/status-alpha-orange" alt="Status: Alpha" />
     <img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs Welcome" />
     <img src="https://img.shields.io/badge/local-first-yes-8A2BE2" alt="Local First" />
-    <img src="https://img.shields.io/badge/engine-Playwright_|_API_|_Contract-blue" alt="Engines" />
+    <img src="https://img.shields.io/badge/engines-UI_|_API_|_Contract_|_Schema_|_Replay-blue" alt="Built-in engines" />
   </p>
 </div>
 
@@ -17,7 +17,7 @@
 
 <!-- Hero -->
 <div align="center">
-  <h2>The world's most unique locally embeddable software testing layer, powered by AI and precise engineering.</h2>
+  <h2>A locally embeddable software testing layer, powered by AI planning and precise engineering.</h2>
   <p>
     Embed it inside your product, run it from the CLI, or wire it into CI.
     Tell it what to test in human language. Brisk discovers the app, plans the checks, runs the right engines, and returns clean evidence.
@@ -100,8 +100,8 @@ Yet testing remains **expensive and fragmented**.
       <sub>Projected by 2031</sub>
     </td>
     <td align="center" bgcolor="fff0f0">
-      <h3>💰 $20.60B</h3>
-      <sub>Automation testing market (2025)</sub>
+      <h3>💰 $24.25B</h3>
+      <sub>Automation testing market (2026)</sub>
     </td>
     <td align="center" bgcolor="fff0f0">
       <h3>📈 $84.22B</h3>
@@ -158,7 +158,7 @@ Brisk is designed differently: local, embeddable, evidence-first, and built arou
 |:------------------|:-----------------------|
 | Local by default | Use it inside your own product, CLI, or CI without forcing a hosted dashboard |
 | AI with control | AI proposes structured plans; Brisk validates before execution |
-| Multi-engine core | UI, API, OpenAPI contracts, Playwright, and Schemathesis can share one pipeline |
+| Multi-engine core | UI, API, OpenAPI contracts, schema fuzzing, replay, Playwright, and Schemathesis can share one pipeline |
 | Evidence handover | Results come back as versioned JSON your product can store, render, or send to CI |
 | Extensible by design | Custom engines and adapters fit the same result contract |
 
@@ -175,7 +175,7 @@ It is a controlled testing pipeline:
 | 1 | It looks at your repo, routes, UI pages, and OpenAPI files. |
 | 2 | It asks AI to create a structured test plan in JSON. |
 | 3 | It checks and repairs that plan before anything is allowed to run. |
-| 4 | It sends each test to the right built-in engine: browser, API, or OpenAPI contract. |
+| 4 | It sends each test to the right built-in engine: browser, API, OpenAPI contract, schema fuzz, or replay. |
 | 5 | It collects screenshots, traces, request/response data, logs, and final results. |
 | 6 | It gives your app one stable JSON result that you can store, show, or send to CI. |
 
@@ -981,7 +981,7 @@ The AI planner returns JSON shaped as `brisk-aitesting.plan.v1`. The engine then
 | 🤖 AI can **enrich UI actions** only from captured page evidence | ✅ Allowed |
 | ❌ AI cannot **invent selectors** and force execution | 🚫 Blocked |
 | ❌ AI cannot **bypass validation** | 🚫 Blocked |
-| ⚙️ Engines produce **evidence** for every executable result | ✅ Guaranteed |
+| ⚙️ Engines produce **evidence** for executable results | ✅ Required by contract |
 
 ## ⚙️ Built-In Engines
 
@@ -1001,6 +1001,18 @@ The AI planner returns JSON shaped as `brisk-aitesting.plan.v1`. The engine then
       <h3>📋 Contract Engine</h3>
       <p><code>BuiltinContractEngine</code></p>
       <p>Reads OpenAPI JSON/YAML and emits operation summaries.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top" align="center">
+      <h3>🧬 Schema Fuzz Engine</h3>
+      <p><code>BuiltinSchemaFuzzEngine</code></p>
+      <p>Sends malformed OpenAPI request examples and expects safe API rejection.</p>
+    </td>
+    <td width="50%" valign="top" align="center">
+      <h3>🔁 Replay Engine</h3>
+      <p><code>BuiltinReplayEngine</code></p>
+      <p>Reruns declared HTTP interactions and records response evidence.</p>
     </td>
   </tr>
 </table>
@@ -1183,7 +1195,7 @@ Some command names are developer shorthand, so here is the plain meaning:
 | Check | Description |
 |:-----:|:------------|
 | Contract/schema registry checks | Make sure every public JSON shape Brisk promises is still documented and exported. |
-| Built-in engine quality checks | Make sure Playwright, API, and contract engines run correctly and return the same clean result shape. |
+| Built-in engine quality checks | Make sure Playwright, API, contract, schema fuzz, and replay engines run correctly and return the same clean result shape. |
 | External engine quality checks | Make sure third-party engines cannot claim support unless they route correctly, time out safely, and avoid obvious secret leakage. |
 | Adapter readiness checks | Make sure every adapter marked "built" has code, docs, package files, CI wiring, proof-app coverage, and saved evidence. |
 | Serious SaaS proof app checks | Run Brisk against a real SaaS-style app with auth, roles, UI, API, OpenAPI, negative cases, state changes, and artifacts. |
@@ -1250,7 +1262,7 @@ Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads 
     <td>🎯</td>
     <td>Grounded UI action execution</td>
     <td>⚙️</td>
-    <td>Playwright / API / Contract engines</td>
+    <td>Playwright / API / Contract / Schema / Replay engines</td>
   </tr>
   <tr>
     <td>⌨️</td>
