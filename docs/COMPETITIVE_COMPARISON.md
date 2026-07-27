@@ -232,7 +232,7 @@ This is a public-evidence map. It does not claim private product internals.
 
 Notes:
 
-- Brisk contract drift detection is native for OpenAPI operations compared with repo/runtime API routes discovered from supported JavaScript/TypeScript patterns, including common `:id` and `{id}` parameter route shapes; coverage varies by framework and may miss dynamic routes, decorators, generated routes, nested prefixes, and non-JS/TS backends.
+- Brisk contract drift detection is native for OpenAPI operations compared with repo/runtime API routes discovered from supported JavaScript/TypeScript patterns. Current source discovery covers direct Express-style routes, nested router prefixes, `router.route(...).get(...)` chains, Nest-style decorators, and common `:id` versus `{id}` parameter route shapes. It may still miss complex dynamic routes, generated routes, and non-JS/TS backend source patterns.
 - Katalon has native OpenAPI/schema validation capabilities, but its own documentation currently notes a validation limitation in `WS.validateOpenApiAgainstSpecification`.
 - Functionize has public API Explorer/API testing documentation, but direct public evidence for native OpenAPI scenario generation and implementation-contract drift detection was not found.
 - Scores are comparative editorial scores from public capability evidence and Brisk's current implementation. They are not vendor-certified results.

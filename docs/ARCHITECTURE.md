@@ -28,6 +28,7 @@ Host apps should not have to care about the moving parts. Developers should stil
 
 2. Discovery
    BuiltinDiscoverer finds UI routes, API routes, contracts, and repo signals.
+   JavaScript/TypeScript source discovery covers direct Express-style route calls, nested router prefixes, `router.route(...).get(...)` chains, and Nest-style decorators.
 
 3. Planning
     Planner returns `brisk-aitesting.plan.v1`.
@@ -184,6 +185,7 @@ Built:
 - Route grounding feedback loop.
 - Grounded UI action execution.
 - OpenAPI JSON/YAML route discovery, schema extraction, generated API scenarios, and response schema validation.
+- JavaScript/TypeScript API route discovery for direct routes, nested router prefixes, chained route declarations, Nest-style decorators, and OpenAPI parameter matching.
 - Evidence-rich API/UI artifacts.
 - Stable result handover for host apps.
 - Built-in engine quality checks.
@@ -198,4 +200,5 @@ Still missing:
 - JUnit/HTML CI report generation.
 - Public npm publishing automation.
 - Metrics/analytics module.
+- Source-route discovery for Python, .NET, Go, Java, generated routes, and complex dynamic route composition.
 - Quality-check suites for external `Discoverer`, `Planner`, `PlanValidator`, `UiRouteGrounder`, and `AiPlannerProvider` implementations.

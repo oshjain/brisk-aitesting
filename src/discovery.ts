@@ -1,5 +1,6 @@
 import { access, readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import ts from 'typescript';
 import { loadOpenApiSummary, openApiOperationsToDiscoveryRoutes } from './openapi.js';
 import type {
   Discoverer,
@@ -169,13 +170,229 @@ function routeHintsFromPath(path: string): readonly string[] {
 }
 
 function apiRouteHintsFromContent(content: string): readonly Pick<DiscoveryApiRoute, 'method' | 'path'>[] {
-  const routes: Pick<DiscoveryApiRoute, 'method' | 'path'>[] = [];
-  for (const match of content.matchAll(/\b(?:app|router)\.(get|post|put|patch|delete)\(\s*['"`]([^'"`]+)['"`]/gi)) {
-    const method = String(match[1] ?? 'GET').toUpperCase();
-    const path = String(match[2] ?? '');
-    if (path.startsWith('/api/')) routes.push({ method, path });
+  return [...new Map(discoverJavaScriptApiRoutes(content).map((route) => [`${route.method} ${route.path}`, route])).values()];
+}
+
+type JavaScriptRoute = Pick<DiscoveryApiRoute, 'method' | 'path'>;
+
+type RouteDeclaration = {
+  readonly owner: string;
+  readonly method: string;
+  readonly path: string;
+};
+
+type RouterMount = {
+  readonly parent: string;
+  readonly child: string;
+  readonly path: string;
+};
+
+function discoverJavaScriptApiRoutes(content: string): readonly JavaScriptRoute[] {
+  const sourceFile = ts.createSourceFile('brisk-route-discovery.ts', content, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const routerNames = new Set<string>(['app', 'router']);
+  const declarations: RouteDeclaration[] = [];
+  const mounts: RouterMount[] = [];
+  const nestRoutes: JavaScriptRoute[] = [];
+
+  const visit = (node: ts.Node): void => {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer !== undefined && isRouterFactoryCall(node.initializer)) {
+      routerNames.add(node.name.text);
+    }
+
+    if (ts.isCallExpression(node)) {
+      const mount = expressMountFromCall(node);
+      if (mount !== undefined) {
+        mounts.push(mount);
+        routerNames.add(mount.child);
+      }
+
+      const directRoute = routeDeclarationFromCall(node, routerNames);
+      if (directRoute !== undefined) declarations.push(directRoute);
+
+      const chainedRoute = chainedRouteDeclarationFromCall(node, routerNames);
+      if (chainedRoute !== undefined) declarations.push(chainedRoute);
+    }
+
+    if (ts.isClassDeclaration(node)) {
+      nestRoutes.push(...nestRoutesFromClass(node));
+    }
+
+    ts.forEachChild(node, visit);
+  };
+
+  visit(sourceFile);
+
+  const routes: JavaScriptRoute[] = [...nestRoutes];
+  const ownerPrefixes = ownerPrefixMap(mounts);
+  for (const declaration of declarations) {
+    if (declaration.path.startsWith('/api/')) {
+      routes.push({ method: declaration.method, path: normalizeRoutePath(declaration.path) });
+      continue;
+    }
+
+    const prefixes = ownerPrefixes.get(declaration.owner) ?? [];
+    for (const prefix of prefixes) {
+      const path = joinRoutePaths(prefix, declaration.path);
+      if (path.startsWith('/api/')) routes.push({ method: declaration.method, path });
+    }
   }
   return routes;
+}
+
+function isRouterFactoryCall(node: ts.Expression): boolean {
+  if (!ts.isCallExpression(node)) return false;
+  const expression = node.expression;
+  if (ts.isPropertyAccessExpression(expression)) {
+    return expression.name.text === 'Router';
+  }
+  return ts.isIdentifier(expression) && expression.text === 'Router';
+}
+
+function expressMountFromCall(node: ts.CallExpression): RouterMount | undefined {
+  if (!ts.isPropertyAccessExpression(node.expression) || node.expression.name.text !== 'use') return undefined;
+  const parent = expressionName(node.expression.expression);
+  const path = stringLiteralText(node.arguments[0]);
+  const child = expressionName(node.arguments[1]);
+  if (parent === undefined || path === undefined || child === undefined) return undefined;
+  return { parent, child, path };
+}
+
+function routeDeclarationFromCall(node: ts.CallExpression, routerNames: ReadonlySet<string>): RouteDeclaration | undefined {
+  if (!ts.isPropertyAccessExpression(node.expression)) return undefined;
+  const method = httpMethodFromName(node.expression.name.text);
+  if (method === undefined) return undefined;
+  const owner = expressionName(node.expression.expression);
+  const path = stringLiteralText(node.arguments[0]);
+  if (owner === undefined || path === undefined || !routerNames.has(owner)) return undefined;
+  return { owner, method, path };
+}
+
+function chainedRouteDeclarationFromCall(node: ts.CallExpression, routerNames: ReadonlySet<string>): RouteDeclaration | undefined {
+  if (!ts.isPropertyAccessExpression(node.expression)) return undefined;
+  const method = httpMethodFromName(node.expression.name.text);
+  if (method === undefined) return undefined;
+  const routeCall = node.expression.expression;
+  if (!ts.isCallExpression(routeCall) || !ts.isPropertyAccessExpression(routeCall.expression) || routeCall.expression.name.text !== 'route') return undefined;
+  const owner = expressionName(routeCall.expression.expression);
+  const path = stringLiteralText(routeCall.arguments[0]);
+  if (owner === undefined || path === undefined || !routerNames.has(owner)) return undefined;
+  return { owner, method, path };
+}
+
+function nestRoutesFromClass(node: ts.ClassDeclaration): readonly JavaScriptRoute[] {
+  const controllerPath = decoratorPath(node, ['Controller']);
+  if (controllerPath === undefined) return [];
+
+  const routes: JavaScriptRoute[] = [];
+  for (const member of node.members) {
+    const methodDecorator = firstHttpDecorator(member);
+    if (methodDecorator === undefined) continue;
+    const path = joinRoutePaths(controllerPath, methodDecorator.path ?? '/');
+    if (path.startsWith('/api/')) routes.push({ method: methodDecorator.method, path });
+  }
+  return routes;
+}
+
+function firstHttpDecorator(node: ts.Node): { readonly method: string; readonly path?: string } | undefined {
+  const decorators = ts.canHaveDecorators(node) ? ts.getDecorators(node) ?? [] : [];
+  for (const decorator of decorators) {
+    const name = decoratorName(decorator);
+    const method = name === undefined ? undefined : httpMethodFromNestDecorator(name);
+    if (method !== undefined) {
+      const path = decoratorCallPath(decorator);
+      return path === undefined ? { method } : { method, path };
+    }
+  }
+  return undefined;
+}
+
+function decoratorPath(node: ts.Node, names: readonly string[]): string | undefined {
+  const decorators = ts.canHaveDecorators(node) ? ts.getDecorators(node) ?? [] : [];
+  for (const decorator of decorators) {
+    const name = decoratorName(decorator);
+    if (name !== undefined && names.includes(name)) return decoratorCallPath(decorator) ?? '/';
+  }
+  return undefined;
+}
+
+function decoratorName(decorator: ts.Decorator): string | undefined {
+  const expression = decorator.expression;
+  if (ts.isCallExpression(expression)) return expressionName(expression.expression);
+  return expressionName(expression);
+}
+
+function decoratorCallPath(decorator: ts.Decorator): string | undefined {
+  const expression = decorator.expression;
+  if (!ts.isCallExpression(expression)) return undefined;
+  return stringLiteralText(expression.arguments[0]);
+}
+
+function httpMethodFromName(name: string): string | undefined {
+  return ['get', 'post', 'put', 'patch', 'delete'].includes(name.toLowerCase()) ? name.toUpperCase() : undefined;
+}
+
+function httpMethodFromNestDecorator(name: string): string | undefined {
+  const map: Record<string, string> = {
+    Get: 'GET',
+    Post: 'POST',
+    Put: 'PUT',
+    Patch: 'PATCH',
+    Delete: 'DELETE',
+  };
+  return map[name];
+}
+
+function ownerPrefixMap(mounts: readonly RouterMount[]): Map<string, readonly string[]> {
+  const direct = new Map<string, RouterMount[]>();
+  for (const mount of mounts) {
+    direct.set(mount.child, [...direct.get(mount.child) ?? [], mount]);
+  }
+
+  const memo = new Map<string, readonly string[]>();
+  const prefixesFor = (owner: string, stack: readonly string[] = []): readonly string[] => {
+    if (owner === 'app') return [''];
+    const cached = memo.get(owner);
+    if (cached !== undefined) return cached;
+    if (stack.includes(owner)) return [];
+
+    const prefixes: string[] = [];
+    for (const mount of direct.get(owner) ?? []) {
+      for (const parentPrefix of prefixesFor(mount.parent, [...stack, owner])) {
+        prefixes.push(joinRoutePaths(parentPrefix, mount.path));
+      }
+    }
+    const unique = [...new Set(prefixes)];
+    memo.set(owner, unique);
+    return unique;
+  };
+
+  const result = new Map<string, readonly string[]>();
+  for (const mount of mounts) {
+    result.set(mount.child, prefixesFor(mount.child));
+  }
+  return result;
+}
+
+function expressionName(expression: ts.Expression | undefined): string | undefined {
+  if (expression === undefined) return undefined;
+  if (ts.isIdentifier(expression)) return expression.text;
+  if (ts.isPropertyAccessExpression(expression)) return expression.name.text;
+  return undefined;
+}
+
+function stringLiteralText(node: ts.Node | undefined): string | undefined {
+  if (node === undefined) return undefined;
+  if (ts.isStringLiteralLike(node)) return node.text;
+  if (ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
+  return undefined;
+}
+
+function joinRoutePaths(prefix: string, path: string): string {
+  const left = normalizeRoutePath(prefix);
+  const right = normalizeRoutePath(path);
+  if (left === '/') return right;
+  if (right === '/') return left;
+  return normalizeRoutePath(`${left}/${right}`);
 }
 
 async function discoverContracts(context: DiscovererContext, state: {

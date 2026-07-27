@@ -34,7 +34,7 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 
 - UI workflow generation is grounded and executable, but complex multi-page journeys still need broader proof coverage.
 - OpenAPI scenario generation handles common request/response schemas, but deeper OpenAPI and JSON Schema coverage will keep expanding.
-- Contract drift detection compares OpenAPI operations with repo/runtime API routes discovered from supported patterns, including common `:id` and `{id}` parameter route shapes; framework coverage still needs expansion beyond current JavaScript/TypeScript route discovery.
+- Contract drift detection compares OpenAPI operations with repo/runtime API routes discovered from supported JavaScript/TypeScript patterns. It now covers direct Express-style routes, nested router prefixes, `router.route(...).get(...)` chains, Nest-style controller/method decorators, and common `:id` versus `{id}` parameter route shapes. Coverage still needs expansion for dynamic route composition, generated routes, and non-JS/TS backend source discovery.
 - Analytics exist as structured summaries and benchmark reports, but richer trend analytics are future work.
 - Business-intent scenarios can be expressed in goals/objectives/assertions, but reusable rule IDs, rule coverage, and contradiction checks are future work.
 - Scenario routing already understands `schema`, `replay`, and `custom` types. Schemathesis covers optional deep OpenAPI checking now; JS-native schema fuzzing and replay still need real built-in adapters.
@@ -56,6 +56,7 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 
 - Add proof apps: Todo, Auth SaaS, E-commerce, API-only, Multi-tenant SaaS, Event/messaging.
 - Add more golden expected outputs for stable plan/result comparison.
+- Add source-route discovery adapters for Python, .NET, Go, Java, and generated-route systems.
 - Extend quality checks beyond engines to discoverers, planners, validators, UI grounders, and AI providers.
 - Add JS-native schema fuzz engine for lightweight OpenAPI/JSON Schema negative coverage.
 - Add a replay adapter shape and then a Keploy-compatible implementation.

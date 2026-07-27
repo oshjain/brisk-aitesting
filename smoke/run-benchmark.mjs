@@ -27,11 +27,30 @@ await writeFile(join(workDir, 'package.json'), JSON.stringify({ dependencies: { 
 await writeFile(join(workDir, 'src', 'routes.ts'), [
   "import express from 'express';",
   'const app = express();',
+  'const apiRouter = express.Router();',
+  'const channelRouter = express.Router();',
   "app.get('/api/implemented', (_request, response) => response.json({ ok: true }));",
   "app.get('/api/users/:id', (_request, response) => response.json({ ok: true }));",
   "app.post('/api/undocumented', (_request, response) => response.json({ ok: true }));",
+  "apiRouter.use('/channels', channelRouter);",
+  "channelRouter.get('/:channelId/topics', (_request, response) => response.json({ ok: true }));",
+  "channelRouter.post('/undocumented-nested', (_request, response) => response.json({ ok: true }));",
+  "apiRouter.route('/subscriptions').get((_request, response) => response.json({ ok: true }));",
+  "app.use('/api', apiRouter);",
   "request('/api/generic-request-helper');",
   "app.get('/internal/ignored', (_request, response) => response.json({ ok: true }));",
+].join('\n'), 'utf8');
+await writeFile(join(workDir, 'src', 'nest-controller.ts'), [
+  "import { Controller, Delete, Get, Post } from '@nestjs/common';",
+  "@Controller('/api/audit')",
+  'export class AuditController {',
+  "  @Get('/:eventId')",
+  '  readEvent() { return { ok: true }; }',
+  '  @Post()',
+  '  createEvent() { return { ok: true }; }',
+  "  @Delete('/undocumented-nest')",
+  '  deleteUndocumentedEvent() { return { ok: true }; }',
+  '}',
 ].join('\n'), 'utf8');
 
 const server = createServer(async (request, response) => {
@@ -136,9 +155,15 @@ try {
       const drift = discovery.contractDrift;
       const passed = drift?.schemaVersion === 'brisk-aitesting.contract-drift.v1'
         && drift.implementedButUndocumented.some((route) => route.method === 'POST' && route.path === '/api/undocumented')
+        && drift.implementedButUndocumented.some((route) => route.method === 'POST' && route.path === '/api/channels/undocumented-nested')
+        && drift.implementedButUndocumented.some((route) => route.method === 'DELETE' && route.path === '/api/audit/undocumented-nest')
         && drift.documentedButNotImplemented.some((route) => route.method === 'GET' && route.path === '/api/documented-only')
         && drift.matchedRoutes.some((route) => route.method === 'GET' && route.path === '/api/implemented')
         && drift.matchedRoutes.some((route) => route.method === 'GET' && route.implementation.path === '/api/users/:id' && route.contract.path === '/api/users/{userId}')
+        && drift.matchedRoutes.some((route) => route.method === 'GET' && route.implementation.path === '/api/channels/:channelId/topics' && route.contract.path === '/api/channels/{channelId}/topics')
+        && drift.matchedRoutes.some((route) => route.method === 'GET' && route.path === '/api/subscriptions')
+        && drift.matchedRoutes.some((route) => route.method === 'GET' && route.implementation.path === '/api/audit/:eventId' && route.contract.path === '/api/audit/{eventId}')
+        && drift.matchedRoutes.some((route) => route.method === 'POST' && route.path === '/api/audit')
         && !discovery.apiRoutes.some((route) => route.method === 'REQUEST')
         && !discovery.apiRoutes.some((route) => route.path === '/api/generic-request-helper')
         && !drift.implementedButUndocumented.some((route) => route.path === '/api/health');
@@ -438,6 +463,82 @@ function driftOpenApi() {
           responses: {
             200: {
               description: 'Parameterized user endpoint',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['ok'],
+                    properties: { ok: { type: 'boolean' } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/api/channels/{channelId}/topics': {
+        get: {
+          operationId: 'listChannelTopics',
+          responses: {
+            200: {
+              description: 'Nested router route',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['ok'],
+                    properties: { ok: { type: 'boolean' } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/api/subscriptions': {
+        get: {
+          operationId: 'listSubscriptions',
+          responses: {
+            200: {
+              description: 'Express router.route endpoint',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['ok'],
+                    properties: { ok: { type: 'boolean' } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/api/audit/{eventId}': {
+        get: {
+          operationId: 'getAuditEvent',
+          responses: {
+            200: {
+              description: 'Nest decorator endpoint',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['ok'],
+                    properties: { ok: { type: 'boolean' } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/api/audit': {
+        post: {
+          operationId: 'createAuditEvent',
+          responses: {
+            201: {
+              description: 'Nest decorator endpoint without method path',
               content: {
                 'application/json': {
                   schema: {

@@ -197,7 +197,7 @@ This section keeps the promise honest.
 | UI testing | Built | Browser tests through Playwright with grounded page evidence. |
 | API testing | Built | HTTP checks, status checks, body checks, headers, and schema-backed response checks. |
 | OpenAPI testing | Built | JSON/YAML contract parsing, route discovery, positive and negative API scenarios, response schema validation. |
-| Contract drift report | Built | Compares OpenAPI operations with repo/runtime API routes discovered from supported patterns and reports matched, undocumented, and missing routes. |
+| Contract drift report | Built | Compares OpenAPI operations with repo/runtime API routes discovered from supported JavaScript/TypeScript patterns and reports matched, undocumented, and missing routes. |
 | AI planning | Built | AI returns JSON plans. Plans are normalized, validated, and repaired before execution. |
 | Result handover | Built | One versioned JSON result for CI, dashboards, databases, and internal tools. |
 | Local SDK/CLI | Built | Use it inside your app or from the command line. No hosted platform required. |
@@ -312,7 +312,7 @@ These are the next product areas, listed separately so nobody confuses them with
   </tr>
   <tr>
     <td>🛣️</td>
-    <td>Discover backend routes from source code</td>
+    <td>Discover backend routes from supported JavaScript/TypeScript source patterns</td>
     <td>🌐</td>
     <td>Discover UI routes separately</td>
   </tr>
@@ -490,6 +490,10 @@ That is already a business rule expressed as an executable scenario. A formal ru
     <td>📝</td>
     <td>It does <strong>not</strong> remove the need for product owners to describe high-value workflows and expected business behavior</td>
   </tr>
+  <tr>
+    <td>🛣️</td>
+    <td>It does <strong>not</strong> discover source-code routes for every backend language yet. HTTP execution can test any reachable API, but source inspection is currently strongest for supported JavaScript/TypeScript patterns.</td>
+  </tr>
 </table>
 
 <br />
@@ -521,7 +525,8 @@ That is already a business rule expressed as an executable scenario. A formal ru
 | Area | Current fit |
 |:----:|:------------|
 | 🖥️ **Frontend apps** | React, Next.js, Vite, Angular, Vue, Svelte, static HTML, and most browser-rendered apps that Playwright can open |
-| ⚙️ **Backend APIs** | Node.js, Express, NestJS, Next.js API routes, Fastify, Python/FastAPI, Django REST, Flask, Java/Spring, .NET APIs, Go APIs, Rails APIs, or any backend with HTTP endpoints |
+| ⚙️ **Backend API execution** | Any backend with reachable HTTP endpoints: Node.js, Python, Java, .NET, Go, Rails, or internal services behind an allowed host |
+| 🛣️ **Source route discovery** | JavaScript/TypeScript routes using supported Express-style direct calls, nested routers, `router.route(...).get(...)` chains, Nest-style decorators, and OpenAPI parameter matching |
 | 📜 **API contracts** | OpenAPI 3.x JSON/YAML |
 | 🎭 **UI testing** | Browser flows through Playwright |
 | 📡 **API testing** | HTTP request/response checks, status checks, JSON body checks, OpenAPI response schema validation |
