@@ -1,6 +1,6 @@
 # brisk-aitesting Status
 
-This package is in pre-public-alpha readiness. The foundation is intentionally strict: AI plans, but engines execute; schemas define handover; CI and benchmarks guard regressions.
+This package is an alpha release. The foundation is intentionally strict: AI plans, validators constrain, engines execute, evidence records, and schemas define handover.
 
 ## Built
 
@@ -17,24 +17,37 @@ This package is in pre-public-alpha readiness. The foundation is intentionally s
 - Manual real AI smoke workflow.
 - Adversarial benchmark report: `brisk-aitesting.benchmark.v1`.
 - Release pack check: `brisk-aitesting.pack-check.v1`.
+- npm package publication path.
 
 ## Partially Built
 
 - UI workflow generation is grounded and executable, but complex multi-page journey planning still needs broader benchmark coverage.
 - OpenAPI scenario generation handles common request/response schemas, but full OpenAPI and JSON Schema coverage will keep expanding.
 - Analytics exist as structured summaries and benchmark reports, but richer trend analytics are future work.
+- Business-intent scenarios can be expressed in goals/objectives/assertions, but reusable rule IDs, rule coverage, and contradiction analysis are future governance layers.
+- Scenario routing supports `schema`, `replay`, and `custom` types structurally, but schema fuzz and replay engines are extension points until built-in adapters are added.
 
-## Not Promised Yet
+## Not Built In Yet
 
 - AI does not execute code.
 - AI-generated Playwright code is not accepted.
 - AI-generated selectors are not trusted.
 - Real provider quality is not benchmark-scored across models yet.
-- npm public release is not published from this repo yet.
+- Built-in Schemathesis, Specmatic, Keploy, AsyncAPI, Pact, or message-contract adapters.
+- Built-in schema fuzz engine.
+- Built-in replay engine.
+- Reference app matrix.
+- Plugin conformance suite.
+- Formal UI selector healing stage with before/after evidence diffing.
 
-## Next After This Gate
+## Next Product Completeness Work
 
-- Framework-specific examples for Express, Fastify, Next.js, and hosted SaaS integrations.
-- JUnit/HTML reporter support.
-- Multi-provider benchmark scoring.
-- Public alpha release checklist and npm publishing workflow.
+- Add reference apps: Todo, Auth SaaS, E-commerce, API-only, Multi-tenant SaaS, Event/messaging.
+- Add golden fixtures for stable plan/result comparison.
+- Add plugin conformance suite for every engine/discoverer/provider extension.
+- Add schema fuzz engine for OpenAPI/JSON Schema negative coverage.
+- Add replay adapter boundary and then Keploy-compatible implementation.
+- Add AsyncAPI/Pact/message-contract adapter boundary.
+- Add JUnit/HTML reporter support.
+- Add multi-provider benchmark scoring.
+- Add release notes and npm release automation.

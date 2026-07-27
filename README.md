@@ -29,7 +29,7 @@
 <div align="center">
   <h3>The world's most unique embeddable AI testing control plane</h3>
   <p>
-    Built for teams that want AI-powered testing inside their own product, repo, CI, and infrastructure.
+    Discovery -> structured planning -> deterministic validation -> specialised engines -> unified evidence.
   </p>
 </div>
 
@@ -49,7 +49,7 @@
         It returns clean evidence your product can consume.</em>
       </blockquote>
       <br />
-      <sub>⚡ This is <strong>not</strong> just a wrapper around Playwright. Playwright is <em>one</em> engine. API checks, contract checks, schema validation, route discovery, AI planning, validation, repair, evidence capture, and handover are all first-class parts of the product.</sub>
+      <sub>⚡ This is <strong>not</strong> just a wrapper around Playwright. Playwright is <em>one</em> built-in engine. API checks, OpenAPI contract checks, schema validation, route discovery, AI planning, validation, repair, evidence capture, and handover are first-class parts of the product.</sub>
     </td>
   </tr>
 </table>
@@ -200,7 +200,7 @@ Yet testing remains **expensive and fragmented**.
 
 ## 🚀 What It Can Do
 
-`brisk-aitesting` is designed to be the **testing brain and execution layer** that a product team can plug into its own SaaS, repo, CI, or internal platform.
+`brisk-aitesting` is designed to be the **embedded testing control plane** that a product team can plug into its own SaaS, repo, CI, or internal platform.
 
 <br />
 
@@ -256,7 +256,7 @@ Yet testing remains **expensive and fragmented**.
   </tr>
   <tr>
     <td>🔄</td>
-    <td>Route scenarios into UI, API, contract, schema, replay, or custom engines</td>
+    <td>Route built-in scenarios into UI, API, and OpenAPI contract engines</td>
     <td>🎭</td>
     <td>Run browser workflows through Playwright</td>
   </tr>
@@ -269,10 +269,43 @@ Yet testing remains **expensive and fragmented**.
   <tr>
     <td>🔧</td>
     <td>Repair invalid structured plans through a validation feedback loop</td>
+    <td>🧩</td>
+    <td>Accept custom engines for schema fuzzing, replay, messaging, database, mobile, or enterprise-specific systems</td>
+  </tr>
+  <tr>
+    <td>📝</td>
+    <td>Turn user-supplied business intent into executable scenarios</td>
+    <td>🔍</td>
+    <td>Preserve objectives and assertions so business meaning stays visible in the result</td>
+  </tr>
+  <tr>
+    <td>🧾</td>
+    <td>Check exact values, ranges, JSON fields, status codes, and schema-backed response shapes</td>
     <td></td>
     <td></td>
   </tr>
 </table>
+
+### 🧭 Business Intent as Executable Scenarios
+
+`brisk-aitesting` does not need to magically discover every business rule in a company. The practical model is simpler and stronger:
+
+```text
+Brisk discovers the application's testable surfaces.
+The user supplies the important business intent.
+The planner maps that intent to UI, API, and contract checks.
+Engines execute the checks and return evidence.
+```
+
+For example, a user can say:
+
+```text
+Given a booking date after vessel departure,
+when a booking is created,
+then the API must reject it with VESSEL_ALREADY_DEPARTED.
+```
+
+That is already a business rule expressed as an executable scenario. A formal rule registry can come later for governance and coverage, but the first-class unit is the scenario: given context, action, expected outcome, and evidence.
 
 ### 📦 Output & Integration
 
@@ -524,12 +557,10 @@ flowchart TD
   <tr>
     <td width="33%" valign="top" align="center">
 
-### 🐙 Current: GitHub Install
-
-<sub>The package has not been published to the npm registry yet.</sub>
+### 🌟 Current: npm Install
 
 ```bash
-npm install github:oshjain/brisk-aitesting
+npm install brisk-aitesting
 ```
 
 Then create a config:
@@ -562,12 +593,10 @@ npm link brisk-aitesting
     </td>
     <td width="33%" valign="top" align="center">
 
-### 🌟 Future: npm Install
-
-<sub>After the package is published to npm:</sub>
+### 🐙 GitHub Install
 
 ```bash
-npm install brisk-aitesting
+npm install github:oshjain/brisk-aitesting
 ```
 
     </td>
@@ -841,7 +870,7 @@ The AI planner returns JSON shaped as `brisk-aitesting.plan.v1`. The engine then
 | Principle | Guard |
 |:---------:|:------|
 | 🤖 AI can **suggest** what should be tested | ✅ Allowed |
-| 🤖 AI can **choose** whether a scenario is UI, API, contract, schema, or custom | ✅ Allowed |
+| 🤖 AI can **choose** whether a scenario is UI, API, contract, schema, replay, or custom | ✅ Allowed |
 | 🤖 AI can **enrich UI actions** only from captured page evidence | ✅ Allowed |
 | ❌ AI cannot **invent selectors** and force execution | 🚫 Blocked |
 | ❌ AI cannot **bypass validation** | 🚫 Blocked |
@@ -871,7 +900,26 @@ The AI planner returns JSON shaped as `brisk-aitesting.plan.v1`. The engine then
 
 <br />
 
-> 🧩 **Extensible.** Custom engines can be plugged in for database, messaging, replay, mobile, or enterprise-specific systems.
+> 🧩 **Extensible.** Custom engines can be plugged in for schema fuzzing, replay, database, messaging, mobile, or enterprise-specific systems. Those adapters are extension points today, not built-in engines yet.
+
+### 🏭 Controlled Factory Line
+
+The product is built around a controlled execution line:
+
+```text
+1. Understand the app
+2. Discover pages, APIs, routes, contracts, and schemas
+3. Create a structured test plan
+4. Normalize and validate the test plan
+5. Repair invalid plans when possible
+6. Route each scenario to the correct engine
+7. Generate executable artifacts through engines
+8. Run the scenario
+9. Collect logs, traces, screenshots, request/response evidence, and contract evidence
+10. Return one final result envelope
+```
+
+That is the precision model: AI proposes, validators constrain, engines execute, evidence records.
 
 ## 📋 Handover Contract
 
@@ -933,6 +981,8 @@ It returns **one stable object** that any host system can store, split, render, 
     <td></td>
   </tr>
 </table>
+
+This may be the most valuable part of the product for enterprise teams. The result envelope can be written to BigQuery, Cloud Storage, GitHub Actions, an internal test portal, release approval workflows, incident-management systems, or any dashboard the host team already owns.
 
 ## 📐 Stable Schemas
 
@@ -1072,7 +1122,7 @@ npm run typecheck  &&  npm run build  &&  npm run smoke:ci  &&  npm run benchmar
 <table>
   <tr>
     <td>📦</td>
-    <td>npm registry publication</td>
+    <td>npm release automation and versioned changelog</td>
     <td>🏆</td>
     <td>Multi-provider benchmark scoring</td>
   </tr>
@@ -1085,6 +1135,24 @@ npm run typecheck  &&  npm run build  &&  npm run smoke:ci  &&  npm run benchmar
   <tr>
     <td>📚</td>
     <td>More framework-specific examples</td>
+    <td>🧪</td>
+    <td>Reference apps and plugin conformance suite</td>
+  </tr>
+  <tr>
+    <td>🧬</td>
+    <td>Built-in schema fuzz engine</td>
+    <td>🔁</td>
+    <td>Built-in replay engine adapter</td>
+  </tr>
+  <tr>
+    <td>📨</td>
+    <td>AsyncAPI / Pact / message-contract adapters</td>
+    <td>🩹</td>
+    <td>Formal UI healing stage with evidence diffing</td>
+  </tr>
+  <tr>
+    <td>⚖️</td>
+    <td>Scenario/rule coverage and contradiction checks when users provide rule IDs or structured expectations</td>
     <td></td>
     <td></td>
   </tr>

@@ -12,6 +12,7 @@ const required = [
   'package/README.md',
   'package/docs/ARCHITECTURE.md',
   'package/docs/STATUS.md',
+  'package/docs/ROADMAP.md',
   'package/examples/brisk-aitesting.config.ts',
   'package/examples/host-config-bridge.ts',
   'package/assets/logo_transparent.png',
