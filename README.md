@@ -29,7 +29,7 @@
 <div align="center">
   <h3>The world's most unique embeddable AI testing control plane</h3>
   <p>
-    Discovery -> structured planning -> deterministic validation -> specialised engines -> unified evidence.
+    It looks at your app, asks AI for a structured test plan, checks that plan, runs the right test tools, and returns proof.
   </p>
 </div>
 
@@ -53,6 +53,62 @@
     </td>
   </tr>
 </table>
+
+## Plain English
+
+`brisk-aitesting` is not "AI writes random Playwright code and runs it."
+
+It is closer to a controlled testing factory:
+
+| Step | What happens |
+|:----:|:-------------|
+| 1 | It looks at your repo, routes, UI pages, and OpenAPI files. |
+| 2 | It asks AI to create a structured test plan in JSON. |
+| 3 | It checks and repairs that plan before anything runs. |
+| 4 | It sends each test to the right built-in engine: browser, API, or OpenAPI contract. |
+| 5 | It collects screenshots, traces, request/response data, logs, and final results. |
+| 6 | It gives your app one stable JSON result that you can store or show anywhere. |
+
+The most important idea is simple:
+
+```text
+AI suggests the plan.
+Brisk checks the plan.
+Engines run the tests.
+Evidence proves what happened.
+```
+
+## Built Now vs Not Built Yet
+
+This section exists so there is no confusion.
+
+| Area | Status today | What users get |
+|:-----|:-------------|:---------------|
+| UI testing | Built | Browser tests through Playwright with grounded page evidence. |
+| API testing | Built | HTTP checks, status checks, body checks, headers, and schema-backed response checks. |
+| OpenAPI testing | Built | JSON/YAML contract parsing, route discovery, positive and negative API scenarios, response schema validation. |
+| AI planning | Built | AI returns JSON plans. Plans are normalized, validated, and repaired before execution. |
+| Result handover | Built | One versioned JSON result for CI, dashboards, databases, and internal tools. |
+| Local SDK/CLI | Built | Use it inside your app or from the command line. No hosted platform required. |
+| Schema fuzz engine | Not built-in yet | Planned: stronger negative API testing from schemas. |
+| Replay engine | Not built-in yet | Planned: replay captured traffic for fast regression checks. |
+| AsyncAPI/Pact/message testing | Not built-in yet | Planned: event and message contract testing. |
+| Specmatic/Schemathesis/Keploy adapters | Not built-in yet | Planned as optional adapters, not core promises today. |
+| UI healing | Not built-in yet | Planned: retry failed UI selectors using fresh page evidence and report what changed. |
+| Reference app matrix | Not built yet | Planned: prove changes against real sample apps, not only smoke tests. |
+| Plugin conformance suite | Not built yet | Planned: every custom engine must pass the same safety/result rules. |
+
+Future work is not there to look impressive. It has to improve something measurable:
+
+| Future work | User impact |
+|:------------|:------------|
+| Reference apps | More trust that Brisk works on real app shapes. |
+| Golden fixtures | Less chance that future changes silently weaken plans. |
+| Plugin conformance | Safer third-party and internal engines. |
+| Schema fuzz engine | More API bugs caught without slow browser tests. |
+| Replay engine | Faster regression checks from known traffic. |
+| Message adapters | Coverage beyond HTTP and browser workflows. |
+| UI healing | Fewer flaky browser failures, with evidence when healing happens. |
 
 ## 🌍 Why This Exists
 
