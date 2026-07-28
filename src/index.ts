@@ -63,6 +63,7 @@ export {
 export {
   BuiltinApiEngine,
   BuiltinContractEngine,
+  BuiltinMessageContractEngine,
   BuiltinPlaywrightEngine,
   BuiltinPlaywrightRouteGrounder,
   BuiltinReplayEngine,
@@ -80,6 +81,7 @@ export type {
   AiPlannerProviderRequest,
   AiPlannerProviderResponse,
   AppConfig,
+  ApiStateSnapshotExpectation,
   ArtifactRef,
   AuthConfig,
   BriskAiTestingConfig,

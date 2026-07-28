@@ -16,10 +16,13 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - OpenAPI JSON/YAML parsing.
 - Built-in lightweight OpenAPI schema fuzz engine: `brisk-aitesting.schema-fuzz-evidence.v1`.
 - Built-in replay engine for declared HTTP interactions: `brisk-aitesting.replay-evidence.v1`.
+- Built-in AsyncAPI message-contract inspection engine: `brisk-aitesting.message-contract-evidence.v1`.
 - OpenAPI route discovery, schema extraction, generated API scenarios, and response schema validation.
 - Implementation-vs-OpenAPI drift report: `brisk-aitesting.contract-drift.v1`.
 - Playwright UI execution with grounded locator evidence.
 - UI route grounding feedback loop.
+- UI healing with fresh page evidence, one retry, and `brisk-aitesting.ui-healing.v1` evidence.
+- API rejected-action state proof with before/after snapshots through `expect.unchanged`.
 - API, OpenAPI, contract drift, Playwright, UI grounding, UI action, result, handover, CLI, and benchmark schemas.
 - Deterministic release check: one command proves the main product paths still work.
 - Manual real AI provider check: proves the configured AI provider works in this environment.
@@ -46,6 +49,7 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - Analytics exist as structured summaries and benchmark reports, but richer trend analytics are future work.
 - Business-intent scenarios can be expressed in goals/objectives/assertions, but reusable rule IDs, rule coverage, and contradiction checks are future work.
 - Scenario routing already understands `schema`, `replay`, and `custom` types. Schemathesis covers optional deep OpenAPI checking now. Built-in replay covers declared HTTP interactions.
+- Message/event testing can inspect AsyncAPI channel/message contracts, but live broker execution and Pact compatibility are future work.
 
 ## Not Built Yet
 
@@ -53,9 +57,8 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - AI-generated Playwright code is not accepted.
 - AI-generated selectors are not trusted.
 - Real provider quality is not compared across multiple AI models yet.
-- Built-in Specmatic, Keploy, AsyncAPI, Pact, or message-contract adapters.
+- Built-in Specmatic, Keploy, Pact, or live message-broker adapters.
 - Full proof app collection beyond serious-saas, API-only, Todo, and multi-tenant.
-- Formal UI selector healing stage with before/after evidence diffing.
 
 ## Next Work
 

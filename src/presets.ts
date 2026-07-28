@@ -6,6 +6,7 @@ export { createAiProviderFromConfig, OpenAiCompatibleProvider } from './provider
 export {
   BuiltinApiEngine,
   BuiltinContractEngine,
+  BuiltinMessageContractEngine,
   BuiltinPlaywrightEngine,
   BuiltinPlaywrightRouteGrounder,
   BuiltinReplayEngine,

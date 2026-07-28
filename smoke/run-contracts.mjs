@@ -19,6 +19,7 @@ const expectedRuntimeExports = [
   'BuiltinApiEngine',
   'BuiltinContractEngine',
   'BuiltinDiscoverer',
+  'BuiltinMessageContractEngine',
   'BuiltinPlanner',
   'BuiltinPlanValidator',
   'BuiltinPlaywrightEngine',
@@ -50,6 +51,7 @@ const expectedRuntimeExports = [
 
 const expectedTypeExports = [
   'AiPlannerProvider',
+  'ApiStateSnapshotExpectation',
   'ArtifactRef',
   'BriskAiTestingConfig',
   'BriskAiTestingEvent',
@@ -111,10 +113,12 @@ const expectedSchemas = [
   'brisk-aitesting.schema-fuzz-evidence.v1',
   'brisk-aitesting.replay-evidence.v1',
   'brisk-aitesting.api-evidence.v1',
+  'brisk-aitesting.message-contract-evidence.v1',
   'brisk-aitesting.openapi-summary.v1',
   'brisk-aitesting.playwright-evidence.v1',
   'brisk-aitesting.ui-grounding.v1',
   'brisk-aitesting.ui-actions.v1',
+  'brisk-aitesting.ui-healing.v1',
 ];
 
 const expectedScripts = [

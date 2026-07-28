@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { ArtifactRef, Engine, EngineContext, EngineRunResult, ScenarioPlan, ScenarioResult } from '../types.js';
-import { apiUrl, assertContractStatus, assertJsonShape, assertResponseSchema, assertStatus, authHeaders, contractRouteEvidence, findContractOperation, findContractRoute, headersToRecord, isHostAllowed, parseJsonOrNull, redactHeaders, redactValue, scenarioEvidence, scenarioResult, serializeBody, type HeaderRecord } from './shared.js';
+import { apiUrl, assertContractStatus, assertJsonShape, assertResponseSchema, assertStatus, authHeaders, contractRouteEvidence, deepEqual, findContractOperation, findContractRoute, getPath, headersToRecord, isHostAllowed, parseJsonOrNull, redactHeaders, redactValue, scenarioEvidence, scenarioResult, serializeBody, type HeaderRecord } from './shared.js';
 export class BuiltinApiEngine implements Engine {
   readonly name = 'builtin-api-engine';
   readonly type = 'api' as const;
@@ -26,6 +26,7 @@ export class BuiltinApiEngine implements Engine {
     let status: ScenarioResult['status'] = 'passed';
     const diagnostics: string[] = [];
     const assertions: ScenarioResult['assertions'][number][] = [];
+    const stateSnapshots: StateSnapshotEvidence[] = [];
     let responseDurationMs = 0;
     let artifactPayload: unknown = {
       schemaVersion: 'brisk-aitesting.api-evidence.v1',
@@ -44,6 +45,13 @@ export class BuiltinApiEngine implements Engine {
       diagnostics.push('Dry run enabled; API request was planned but not executed.');
     } else if (isHostAllowed(url, context.config.security.allowedHosts, context.config.security.networkPolicy)) {
       try {
+        for (const snapshot of context.scenario.expect?.unchanged ?? []) {
+          stateSnapshots.push({
+            name: snapshot.name ?? `${snapshot.target.method ?? 'GET'} ${snapshot.target.path}`,
+            expectation: snapshot,
+            before: await captureStateSnapshot(context, snapshot, headers),
+          });
+        }
         const requestStarted = Date.now();
         const response = await fetch(url, {
           method,
@@ -66,6 +74,10 @@ export class BuiltinApiEngine implements Engine {
             status: responseText.includes(context.scenario.expect.contains) ? 'passed' : 'failed',
             ...(responseText.includes(context.scenario.expect.contains) ? {} : { message: 'Expected text was not found in response body.' }),
           });
+        }
+        for (const snapshotEvidence of stateSnapshots) {
+          snapshotEvidence.after = await captureStateSnapshot(context, snapshotEvidence.expectation, headers);
+          assertions.push(...assertStateUnchanged(snapshotEvidence));
         }
         const responseSchemaAssertion = assertResponseSchema(response.status, response.headers, responseJson, contractOperation);
         if (responseSchemaAssertion !== undefined) assertions.push(responseSchemaAssertion);
@@ -94,6 +106,7 @@ export class BuiltinApiEngine implements Engine {
             body: responseJson ?? responseText,
           },
           ...(contractRoute !== undefined ? { contract: contractRouteEvidence(contractRoute, contractOperation) } : {}),
+          ...(stateSnapshots.length > 0 ? { stateSnapshots: redactValue(stateSnapshots, context.config.security.redactSecrets) } : {}),
           assertions,
           diagnostics,
         };
@@ -133,6 +146,89 @@ export class BuiltinApiEngine implements Engine {
       }),
     };
   }
+}
+
+interface StateSnapshotEvidence {
+  readonly name: string;
+  readonly expectation: NonNullable<NonNullable<ScenarioPlan['expect']>['unchanged']>[number];
+  before: CapturedStateSnapshot;
+  after?: CapturedStateSnapshot;
+}
+
+interface CapturedStateSnapshot {
+  readonly method: string;
+  readonly url: string;
+  readonly status: number;
+  readonly body: unknown;
+  readonly durationMs: number;
+}
+
+async function captureStateSnapshot(
+  context: EngineContext,
+  snapshot: NonNullable<NonNullable<ScenarioPlan['expect']>['unchanged']>[number],
+  inheritedHeaders: HeaderRecord,
+): Promise<CapturedStateSnapshot> {
+  const method = snapshot.target.method ?? 'GET';
+  const url = new URL(snapshot.target.path, context.config.app.baseUrl);
+  for (const [key, value] of Object.entries(snapshot.request?.query ?? {})) {
+    url.searchParams.set(key, String(value));
+  }
+  if (!isHostAllowed(url, context.config.security.allowedHosts, context.config.security.networkPolicy)) {
+    throw new Error(`Network policy blocked state snapshot host ${url.hostname}`);
+  }
+  const headers: HeaderRecord = {
+    ...inheritedHeaders,
+    ...snapshot.request?.headers,
+  };
+  const started = Date.now();
+  const response = await fetch(url, {
+    method,
+    headers,
+    ...(snapshot.request?.body !== undefined ? { body: serializeBody(snapshot.request.body, headers) } : {}),
+    signal: AbortSignal.timeout(context.config.runtime.timeoutMs),
+  });
+  const text = await response.text();
+  return {
+    method,
+    url: url.toString(),
+    status: response.status,
+    body: parseJsonOrNull(text) ?? text,
+    durationMs: Date.now() - started,
+  };
+}
+
+function assertStateUnchanged(snapshot: StateSnapshotEvidence): readonly ScenarioResult['assertions'][number][] {
+  if (snapshot.after === undefined) {
+    return [{ name: `${snapshot.name} state snapshot captured after action`, status: 'failed', message: 'After snapshot was not captured.' }];
+  }
+  const assertions: ScenarioResult['assertions'][number][] = [
+    {
+      name: `${snapshot.name} before/after snapshot status unchanged`,
+      status: snapshot.before.status === snapshot.after.status ? 'passed' : 'failed',
+      ...(snapshot.before.status === snapshot.after.status ? {} : { message: `Expected snapshot status ${snapshot.before.status}, got ${snapshot.after.status}.` }),
+    },
+  ];
+  const expectedPaths = snapshot.expectation.json;
+  if (expectedPaths !== undefined) {
+    for (const [path, expectedValue] of Object.entries(expectedPaths)) {
+      const beforeValue = getPath(snapshot.before.body, path);
+      const afterValue = getPath(snapshot.after.body, path);
+      const passed = deepEqual(beforeValue, expectedValue) && deepEqual(afterValue, expectedValue);
+      assertions.push({
+        name: `${snapshot.name} json.${path} remains ${JSON.stringify(expectedValue)}`,
+        status: passed ? 'passed' : 'failed',
+        ...(passed ? {} : { message: `Before ${JSON.stringify(beforeValue)}, after ${JSON.stringify(afterValue)}, expected ${JSON.stringify(expectedValue)}.` }),
+      });
+    }
+  } else {
+    const passed = deepEqual(snapshot.before.body, snapshot.after.body);
+    assertions.push({
+      name: `${snapshot.name} response body unchanged`,
+      status: passed ? 'passed' : 'failed',
+      ...(passed ? {} : { message: 'Before and after snapshot bodies differ.' }),
+    });
+  }
+  return assertions;
 }
 
 

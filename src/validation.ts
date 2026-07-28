@@ -1,14 +1,14 @@
 import type { PlanValidator, PlanValidatorContext, ValidationIssue, ValidationResult } from './types.js';
 import { validatePlanJsonContract } from './plan-contract.js';
 
-const ENGINE_TYPES = new Set(['ui', 'api', 'contract', 'schema', 'replay', 'custom']);
+const ENGINE_TYPES = new Set(['ui', 'api', 'contract', 'schema', 'replay', 'message', 'custom']);
 const PLAN_KEYS = new Set(['schemaVersion', 'runId', 'goal', 'mode', 'scenarios', 'discovery', 'warnings', 'createdAt']);
 const SCENARIO_KEYS = new Set(['id', 'name', 'type', 'objective', 'target', 'request', 'expect', 'assertions', 'uiActions', 'evidenceRequired', 'metadata']);
-const TARGET_KEYS = new Set(['method', 'path', 'route', 'schema']);
+const TARGET_KEYS = new Set(['method', 'path', 'route', 'schema', 'channel']);
 const REQUEST_KEYS = new Set(['headers', 'query', 'body']);
-const EXPECT_KEYS = new Set(['status', 'json', 'contains']);
+const EXPECT_KEYS = new Set(['status', 'json', 'contains', 'unchanged']);
 const UI_ACTION_KEYS = new Set(['action', 'evidenceId', 'value', 'key', 'text', 'description']);
-const EVIDENCE_TYPES = new Set(['repo', 'ui', 'api', 'schema', 'auth']);
+const EVIDENCE_TYPES = new Set(['repo', 'ui', 'api', 'schema', 'auth', 'message']);
 
 export class BuiltinPlanValidator implements PlanValidator {
   readonly name = 'builtin-plan-validator';
@@ -135,6 +135,14 @@ function validateEngineTarget(path: string, scenario: PlanValidatorContext['plan
   if ((scenario.type === 'contract' || scenario.type === 'schema') && scenario.target?.schema === undefined && scenario.evidenceRequired.includes('schema')) {
     issues.push(warning(`${path}.target.schema`, 'MISSING_SCHEMA_TARGET', 'Schema/contract scenario has no explicit target.schema.'));
   }
+  if (scenario.type === 'message') {
+    if (scenario.target?.schema === undefined) {
+      issues.push(error(`${path}.target.schema`, 'REQUIRED_MESSAGE_SCHEMA', 'Message scenario target.schema must point to an AsyncAPI contract.'));
+    }
+    if (scenario.target?.channel === undefined || scenario.target.channel.trim().length === 0) {
+      issues.push(error(`${path}.target.channel`, 'REQUIRED_MESSAGE_CHANNEL', 'Message scenario target.channel is required.'));
+    }
+  }
 }
 
 function validateEvidenceRequired(path: string, scenario: PlanValidatorContext['plan']['scenarios'][number], issues: ValidationIssue[]): void {
@@ -180,6 +188,32 @@ function validateExpectations(path: string, scenario: PlanValidatorContext['plan
   }
   if (scenario.expect?.contains !== undefined && typeof scenario.expect.contains !== 'string') {
     issues.push(error(`${path}.expect.contains`, 'INVALID_CONTAINS_EXPECTATION', 'expect.contains must be a string.'));
+  }
+  if (scenario.expect?.unchanged !== undefined) {
+    if (scenario.type !== 'api') {
+      issues.push(error(`${path}.expect.unchanged`, 'UNCHANGED_ON_NON_API_SCENARIO', 'Unchanged state checks are supported on api scenarios.'));
+    }
+    scenario.expect.unchanged.forEach((snapshot, index) => {
+      const snapshotPath = `${path}.expect.unchanged.${index}`;
+      validateObjectKeys(snapshotPath, snapshot, new Set(['name', 'target', 'request', 'json']), issues);
+      validateObjectKeys(`${snapshotPath}.target`, snapshot.target, new Set(['method', 'path']), issues);
+      const method = snapshot.target.method ?? 'GET';
+      if (!['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) {
+        issues.push(error(`${snapshotPath}.target.method`, 'REQUIRED_API_METHOD', 'State snapshot target.method must be GET, POST, PUT, PATCH, or DELETE.'));
+      }
+      if (!snapshot.target.path.startsWith('/')) {
+        issues.push(error(`${snapshotPath}.target.path`, 'REQUIRED_API_PATH', 'State snapshot target.path must start with /.'));
+      }
+      if (snapshot.request !== undefined) {
+        validateObjectKeys(`${snapshotPath}.request`, snapshot.request, REQUEST_KEYS, issues);
+        if (snapshot.request.headers !== undefined && !isStringRecord(snapshot.request.headers)) {
+          issues.push(error(`${snapshotPath}.request.headers`, 'INVALID_HEADERS', 'State snapshot headers must be string key/value pairs.'));
+        }
+        if (snapshot.request.query !== undefined && !isQueryRecord(snapshot.request.query)) {
+          issues.push(error(`${snapshotPath}.request.query`, 'INVALID_QUERY', 'State snapshot query values must be strings, numbers, or booleans.'));
+        }
+      }
+    });
   }
 }
 

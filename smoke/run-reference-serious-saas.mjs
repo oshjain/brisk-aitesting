@@ -62,12 +62,19 @@ try {
   if (!auditResult?.assertions.some((assertion) => assertion.name.includes('json.total equals 4') && assertion.status === 'passed')) {
     errors.push('audit event scenario did not prove state change');
   }
+  const blockedCreateResult = result.tests.find((test) => test.scenarioId === 'serious_api_viewer_cannot_create_user');
+  if (!blockedCreateResult?.assertions.some((assertion) => assertion.name.includes('users collection json.total remains 3') && assertion.status === 'passed')) {
+    errors.push('viewer rejected action did not prove unchanged user state');
+  }
 
   const apiArtifacts = result.artifacts.filter((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.api-evidence.v1' && artifact.path !== undefined);
   for (const artifact of apiArtifacts) {
     const evidence = JSON.parse(await readFile(artifact.path, 'utf8'));
     if (!Array.isArray(evidence.assertions) || evidence.assertions.length === 0) errors.push(`API evidence missing assertions for ${artifact.path}`);
     if (evidence.contract?.operationId === undefined) errors.push(`API evidence missing contract operation for ${artifact.path}`);
+    if (evidence.scenario?.id === 'serious_api_viewer_cannot_create_user' && !Array.isArray(evidence.stateSnapshots)) {
+      errors.push('viewer rejected action evidence missing stateSnapshots');
+    }
   }
 
   if (errors.length > 0) {
@@ -194,8 +201,19 @@ function seriousSaasScenarios() {
         headers: { authorization: 'Bearer viewer-token' },
         body: { name: 'Blocked User', email: 'blocked@example.com', role: 'viewer' },
       },
-      expect: { status: 403, json: { 'error.code': 'FORBIDDEN' } },
-      assertions: ['status is 403', 'error code is FORBIDDEN'],
+      expect: {
+        status: 403,
+        json: { 'error.code': 'FORBIDDEN' },
+        unchanged: [
+          {
+            name: 'users collection',
+            target: { method: 'GET', path: '/api/users' },
+            request: { headers: { authorization: 'Bearer admin-token' } },
+            json: { total: 3 },
+          },
+        ],
+      },
+      assertions: ['status is 403', 'error code is FORBIDDEN', 'user total remains unchanged'],
       evidenceRequired: ['api', 'auth'],
       metadata: { polarity: 'negative' },
     },

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import {
   BuiltinApiEngine,
   BuiltinContractEngine,
+  BuiltinMessageContractEngine,
   BuiltinPlaywrightEngine,
   BuiltinReplayEngine,
   BuiltinSchemaFuzzEngine,
@@ -18,6 +19,7 @@ const packageDir = dirname(here);
 const workDir = join(packageDir, '.brisk-aitesting-engine-conformance');
 const artifactsDir = join(workDir, 'artifacts');
 const openApiPath = join(workDir, 'openapi.json');
+const asyncApiPath = join(workDir, 'asyncapi.json');
 
 await rm(workDir, { recursive: true, force: true });
 await mkdir(workDir, { recursive: true });
@@ -67,6 +69,7 @@ const baseUrl = `http://127.0.0.1:${address.port}`;
 
 try {
   await writeFile(openApiPath, JSON.stringify(openApiDocument(), null, 2), 'utf8');
+  await writeFile(asyncApiPath, JSON.stringify(asyncApiDocument(), null, 2), 'utf8');
 
   const config = normalizeConfig(defineConfig({
     app: {
@@ -76,7 +79,7 @@ try {
       env: 'local',
     },
     auth: { type: 'none' },
-    contracts: { openApiPath },
+    contracts: { openApiPath, asyncApiPath },
     runtime: {
       artifactsDir,
       timeoutMs: 30_000,
@@ -114,7 +117,10 @@ try {
       contractPath: openApiPath,
       statusCodes: [200],
     }],
-    contracts: [{ kind: 'openapi', path: openApiPath, exists: true, operations: 1 }],
+    contracts: [
+      { kind: 'openapi', path: openApiPath, exists: true, operations: 1 },
+      { kind: 'asyncapi', path: asyncApiPath, exists: true },
+    ],
     repoSignals: [],
     warnings: [],
     createdAt: new Date().toISOString(),
@@ -171,6 +177,15 @@ try {
         },
       },
     },
+    message: {
+      id: 'conformance_message_contract',
+      name: 'Message engine conformance AsyncAPI check',
+      type: 'message',
+      objective: 'Message contract engine returns a valid ScenarioResult.',
+      target: { schema: asyncApiPath, channel: 'orders.created' },
+      assertions: ['message contract exposes channel and payload'],
+      evidenceRequired: ['message', 'schema'],
+    },
   };
 
   const plan = {
@@ -189,6 +204,7 @@ try {
     { engine: new BuiltinContractEngine(), validScenario: scenarios.contract, unrelatedScenario: scenarios.api },
     { engine: new BuiltinSchemaFuzzEngine(), validScenario: scenarios.schema, unrelatedScenario: scenarios.api },
     { engine: new BuiltinReplayEngine(), validScenario: scenarios.replay, unrelatedScenario: scenarios.api },
+    { engine: new BuiltinMessageContractEngine(), validScenario: scenarios.message, unrelatedScenario: scenarios.api },
     { engine: new BuiltinPlaywrightEngine(), validScenario: scenarios.ui, unrelatedScenario: scenarios.api },
   ];
 
@@ -234,7 +250,7 @@ async function checkEngine({ config, plan, engine, validScenario, unrelatedScena
   };
 
   record('name is non-empty', typeof engine.name === 'string' && engine.name.length > 0);
-  record('type is valid', ['ui', 'api', 'contract', 'schema', 'replay', 'custom'].includes(engine.type));
+  record('type is valid', ['ui', 'api', 'contract', 'schema', 'replay', 'message', 'custom'].includes(engine.type));
   record('canRun accepts own scenario', engine.canRun(validScenario) === true);
   record('canRun rejects unrelated scenario', engine.canRun(unrelatedScenario) === false);
 
@@ -372,6 +388,34 @@ function openApiDocument() {
             },
             400: {
               description: 'Invalid request',
+            },
+          },
+        },
+      },
+    },
+  };
+}
+
+function asyncApiDocument() {
+  return {
+    asyncapi: '2.6.0',
+    info: {
+      title: 'Engine Conformance Events',
+      version: '1.0.0',
+    },
+    channels: {
+      'orders.created': {
+        publish: {
+          message: {
+            name: 'OrderCreated',
+            contentType: 'application/json',
+            payload: {
+              type: 'object',
+              required: ['orderId', 'total'],
+              properties: {
+                orderId: { type: 'string' },
+                total: { type: 'number' },
+              },
             },
           },
         },

@@ -29,6 +29,7 @@ export class BuiltinPlaywrightEngine implements Engine {
     const manifestPath = join(dir, `${context.scenario.id}.evidence.json`);
     const groundingPath = join(dir, `${context.scenario.id}.ui-grounding.json`);
     const actionEvidencePath = join(dir, `${context.scenario.id}.ui-actions.json`);
+    const healingEvidencePath = join(dir, `${context.scenario.id}.ui-healing.json`);
     const route = context.scenario.target?.route ?? '/';
     const targetUrl = new URL(route, context.config.app.baseUrl).toString();
     const uiActions = context.scenario.uiActions ?? [];
@@ -54,12 +55,32 @@ export class BuiltinPlaywrightEngine implements Engine {
       })});`,
       `  writeFileSync(${JSON.stringify(groundingPath)}, JSON.stringify(grounding, null, 2) + '\\n', 'utf8');`,
       `  const actionLog = [];`,
+      `  const healingEvents = [];`,
       `  const actions = ${JSON.stringify(uiActions)};`,
       `  for (const action of actions) {`,
-      `    const evidence = grounding.elements.find((element) => element.id === action.evidenceId);`,
-      `    if (!evidence) throw new Error('Grounded UI action references missing evidenceId ' + action.evidenceId);`,
-      `    const locator = (${playwrightLocatorFunctionSource()})(page, evidence);`,
-      `    await locator.first().waitFor({ state: 'visible', timeout: 5000 });`,
+      `    let evidence = grounding.elements.find((element) => element.id === action.evidenceId);`,
+      `    let locator;`,
+      `    try {`,
+      `      if (!evidence) throw new Error('Grounded UI action references missing evidenceId ' + action.evidenceId);`,
+      `      locator = (${playwrightLocatorFunctionSource()})(page, evidence);`,
+      `      await locator.first().waitFor({ state: 'visible', timeout: 5000 });`,
+      `    } catch (firstError) {`,
+      `      const freshGrounding = await page.evaluate(${browserGroundingFunctionSource()}, ${JSON.stringify({
+        scenario: {
+          id: context.scenario.id,
+          name: context.scenario.name,
+          objective: context.scenario.objective,
+        },
+        route,
+        url: targetUrl,
+      })});`,
+      `      const healedEvidence = findHealingCandidate(action, evidence, freshGrounding.elements);`,
+      `      if (!healedEvidence) throw firstError;`,
+      `      locator = (${playwrightLocatorFunctionSource()})(page, healedEvidence);`,
+      `      await locator.first().waitFor({ state: 'visible', timeout: 5000 });`,
+      `      healingEvents.push({ schemaVersion: 'brisk-aitesting.ui-healing-event.v1', action: action.action, evidenceId: action.evidenceId, reason: String(firstError && firstError.message ? firstError.message : firstError), before: evidence ?? null, after: healedEvidence });`,
+      `      evidence = healedEvidence;`,
+      `    }`,
       `    if (action.action === 'fill') await locator.first().fill(action.value);`,
       `    else if (action.action === 'click') await locator.first().click();`,
       `    else if (action.action === 'check') await locator.first().check();`,
@@ -70,7 +91,28 @@ export class BuiltinPlaywrightEngine implements Engine {
       `    actionLog.push({ action: action.action, evidenceId: action.evidenceId, locator: evidence.locator, status: 'passed' });`,
       `  }`,
       `  writeFileSync(${JSON.stringify(actionEvidencePath)}, JSON.stringify({ schemaVersion: 'brisk-aitesting.ui-actions.v1', scenario: ${JSON.stringify(scenarioEvidence(context))}, actions: actionLog }, null, 2) + '\\n', 'utf8');`,
+      `  writeFileSync(${JSON.stringify(healingEvidencePath)}, JSON.stringify({ schemaVersion: 'brisk-aitesting.ui-healing.v1', scenario: ${JSON.stringify(scenarioEvidence(context))}, events: healingEvents }, null, 2) + '\\n', 'utf8');`,
       '});',
+      '',
+      'function findHealingCandidate(action, previous, elements) {',
+      '  const actionable = elements.filter((element) => element.locator && (element.role || element.label || element.testId || element.text || element.css));',
+      '  const preferredKind = action.action === "fill" ? new Set(["testId", "label", "role"]) : new Set(["testId", "role", "text", "label"]);',
+      '  const expectedText = String(action.text || action.value || action.description || "").trim().toLowerCase();',
+      '  const previousText = String(previous?.text || previous?.label || previous?.testId || previous?.locator?.value || "").trim().toLowerCase();',
+      '  if (!previous && !expectedText) return undefined;',
+      '  const candidates = actionable.map((element) => {',
+      '    let score = 0;',
+      '    if (previous && element.id !== previous.id && element.locator?.strategy === previous.locator?.strategy) score += 2;',
+      '    if (previous?.role && element.role === previous.role) score += 3;',
+      '    if (previous?.tagName && element.tagName === previous.tagName) score += 2;',
+      '    if (preferredKind.has(element.locator?.strategy)) score += 2;',
+      '    const haystack = String([element.text, element.label, element.testId, element.locator?.value].filter(Boolean).join(" ")).toLowerCase();',
+      '    if (expectedText && haystack.includes(expectedText)) score += 5;',
+      '    if (previousText && haystack.includes(previousText)) score += 4;',
+      '    return { element, score };',
+      '  }).filter((candidate) => candidate.score > 0).sort((left, right) => right.score - left.score);',
+      '  return candidates[0]?.element;',
+      '}',
       '',
     ].join('\n');
     await writeFile(artifactSpecPath, testFile, 'utf8');
@@ -154,6 +196,15 @@ export class BuiltinPlaywrightEngine implements Engine {
         actions: uiActions.length,
       },
     };
+    const healingArtifact: ArtifactRef = {
+      kind: 'json',
+      path: healingEvidencePath,
+      label: 'UI healing evidence',
+      metadata: {
+        schemaVersion: 'brisk-aitesting.ui-healing.v1',
+        scenarioId: context.scenario.id,
+      },
+    };
     const manifestArtifact: ArtifactRef = {
       kind: 'json',
       path: manifestPath,
@@ -169,6 +220,7 @@ export class BuiltinPlaywrightEngine implements Engine {
       { kind: 'log', path: logPath, label: 'Playwright execution log', metadata: { scenarioId: context.scenario.id } },
       groundingArtifact,
       actionArtifact,
+      healingArtifact,
       ...collectedArtifacts,
       manifestArtifact,
     ];
@@ -195,6 +247,10 @@ export class BuiltinPlaywrightEngine implements Engine {
         schemaVersion: 'brisk-aitesting.ui-actions.v1',
         path: actionEvidencePath,
         planned: uiActions.length,
+      },
+      healing: {
+        schemaVersion: 'brisk-aitesting.ui-healing.v1',
+        path: healingEvidencePath,
       },
       artifacts: artifacts.filter((artifact) => artifact.path !== manifestPath),
       diagnostics,

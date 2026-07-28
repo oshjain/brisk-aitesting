@@ -47,7 +47,7 @@ export const planJsonSchema = {
       properties: {
         id: { type: 'string', minLength: 1, pattern: '^[A-Za-z_$][A-Za-z0-9_$-]*$' },
         name: { type: 'string', minLength: 1 },
-        type: { enum: ['ui', 'api', 'contract', 'schema', 'replay', 'custom'] },
+        type: { enum: ['ui', 'api', 'contract', 'schema', 'replay', 'message', 'custom'] },
         objective: { type: 'string', minLength: 1 },
         target: {
           type: 'object',
@@ -57,6 +57,7 @@ export const planJsonSchema = {
             path: { type: 'string' },
             route: { type: 'string' },
             schema: { type: 'string' },
+            channel: { type: 'string' },
           },
         },
         request: {
@@ -100,6 +101,11 @@ export const planJsonSchema = {
             },
             json: { type: 'object' },
             contains: { type: 'string' },
+            unchanged: {
+              type: 'array',
+              minItems: 1,
+              items: { $ref: '#/$defs/apiStateSnapshotExpectation' },
+            },
           },
         },
         assertions: {
@@ -114,12 +120,47 @@ export const planJsonSchema = {
         evidenceRequired: {
           type: 'array',
           minItems: 1,
-          items: { enum: ['repo', 'ui', 'api', 'schema', 'auth'] },
+          items: { enum: ['repo', 'ui', 'api', 'schema', 'auth', 'message'] },
         },
         metadata: {
           type: 'object',
           additionalProperties: true,
         },
+      },
+    },
+    apiStateSnapshotExpectation: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['target'],
+      properties: {
+        name: { type: 'string', minLength: 1 },
+        target: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['path'],
+          properties: {
+            method: { type: 'string', minLength: 1 },
+            path: { type: 'string', pattern: '^/' },
+          },
+        },
+        request: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            headers: {
+              type: 'object',
+              additionalProperties: { type: 'string' },
+            },
+            query: {
+              type: 'object',
+              additionalProperties: {
+                anyOf: [{ type: 'string' }, { type: 'number' }, { type: 'boolean' }],
+              },
+            },
+            body: {},
+          },
+        },
+        json: { type: 'object' },
       },
     },
     uiAction: {

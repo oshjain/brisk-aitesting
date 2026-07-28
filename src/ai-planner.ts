@@ -260,6 +260,18 @@ function scenarioForType(type: EngineType, context: PlannerContext): ScenarioPla
       evidenceRequired: ['ui'],
     };
   }
+  if (type === 'message') {
+    const schema = context.discovery.contracts.find((contract) => contract.kind === 'asyncapi' && contract.exists)?.path;
+    return {
+      id: `required_message_${randomUUID()}`,
+      name: 'Required message coverage',
+      type: 'message',
+      objective: 'Ensure required message/event contract coverage is present in the plan.',
+      target: { ...(schema !== undefined ? { schema } : {}), channel: 'default' },
+      assertions: ['message contract can be inspected'],
+      evidenceRequired: ['message', 'schema'],
+    };
+  }
   return {
     id: `required_${type}_${randomUUID()}`,
     name: `Required ${type} coverage`,
@@ -455,11 +467,12 @@ function normalizeIdentifier(value: unknown, fallback: string): string {
 function normalizeEngineType(value: unknown): EngineType {
   if (typeof value !== 'string') return 'custom';
   const normalized = value.trim().toLowerCase();
-  if (['ui', 'api', 'contract', 'schema', 'replay', 'custom'].includes(normalized)) return normalized as EngineType;
+  if (['ui', 'api', 'contract', 'schema', 'replay', 'message', 'custom'].includes(normalized)) return normalized as EngineType;
   if (['e2e', 'browser', 'frontend'].includes(normalized)) return 'ui';
   if (['integration', 'workflow', 'end-to-end'].includes(normalized)) return 'ui';
   if (['backend', 'http', 'rest'].includes(normalized)) return 'api';
-  if (['openapi', 'asyncapi'].includes(normalized)) return 'schema';
+  if (normalized === 'asyncapi' || normalized === 'event' || normalized === 'messaging' || normalized === 'message') return 'message';
+  if (normalized === 'openapi') return 'schema';
   return 'custom';
 }
 
@@ -478,6 +491,14 @@ function normalizeTarget(value: unknown, type: EngineType, discovery: DiscoveryR
   if (type === 'contract' || type === 'schema') {
     const schema = typeof record.schema === 'string' ? record.schema : discovery.contracts.find((contract) => contract.exists)?.path;
     return schema !== undefined ? { schema } : {};
+  }
+  if (type === 'message') {
+    const schema = typeof record.schema === 'string' ? record.schema : discovery.contracts.find((contract) => contract.kind === 'asyncapi' && contract.exists)?.path;
+    const channel = typeof record.channel === 'string' ? record.channel : typeof record.path === 'string' ? record.path : undefined;
+    return {
+      ...(schema !== undefined ? { schema } : {}),
+      ...(channel !== undefined ? { channel } : {}),
+    };
   }
   return isRecord(value) ? value as ScenarioPlan['target'] : {};
 }
@@ -598,7 +619,7 @@ function normalizePath(value: unknown): string | undefined {
 }
 
 function normalizeEvidenceRequired(value: unknown, type: EngineType): ScenarioPlan['evidenceRequired'] {
-  const allowed = new Set(['repo', 'ui', 'api', 'schema', 'auth']);
+  const allowed = new Set(['repo', 'ui', 'api', 'schema', 'auth', 'message']);
   if (Array.isArray(value)) {
     const normalized = value.filter((entry): entry is ScenarioPlan['evidenceRequired'][number] => typeof entry === 'string' && allowed.has(entry));
     if (normalized.length > 0) return normalized;
@@ -606,6 +627,7 @@ function normalizeEvidenceRequired(value: unknown, type: EngineType): ScenarioPl
   if (type === 'ui') return ['ui'];
   if (type === 'api') return ['api'];
   if (type === 'contract' || type === 'schema') return ['schema'];
+  if (type === 'message') return ['message', 'schema'];
   return ['repo'];
 }
 

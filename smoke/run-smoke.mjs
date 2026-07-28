@@ -407,6 +407,53 @@ try {
     process.exitCode = 1;
   }
 
+  const healingPlanner = {
+    name: 'ui-healing-planner',
+    async plan(context) {
+      return {
+        schemaVersion: 'brisk-aitesting.plan.v1',
+        runId: context.runId,
+        goal: context.input.goal,
+        mode: 'automatic',
+        discovery: context.discovery,
+        createdAt: new Date().toISOString(),
+        warnings: [],
+        scenarios: [
+          {
+            id: 'healed_ui_action',
+            name: 'UI healing replaces stale evidence',
+            type: 'ui',
+            objective: 'A stale evidence id with clear intent should be healed from fresh page evidence.',
+            target: { route: '/login' },
+            assertions: ['stale evidence is healed with evidence'],
+            uiActions: [{ action: 'click', evidenceId: 'ui_el_999', description: 'Sign in' }],
+            evidenceRequired: ['ui'],
+          },
+        ],
+      };
+    },
+  };
+  const healingTester = createBriskAiTesting(config, { planner: healingPlanner });
+  const healingResult = await healingTester.run({
+    goal: 'Heal stale grounded UI evidence',
+    scenarios: 1,
+    mode: 'automatic',
+  });
+  const healingArtifact = healingResult.artifacts.find((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.ui-healing.v1' && artifact.path !== undefined);
+  const healingErrors = [];
+  if (healingResult.summary.passed !== 1) healingErrors.push(`expected healing run to pass, got ${healingResult.status}`);
+  if (healingArtifact === undefined) {
+    healingErrors.push('healing run missing UI healing evidence artifact');
+  } else {
+    const healingEvidence = JSON.parse(await readFile(healingArtifact.path, 'utf8'));
+    if (!Array.isArray(healingEvidence.events) || healingEvidence.events.length !== 1) healingErrors.push('healing evidence did not record exactly one healing event');
+    if (healingEvidence.events?.[0]?.after?.id === undefined) healingErrors.push('healing event missing replacement evidence');
+  }
+  if (healingErrors.length > 0) {
+    console.error(JSON.stringify({ healingErrors, status: healingResult.status, summary: healingResult.summary, tests: healingResult.tests }, null, 2));
+    process.exitCode = 1;
+  }
+
   const feedbackEvents = [];
   const feedbackPlanner = {
     name: 'feedback-loop-planner',

@@ -246,7 +246,7 @@ async function checkEngine(params: {
   };
 
   record('name is non-empty', typeof params.engine.name === 'string' && params.engine.name.trim().length > 0);
-  record('type is valid', ['ui', 'api', 'contract', 'schema', 'replay', 'custom'].includes(params.engine.type));
+  record('type is valid', ['ui', 'api', 'contract', 'schema', 'replay', 'message', 'custom'].includes(params.engine.type));
   record('canRun accepts own scenario', params.engine.canRun(params.validScenario) === true);
   record('canRun rejects unrelated scenario', params.engine.canRun(params.unrelatedScenario) === false);
 

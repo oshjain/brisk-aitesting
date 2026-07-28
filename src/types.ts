@@ -1,4 +1,4 @@
-export type EngineType = 'ui' | 'api' | 'contract' | 'schema' | 'replay' | 'custom';
+export type EngineType = 'ui' | 'api' | 'contract' | 'schema' | 'replay' | 'message' | 'custom';
 export type BriskAiTestingStatus = 'passed' | 'failed' | 'error' | 'skipped';
 
 export interface AppConfig {
@@ -101,6 +101,7 @@ export interface ScenarioPlan {
     readonly path?: string;
     readonly route?: string;
     readonly schema?: string;
+    readonly channel?: string;
   };
   readonly request?: {
     readonly headers?: Record<string, string>;
@@ -114,11 +115,26 @@ export interface ScenarioPlan {
     };
     readonly json?: Record<string, unknown>;
     readonly contains?: string;
+    readonly unchanged?: readonly ApiStateSnapshotExpectation[];
   };
   readonly assertions: readonly string[];
   readonly uiActions?: readonly UiActionPlan[];
-  readonly evidenceRequired: readonly ('repo' | 'ui' | 'api' | 'schema' | 'auth')[];
+  readonly evidenceRequired: readonly ('repo' | 'ui' | 'api' | 'schema' | 'auth' | 'message')[];
   readonly metadata?: Record<string, unknown>;
+}
+
+export interface ApiStateSnapshotExpectation {
+  readonly name?: string;
+  readonly target: {
+    readonly method?: string;
+    readonly path: string;
+  };
+  readonly request?: {
+    readonly headers?: Record<string, string>;
+    readonly query?: Record<string, string | number | boolean>;
+    readonly body?: unknown;
+  };
+  readonly json?: Record<string, unknown>;
 }
 
 export type UiActionPlan =

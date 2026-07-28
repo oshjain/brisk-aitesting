@@ -40,10 +40,13 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 - Built-in OpenAPI contract engine.
 - Built-in lightweight schema fuzz engine.
 - Built-in replay engine for declared HTTP interactions.
+- Built-in AsyncAPI message-contract inspection engine.
 - External engine quality API and automated health gate.
 - Non-engine extension quality API and automated health gate.
 - Optional Schemathesis OpenAPI deep API checker with readiness manifest and coverage gate.
 - UI grounding and evidence-ID action execution.
+- UI healing with fresh page evidence, one retry, and visible replacement evidence.
+- Rejected-action state proof with before/after API snapshots.
 - Versioned result and handover JSON.
 - Event stream callbacks.
 - Artifact collection.
@@ -56,9 +59,8 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 
 - No built-in Specmatic adapter yet.
 - No built-in Keploy adapter yet.
-- No built-in AsyncAPI, Pact, or message-contract engine yet.
+- No built-in Pact or live message-broker execution engine yet.
 - No full proof app collection yet; e-commerce and event/messaging are still pending.
-- No formal UI healing stage with before/after evidence diffing yet.
 - No shared business rule catalog yet.
 
 ## How We Finish It Properly
@@ -133,15 +135,11 @@ Add adapters in this order:
 
 These should remain optional dependencies or separate packages if they add heavy runtime requirements.
 
-### 6. UI Healing
+### 6. Deeper UI Resilience
 
-Build UI healing as a visible stage:
+The first healing stage is built: stale grounded evidence can trigger fresh page grounding, one retry, and visible replacement evidence.
 
-```text
-failed locator -> fresh grounding -> candidate replacement -> validation -> retry -> evidence diff
-```
-
-Healing must never silently hide failure. It should report what changed and why a retry was allowed.
+Next depth: repeated flake analysis, multi-page healing, stricter confidence scoring, and richer before/after reports.
 
 ### 7. Business Intent And Rule Governance
 

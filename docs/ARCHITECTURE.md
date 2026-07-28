@@ -120,10 +120,12 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.schema-fuzz-evidence.v1` | schema engine | Lightweight OpenAPI malformed-request evidence |
 | `brisk-aitesting.replay-evidence.v1` | replay engine | Declared HTTP interaction replay evidence |
 | `brisk-aitesting.api-evidence.v1` | API engine | Request/response evidence |
+| `brisk-aitesting.message-contract-evidence.v1` | message engine | AsyncAPI channel and message payload evidence |
 | `brisk-aitesting.openapi-summary.v1` | contract engine/discoverer | OpenAPI JSON/YAML operation summary |
 | `brisk-aitesting.playwright-evidence.v1` | UI engine | UI execution manifest |
 | `brisk-aitesting.ui-grounding.v1` | UI grounder/engine | Real page element evidence |
 | `brisk-aitesting.ui-actions.v1` | UI engine | Executed grounded action evidence |
+| `brisk-aitesting.ui-healing.v1` | UI engine | Before/after replacement evidence for healed UI actions |
 
 Any new schema must be documented here and covered by automated health checks before we call it stable.
 

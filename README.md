@@ -204,10 +204,10 @@ This section keeps the promise honest: what is built, what is partly built, and 
 | Local SDK/CLI | Built | Use it inside your app or from the command line. No hosted platform required. |
 | Schemathesis OpenAPI deep API checker | Built | Optional Python/Schemathesis engine that sends many real OpenAPI request variations. |
 | Replay engine | Built | Reruns declared HTTP interactions to catch regressions quickly, with evidence in the same result contract. |
-| Message/event testing | Expansion work | AsyncAPI/Pact/message-contract adapters are not built into the package yet. |
+| Message/event testing | Partly built | Built-in AsyncAPI message-contract inspection is available; Pact and live broker execution are not built yet. |
 | Specmatic adapter | Expansion work | Planned as an optional adapter for teams that want Specmatic-backed contract execution. |
 | Keploy compatibility | Expansion work | Built-in replay exists today; Keploy import/export compatibility is not built yet. |
-| UI healing | Expansion work | Planned: if a button or field moves, retry with fresh page evidence and show exactly what changed. |
+| UI healing | Built | If a grounded UI action has stale evidence but clear intent, Brisk captures fresh page evidence, retries once, and records what changed. |
 | Serious SaaS proof app | Built | A real sample product used to prove auth, roles, UI, API, OpenAPI, negative cases, state changes, and saved evidence. |
 | Proof app collection | Partly built | Serious SaaS, API-only, Todo, and multi-tenant proof apps run today; e-commerce and event/messaging proof apps are still pending. |
 | Built-in engine quality check | Built | Built-in engines must prove they can run, return the expected result shape, and save evidence. |
@@ -230,6 +230,8 @@ These are not future promises anymore:
 | Built-in replay engine | Brisk can rerun declared HTTP interactions and show exactly what changed. |
 | Adapter readiness gate | If we call an adapter "built", automation checks code, docs, packaging, CI wiring, proof app coverage, and result evidence. |
 | Non-engine extension conformance | Custom discoverers, planners, validators, UI grounders, and AI providers can be checked before teams trust them. |
+| Rejected-action state proof | API scenarios can capture before/after snapshots and prove a rejected action did not change state. |
+| UI healing evidence | UI runs produce `brisk-aitesting.ui-healing.v1` evidence showing replacement attempts. |
 | Release readiness check | Releases have a repeatable command and matching changelog check. |
 
 ### Still To Build
@@ -239,8 +241,7 @@ These are the real remaining product areas, listed separately so nobody confuses
 | Still to build | User impact |
 |:----------------|:------------|
 | More proof apps | More confidence across e-commerce and event-driven systems. |
-| Message adapters | Coverage beyond browser screens and HTTP APIs. |
-| UI healing | Fewer fragile browser failures, with a clear before/after explanation. |
+| Message adapters | Deeper coverage beyond AsyncAPI inspection, including Pact and live broker execution. |
 
 ## What It Solves
 
@@ -1139,10 +1140,12 @@ This may be the most valuable part of the product for enterprise teams. The resu
 | `brisk-aitesting.schema-fuzz-evidence.v1` | Schema Fuzz Evidence |
 | `brisk-aitesting.replay-evidence.v1` | Replay Evidence |
 | `brisk-aitesting.api-evidence.v1` | 📡 API Evidence |
+| `brisk-aitesting.message-contract-evidence.v1` | Message Contract Evidence |
 | `brisk-aitesting.openapi-summary.v1` | 📜 OpenAPI Summary |
 | `brisk-aitesting.playwright-evidence.v1` | 🎭 Playwright Evidence |
 | `brisk-aitesting.ui-grounding.v1` | 🎯 UI Grounding |
 | `brisk-aitesting.ui-actions.v1` | 🖱️ UI Actions |
+| `brisk-aitesting.ui-healing.v1` | UI Healing |
 
 </div>
 
@@ -1356,7 +1359,7 @@ Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads 
     <td>📨</td>
     <td>AsyncAPI / Pact / message-contract adapters</td>
     <td>🩹</td>
-    <td>Formal UI healing stage with evidence diffing</td>
+    <td>Deeper multi-page UI resilience and flake analysis</td>
   </tr>
   <tr>
     <td>⚖️</td>

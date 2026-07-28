@@ -220,8 +220,8 @@ This is a public-evidence map. It does not claim private product internals.
     <td align="center">&#10060;</td>
   </tr>
   <tr>
-    <td><strong>Comparative product capability score</strong><br />Public capability score, not a lab benchmark result.</td>
-    <td align="center" bgcolor="#dcfce7"><strong>9.0 / 10</strong></td>
+    <td><strong>Comparative product capability score</strong><br />Selected public capability score, not full product-completeness or lab benchmark result.</td>
+    <td align="center" bgcolor="#dcfce7"><strong>8.6 / 10</strong></td>
     <td align="center" bgcolor="#fef3c7"><strong>6.8 / 10</strong></td>
     <td align="center" bgcolor="#dcfce7"><strong>8.2 / 10</strong></td>
     <td align="center" bgcolor="#fef3c7"><strong>7.6 / 10</strong></td>
@@ -257,8 +257,8 @@ For competitors, the icons are based on public product capabilities. They are no
   <tr>
     <td>1</td>
     <td>Discover an undocumented frontend application</td>
-    <td align="center">&#128295;</td>
-    <td align="center">&#128295;</td>
+    <td align="center">&#9989;</td>
+    <td align="center">&#9989;</td>
     <td align="center">&#128295;</td>
     <td align="center">&#128295;</td>
     <td align="center">&#128295;</td>
@@ -327,7 +327,7 @@ For competitors, the icons are based on public product capabilities. They are no
   <tr>
     <td>8</td>
     <td>Validate a rejected action and unchanged state</td>
-    <td align="center">&#128295;</td>
+    <td align="center">&#9989;</td>
     <td align="center">&#128295;</td>
     <td align="center">&#9989;</td>
     <td align="center">&#9989;</td>
@@ -337,7 +337,7 @@ For competitors, the icons are based on public product capabilities. They are no
   <tr>
     <td>9</td>
     <td>Handle a changed UI selector</td>
-    <td align="center">&#128295;</td>
+    <td align="center">&#9989;</td>
     <td align="center">&#9989;</td>
     <td align="center">&#9989;</td>
     <td align="center">&#9989;</td>
@@ -376,7 +376,7 @@ For competitors, the icons are based on public product capabilities. They are no
   </tr>
   <tr>
     <td colspan="2"><strong>Comparative benchmark-readiness score</strong><br />Coverage against mandatory scenarios; competitor cells are public-capability mapping, not lab results.</td>
-    <td align="center" bgcolor="#dcfce7"><strong>8.3 / 10</strong></td>
+    <td align="center" bgcolor="#dcfce7"><strong>8.6 / 10</strong></td>
     <td align="center" bgcolor="#fef3c7"><strong>6.7 / 10</strong></td>
     <td align="center" bgcolor="#dcfce7"><strong>8.3 / 10</strong></td>
     <td align="center" bgcolor="#dcfce7"><strong>8.3 / 10</strong></td>
