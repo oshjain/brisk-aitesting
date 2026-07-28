@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>brisk-aitesting — Local, embeddable AI testing control layer</title>
+<title>brisk-aitesting — AI driven software testing control plane</title>
 <meta name="description" content="Brisk discovers your application, creates structured test plans, validates them, routes scenarios to the right engine, and returns clean evidence your product can use. Local-first, embeddable, evidence-first.">
-<meta property="og:title" content="brisk-aitesting — Local, embeddable AI testing control layer">
+<meta property="og:title" content="brisk-aitesting — AI driven software testing control plane">
 <meta property="og:description" content="Say what should be tested. Brisk turns it into checked, executable tests. Local-first, embeddable, evidence-first.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://github.com/oshjain/brisk-aitesting">
@@ -38,6 +38,68 @@
   .evidence-json-highlight { background:rgba(74,20,140,0.25); border-radius:2px; transition:background 0.3s; }
   .score-bar { transition:width 1s ease-out; }
   .process-step-active .step-card { border-color:#4A148C; box-shadow:0 4px 12px rgba(49,13,94,0.1); }
+
+  /* ═══════════════════════════════════════════
+     HERO SECTION — CUSTOM STYLES
+     ═══════════════════════════════════════════ */
+  /* Subtle dot-grid background pattern */
+  .hero-dot-grid {
+    background-image: radial-gradient(circle, rgba(49,13,94,0.06) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  /* Glowing ring behind the logo */
+  .hero-logo-ring {
+    position: relative;
+    display: inline-block;
+    padding: 10px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(74,20,140,0.12) 0%, rgba(251,192,45,0.18) 100%);
+    box-shadow: 0 0 80px rgba(74,20,140,0.1), 0 0 160px rgba(251,192,45,0.06);
+  }
+  /* The logo image itself — sized up, with drop shadow + gentle float */
+  .hero-logo-img {
+    display: block;
+    width: 150px;
+    height: 150px;
+    filter: drop-shadow(0 12px 32px rgba(49,13,94,0.25));
+    animation: hero-logo-float 6s ease-in-out infinite;
+  }
+  @keyframes hero-logo-float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  /* Gradient text for the brand tagline */
+  .hero-brand-tagline {
+    background: linear-gradient(135deg, #4a148c 0%, #7c43bd 45%, #f57f17 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  /* Primary CTA shine effect on hover */
+  .hero-cta-primary {
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-cta-primary::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    transition: left 0.6s;
+  }
+  .hero-cta-primary:hover::after {
+    left: 100%;
+  }
+  /* Responsive logo sizing */
+  @media (min-width: 640px) {
+    .hero-logo-img { width: 190px; height: 190px; }
+  }
+  @media (min-width: 1024px) {
+    .hero-logo-img { width: 220px; height: 220px; }
+  }
 </style>
 </head>
 <body class="bg-[#FAFAFA] text-[#1A1A1A] font-sans antialiased">
@@ -111,68 +173,162 @@
 
 <!-- ===== HOME / HERO ===== -->
 <section id="home" class="relative overflow-hidden bg-white" aria-labelledby="hero-heading">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 sm:pt-20 sm:pb-24">
-    <!-- Alpha badge -->
-    <div class="inline-flex items-center gap-2 px-3 py-1 bg-brisk-yellow-100 text-brisk-yellow-900 text-xs font-semibold rounded-full mb-6">
-      <span class="material-symbols-outlined text-sm">construction</span> Alpha
+
+  <!-- ── Decorative background layer ── -->
+  <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
+    <!-- Large purple glow orb — top right -->
+    <div class="absolute -top-32 -right-32 w-[700px] h-[700px] rounded-full blur-3xl" style="background:radial-gradient(circle, rgba(74,20,140,0.08) 0%, transparent 70%);"></div>
+    <!-- Warm yellow glow orb — bottom left -->
+    <div class="absolute -bottom-40 -left-40 w-[550px] h-[550px] rounded-full blur-3xl" style="background:radial-gradient(circle, rgba(251,192,45,0.07) 0%, transparent 70%);"></div>
+    <!-- Subtle dot-grid pattern -->
+    <div class="absolute inset-0 hero-dot-grid"></div>
+  </div>
+
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-20 sm:pt-24 sm:pb-28">
+
+    <!-- ═══════════ BRAND BLOCK ═══════════ -->
+    <div class="flex flex-col items-center text-center mb-14">
+      <!-- Logo with glowing ring -->
+      <div class="hero-logo-ring mb-5">
+        <img src="assets/logo_transparent.png" alt="Brisk logo" class="hero-logo-img" width="220" height="220">
+      </div>
+
+      <!-- Brand name -->
+      <p class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-brisk-purple-900 tracking-tight mb-3">
+        brisk-aitesting
+      </p>
+
+      <!-- Brand punch line — gradient text -->
+      <p class="hero-brand-tagline text-xl sm:text-2xl lg:text-3xl font-bold mb-4">
+        Fast<span class="text-brisk-yellow-600" style="-webkit-text-fill-color:#fbc02d">,</span> Efficient<span class="text-brisk-yellow-600" style="-webkit-text-fill-color:#fbc02d"> &amp;</span> No-nonsense
+      </p>
+
+      <!-- Decorative divider -->
+      <div class="flex items-center justify-center gap-4">
+        <div class="w-10 h-px bg-brisk-purple-200"></div>
+        <div class="w-2.5 h-2.5 bg-brisk-yellow-600 rounded-full"></div>
+        <div class="w-10 h-px bg-brisk-purple-200"></div>
+      </div>
     </div>
-    <!-- Eyebrow -->
-    <p class="text-sm font-medium tracking-wide uppercase text-brisk-purple-400 mb-4">Local-first &middot; Embeddable &middot; Evidence-first</p>
-    <!-- Heading -->
-    <h1 id="hero-heading" class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-brisk-gray-950 leading-tight mb-6 max-w-4xl">
-      Say what should be tested. <span class="text-brisk-purple-800">Brisk</span> turns it into checked, executable tests.
+
+    <!-- ═══════════ PRODUCT VALUE PROP ═══════════ -->
+    <div class="text-center mb-10">
+      <!-- Alpha badge -->
+      <span class="inline-flex items-center gap-2 px-4 py-1.5 bg-brisk-yellow-100 text-brisk-yellow-900 text-xs font-semibold rounded-full mb-5 border border-brisk-yellow-200">
+        <span class="material-symbols-outlined text-sm">construction</span> Alpha
+      </span>
+
+      <!-- Product punch line — bold, selling -->
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-brisk-gray-950 leading-tight mb-3 max-w-4xl mx-auto">
+        The world's most unique
+        <br class="hidden sm:block">
+        <span class="text-brisk-purple-800">AI driven software testing</span> control plane
+      </h2>
+
+      <!-- Eyebrow -->
+      <p class="text-sm font-semibold tracking-wide uppercase text-brisk-purple-400">
+        Local-first &middot; Embeddable &middot; AI-powered
+      </p>
+    </div>
+
+    <!-- ═══════════ MAIN HEADLINE ═══════════ -->
+    <h1 id="hero-heading" class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-brisk-gray-950 leading-tight mb-6 max-w-4xl mx-auto text-center">
+      Say what should be tested.
+      <br class="hidden sm:block">
+      <span class="text-brisk-purple-800">Brisk</span> turns it into checked, executable tests.
     </h1>
-    <!-- Supporting text -->
-    <p class="text-lg sm:text-xl text-brisk-gray-600 max-w-3xl mb-8 leading-relaxed">
-      Brisk discovers the application, creates a structured test plan, validates it before execution, routes each scenario to the right engine, and returns clean evidence your product can use.
+
+    <!-- ═══════════ SUPPORTING DESCRIPTION ═══════════ -->
+    <p class="text-lg sm:text-xl text-brisk-gray-600 max-w-3xl mx-auto text-center mb-10 leading-relaxed">
+      Brisk discovers the application, creates a structured test plan, validates it before execution,
+      routes each scenario to the right engine, and returns clean evidence your product can use.
     </p>
-    <!-- CTAs -->
-    <div class="flex flex-wrap gap-3 mb-8">
-      <a href="#get-started" class="inline-flex items-center gap-2 px-6 py-3 text-base font-semibold bg-brisk-yellow-600 text-brisk-gray-950 rounded-lg hover:bg-brisk-yellow-900 hover:text-white transition-colors shadow-sm">Get started <span class="material-symbols-outlined">arrow_forward</span></a>
-      <a href="https://github.com/oshjain/brisk-aitesting" class="inline-flex items-center gap-2 px-6 py-3 text-base font-medium text-brisk-gray-800 bg-white border border-brisk-gray-300 rounded-lg hover:border-brisk-purple-400 hover:text-brisk-purple-800 transition-colors">View on GitHub <span class="material-symbols-outlined">open_in_new</span></a>
+
+    <!-- ═══════════ CTAs ═══════════ -->
+    <div class="flex flex-wrap justify-center gap-4 mb-6">
+      <a href="#get-started" class="hero-cta-primary inline-flex items-center gap-2 px-8 py-3.5 text-base font-bold bg-brisk-yellow-600 text-brisk-gray-950 rounded-xl hover:bg-brisk-yellow-900 hover:text-white transition-all shadow-lg shadow-brisk-yellow-600/20 hover:shadow-brisk-yellow-900/25">
+        Get started
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </a>
+      <a href="https://github.com/oshjain/brisk-aitesting" class="inline-flex items-center gap-2 px-8 py-3.5 text-base font-semibold text-brisk-gray-800 bg-white border-2 border-brisk-gray-300 rounded-xl hover:border-brisk-purple-400 hover:text-brisk-purple-800 transition-all shadow-sm hover:shadow-md">
+        <span class="material-symbols-outlined">code</span>
+        View on GitHub
+        <span class="material-symbols-outlined">open_in_new</span>
+      </a>
     </div>
-    <p class="text-sm text-brisk-gray-600 mb-10">Use it inside your product, from the CLI, or in CI. No proprietary hosted dashboard is required.</p>
-    <!-- Status badges -->
-    <div class="flex flex-wrap gap-2 mb-10">
-      <span class="inline-flex items-center gap-1 px-3 py-1 bg-brisk-purple-50 text-brisk-purple-800 text-xs font-medium rounded-full"><span class="material-symbols-outlined text-sm">lock_open</span> Open source</span>
-      <span class="inline-flex items-center gap-1 px-3 py-1 bg-brisk-purple-50 text-brisk-purple-800 text-xs font-medium rounded-full">MIT</span>
-      <span class="inline-flex items-center gap-1 px-3 py-1 bg-brisk-yellow-100 text-brisk-yellow-900 text-xs font-medium rounded-full">Alpha</span>
-      <span class="inline-flex items-center gap-1 px-3 py-1 bg-brisk-purple-50 text-brisk-purple-800 text-xs font-medium rounded-full"><span class="material-symbols-outlined text-sm">home</span> Local first</span>
-      <span class="inline-flex items-center gap-1 px-3 py-1 bg-brisk-purple-50 text-brisk-purple-800 text-xs font-medium rounded-full">PRs welcome</span>
+
+    <!-- ═══════════ DEPLOYMENT FREEDOM ═══════════ -->
+    <p class="text-sm text-brisk-gray-500 text-center mb-12">
+      Use it inside your product, from the CLI, or in CI. No proprietary hosted dashboard is required.
+    </p>
+
+    <!-- ═══════════ STATUS BADGES ═══════════ -->
+    <div class="flex flex-wrap justify-center gap-2 mb-14">
+      <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-brisk-purple-50 text-brisk-purple-800 text-xs font-semibold rounded-full border border-brisk-purple-100">
+        <span class="material-symbols-outlined text-sm">lock_open</span> Open source
+      </span>
+      <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-brisk-purple-50 text-brisk-purple-800 text-xs font-semibold rounded-full border border-brisk-purple-100">
+        MIT
+      </span>
+      <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-brisk-yellow-100 text-brisk-yellow-900 text-xs font-semibold rounded-full border border-brisk-yellow-200">
+        Alpha
+      </span>
+      <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-brisk-purple-50 text-brisk-purple-800 text-xs font-semibold rounded-full border border-brisk-purple-100">
+        <span class="material-symbols-outlined text-sm">home</span> Local first
+      </span>
+      <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-brisk-purple-50 text-brisk-purple-800 text-xs font-semibold rounded-full border border-brisk-purple-100">
+        PRs welcome
+      </span>
     </div>
-    <!-- Hero Pipeline Visual -->
-    <div class="relative mt-10" aria-label="Brisk testing pipeline: Human goal to Discovery to Checked plan to Engines to Evidence">
+
+    <!-- ═══════════ PIPELINE VISUAL ═══════════ -->
+    <div class="relative" aria-label="Brisk testing pipeline: Human goal → Discovery → Checked plan → Engines → Evidence">
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-0">
-        <div class="pipeline-node flex-1 bg-white border-2 border-brisk-purple-100 rounded-xl p-4 text-center sm:mr-1">
-          <span class="material-symbols-outlined text-2xl text-brisk-purple-800 mb-2 block">psychology</span>
-          <p class="text-sm font-semibold text-brisk-gray-950">Human testing goal</p>
+        <!-- Step 1 -->
+        <div class="pipeline-node flex-1 bg-white border-2 border-brisk-purple-100 rounded-xl p-5 text-center sm:mr-1 group hover:border-brisk-purple-400 hover:shadow-lg transition-all">
+          <span class="material-symbols-outlined text-3xl text-brisk-purple-800 mb-2 block group-hover:scale-110 transition-transform">psychology</span>
+          <p class="text-sm font-bold text-brisk-gray-950">Human goal</p>
+          <p class="text-xs text-brisk-gray-600 mt-0.5">Say what to test</p>
         </div>
-        <div class="hidden sm:flex items-center text-brisk-purple-400"><span class="material-symbols-outlined">arrow_forward</span></div>
-        <div class="flex sm:hidden justify-center text-brisk-purple-400"><span class="material-symbols-outlined rotate-90">arrow_forward</span></div>
-        <div class="pipeline-node flex-1 bg-white border-2 border-brisk-purple-100 rounded-xl p-4 text-center sm:mx-1">
-          <span class="material-symbols-outlined text-2xl text-brisk-purple-800 mb-2 block">travel_explore</span>
-          <p class="text-sm font-semibold text-brisk-gray-950">Discovery</p>
+        <!-- Arrow -->
+        <div class="hidden sm:flex items-center text-brisk-purple-300"><span class="material-symbols-outlined text-lg">arrow_forward</span></div>
+        <div class="flex sm:hidden justify-center text-brisk-purple-300"><span class="material-symbols-outlined rotate-90">arrow_forward</span></div>
+        <!-- Step 2 -->
+        <div class="pipeline-node flex-1 bg-white border-2 border-brisk-purple-100 rounded-xl p-5 text-center sm:mx-1 group hover:border-brisk-purple-400 hover:shadow-lg transition-all">
+          <span class="material-symbols-outlined text-3xl text-brisk-purple-800 mb-2 block group-hover:scale-110 transition-transform">travel_explore</span>
+          <p class="text-sm font-bold text-brisk-gray-950">Discovery</p>
+          <p class="text-xs text-brisk-gray-600 mt-0.5">Repo, routes, contracts</p>
         </div>
-        <div class="hidden sm:flex items-center text-brisk-purple-400"><span class="material-symbols-outlined">arrow_forward</span></div>
-        <div class="flex sm:hidden justify-center text-brisk-purple-400"><span class="material-symbols-outlined rotate-90">arrow_forward</span></div>
-        <div class="pipeline-node flex-1 bg-brisk-purple-50 border-2 border-brisk-purple-400 rounded-xl p-4 text-center sm:mx-1">
-          <span class="material-symbols-outlined text-2xl text-brisk-purple-800 mb-2 block">description</span>
-          <p class="text-sm font-semibold text-brisk-gray-950">Checked JSON plan</p>
+        <!-- Arrow -->
+        <div class="hidden sm:flex items-center text-brisk-purple-300"><span class="material-symbols-outlined text-lg">arrow_forward</span></div>
+        <div class="flex sm:hidden justify-center text-brisk-purple-300"><span class="material-symbols-outlined rotate-90">arrow_forward</span></div>
+        <!-- Step 3 — highlighted -->
+        <div class="pipeline-node flex-1 bg-brisk-purple-50 border-2 border-brisk-purple-400 rounded-xl p-5 text-center sm:mx-1 shadow-md group hover:shadow-lg transition-all">
+          <span class="material-symbols-outlined text-3xl text-brisk-purple-800 mb-2 block group-hover:scale-110 transition-transform">description</span>
+          <p class="text-sm font-bold text-brisk-gray-950">Checked plan</p>
+          <p class="text-xs text-brisk-gray-600 mt-0.5">Validated JSON schema</p>
         </div>
-        <div class="hidden sm:flex items-center text-brisk-purple-400"><span class="material-symbols-outlined">arrow_forward</span></div>
-        <div class="flex sm:hidden justify-center text-brisk-purple-400"><span class="material-symbols-outlined rotate-90">arrow_forward</span></div>
-        <div class="pipeline-node flex-1 bg-white border-2 border-brisk-purple-100 rounded-xl p-4 text-center sm:mx-1">
-          <span class="material-symbols-outlined text-2xl text-brisk-purple-800 mb-2 block">precision_manufacturing</span>
-          <p class="text-sm font-semibold text-brisk-gray-950">UI / API / Contract engines</p>
+        <!-- Arrow -->
+        <div class="hidden sm:flex items-center text-brisk-purple-300"><span class="material-symbols-outlined text-lg">arrow_forward</span></div>
+        <div class="flex sm:hidden justify-center text-brisk-purple-300"><span class="material-symbols-outlined rotate-90">arrow_forward</span></div>
+        <!-- Step 4 -->
+        <div class="pipeline-node flex-1 bg-white border-2 border-brisk-purple-100 rounded-xl p-5 text-center sm:mx-1 group hover:border-brisk-purple-400 hover:shadow-lg transition-all">
+          <span class="material-symbols-outlined text-3xl text-brisk-purple-800 mb-2 block group-hover:scale-110 transition-transform">precision_manufacturing</span>
+          <p class="text-sm font-bold text-brisk-gray-950">Engines</p>
+          <p class="text-xs text-brisk-gray-600 mt-0.5">UI / API / Contract</p>
         </div>
-        <div class="hidden sm:flex items-center text-brisk-purple-400"><span class="material-symbols-outlined">arrow_forward</span></div>
-        <div class="flex sm:hidden justify-center text-brisk-purple-400"><span class="material-symbols-outlined rotate-90">arrow_forward</span></div>
-        <div class="pipeline-node flex-1 bg-brisk-yellow-50 border-2 border-brisk-yellow-400 rounded-xl p-4 text-center sm:ml-1">
-          <span class="material-symbols-outlined text-2xl text-brisk-yellow-900 mb-2 block">verified</span>
-          <p class="text-sm font-semibold text-brisk-gray-950">Evidence result</p>
+        <!-- Arrow -->
+        <div class="hidden sm:flex items-center text-brisk-purple-300"><span class="material-symbols-outlined text-lg">arrow_forward</span></div>
+        <div class="flex sm:hidden justify-center text-brisk-purple-300"><span class="material-symbols-outlined rotate-90">arrow_forward</span></div>
+        <!-- Step 5 — result -->
+        <div class="pipeline-node flex-1 bg-brisk-yellow-50 border-2 border-brisk-yellow-400 rounded-xl p-5 text-center sm:ml-1 shadow-sm group hover:shadow-lg transition-all">
+          <span class="material-symbols-outlined text-3xl text-brisk-yellow-900 mb-2 block group-hover:scale-110 transition-transform">verified</span>
+          <p class="text-sm font-bold text-brisk-gray-950">Evidence</p>
+          <p class="text-xs text-brisk-gray-600 mt-0.5">Versioned result</p>
         </div>
       </div>
     </div>
+
   </div>
 </section>
 
@@ -1079,8 +1235,8 @@ function requiredEnv(name: string): string {
           <img src="assets/logo_transparent.png" alt="Brisk logo" class="h-8 w-8" width="32" height="32">
           <span class="font-bold text-lg">brisk-aitesting</span>
         </div>
-        <p class="text-sm text-brisk-gray-300">Fast, No-nonsense and Effective.</p>
-        <p class="text-xs text-brisk-gray-600 mt-2">Local-first &middot; Embeddable &middot; Evidence-first</p>
+        <p class="text-sm text-brisk-gray-300">Fast, Efficient and No-nonsense.</p>
+        <p class="text-xs text-brisk-gray-600 mt-2">Local-first &middot; Embeddable &middot; AI-powered</p>
       </div>
       <div>
         <h4 class="text-sm font-semibold mb-3">Documentation</h4>
