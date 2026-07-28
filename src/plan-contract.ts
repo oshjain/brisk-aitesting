@@ -12,7 +12,7 @@ export const planJsonSchema = {
     schemaVersion: { const: 'brisk-aitesting.plan.v1' },
     runId: { type: 'string', minLength: 1 },
     goal: { type: 'string', minLength: 1 },
-    mode: { enum: ['automatic', 'ui', 'api', 'contract', 'schema', 'replay', 'custom'] },
+    mode: { enum: ['automatic', 'ui', 'api', 'contract', 'schema', 'replay', 'message', 'custom'] },
     warnings: {
       type: 'array',
       items: { type: 'string' },

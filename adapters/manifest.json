@@ -30,6 +30,66 @@
         "docs/STATUS.md",
         "docs/ROADMAP.md"
       ]
+    },
+    {
+      "id": "specmatic-contract",
+      "name": "Specmatic contract adapter",
+      "status": "built",
+      "runtime": "java-cli",
+      "source": "src/specmatic.ts",
+      "runtimeExport": "SpecmaticContractEngine",
+      "typeExport": "SpecmaticEngineOptions",
+      "smokeScript": "smoke:specmatic",
+      "coverageScript": "smoke:specmatic",
+      "smokeFile": "smoke/run-specmatic-smoke.mjs",
+      "workflow": ".github/workflows/specmatic-smoke.yml",
+      "referenceApp": "reference-apps/serious-saas",
+      "conformance": "runEnginePluginConformance",
+      "evidenceSchema": "brisk-aitesting.specmatic-evidence.v1",
+      "smokeSchema": "brisk-aitesting.specmatic-smoke.v1",
+      "optionalDependency": "specmatic",
+      "coverageMinimums": {
+        "events": 1,
+        "selectedOperations": 1,
+        "successfulScenarios": 1,
+        "artifacts": 2
+      },
+      "docs": [
+        "README.md",
+        "docs/ARCHITECTURE.md",
+        "docs/STATUS.md",
+        "docs/ROADMAP.md"
+      ]
+    },
+    {
+      "id": "keploy-cli",
+      "name": "Keploy CLI adapter",
+      "status": "built",
+      "runtime": "keploy-cli",
+      "source": "src/keploy-engine.ts",
+      "runtimeExport": "KeployCliEngine",
+      "typeExport": "KeployEngineOptions",
+      "smokeScript": "smoke:keploy",
+      "coverageScript": "smoke:keploy",
+      "smokeFile": "smoke/run-keploy-smoke.mjs",
+      "workflow": ".github/workflows/keploy-smoke.yml",
+      "referenceApp": "reference-apps/api-only",
+      "conformance": "runEnginePluginConformance",
+      "evidenceSchema": "brisk-aitesting.keploy-evidence.v1",
+      "smokeSchema": "brisk-aitesting.keploy-smoke.v1",
+      "optionalDependency": "keploy",
+      "coverageMinimums": {
+        "events": 1,
+        "selectedOperations": 1,
+        "successfulScenarios": 1,
+        "artifacts": 2
+      },
+      "docs": [
+        "README.md",
+        "docs/ARCHITECTURE.md",
+        "docs/STATUS.md",
+        "docs/ROADMAP.md"
+      ]
     }
   ]
 }

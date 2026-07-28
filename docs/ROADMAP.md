@@ -41,10 +41,12 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 - Built-in lightweight schema fuzz engine.
 - Built-in replay engine for declared HTTP interactions.
 - Keploy-style HTTP replay import/export.
+- Optional Keploy CLI adapter for local `keploy record` / `keploy test` flows.
 - Built-in AsyncAPI message-contract inspection engine.
 - External engine quality API and automated health gate.
 - Non-engine extension quality API and automated health gate.
 - Optional Schemathesis OpenAPI deep API checker with readiness manifest and coverage gate.
+- Optional Specmatic contract adapter with readiness manifest and smoke gate.
 - UI grounding and evidence-ID action execution.
 - UI healing with fresh page evidence, one retry, and visible replacement evidence.
 - Rejected-action state proof with before/after API snapshots.
@@ -58,9 +60,8 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 
 ## Gaps
 
-- No built-in Specmatic adapter yet.
-- No full Keploy recording/service virtualization yet.
 - No built-in Pact or live message-broker execution engine yet.
+- Specmatic mock/service virtualization and Keploy dependency virtualization need broader proof-app coverage.
 - No full proof app collection yet; e-commerce and event/messaging are still pending.
 - No shared business rule catalog yet.
 
@@ -117,11 +118,11 @@ Future non-engine quality checks should define the stable output contract for ea
 
 ### 4. Replay Depth
 
-The built-in replay engine can run declared HTTP interactions today. Keploy-style HTTP cases can now import into replay and export from replay requests.
+The built-in replay engine can run declared HTTP interactions today. Keploy-style HTTP cases can import into replay and export from replay requests. The optional `KeployCliEngine` can also call local `keploy record` and `keploy test` flows and collect the generated local files.
 
 Remaining depth:
 
-- full Keploy recording/service virtualization
+- broader Keploy dependency virtualization proof against larger apps
 - richer response diff artifacts
 - multi-step traffic session replay
 - captured traffic privacy controls
@@ -131,8 +132,8 @@ Remaining depth:
 Add adapters in this order:
 
 - Pact adapter
-- Specmatic adapter
- - live message-broker execution
+- live message-broker execution
+- deeper Specmatic mock behavior checks
 
 These should remain optional dependencies or separate packages if they add heavy runtime requirements.
 

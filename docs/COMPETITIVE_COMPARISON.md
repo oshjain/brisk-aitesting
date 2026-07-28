@@ -395,7 +395,7 @@ Brisk is designed for a different job.
   <tr>
     <td width="33%"><strong>&#127919; Embeddable by design</strong><br />Brisk can sit inside a SaaS product, internal platform, developer portal, or CI pipeline.</td>
     <td width="33%"><strong>&#128737; AI with control</strong><br />AI proposes the plan. Brisk validates, normalizes, routes, and executes through engines.</td>
-    <td width="33%"><strong>&#128230; One evidence shape</strong><br />UI, API, OpenAPI, adapters, artifacts, assertions, diagnostics, and final results return through a stable contract.</td>
+    <td width="33%"><strong>&#128230; One evidence shape</strong><br />UI, API, OpenAPI, Schemathesis, Specmatic, Keploy, artifacts, assertions, diagnostics, and final results return through a stable contract.</td>
   </tr>
 </table>
 

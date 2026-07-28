@@ -42,6 +42,8 @@
     "smoke:extension-conformance": "node smoke/run-extension-conformance.mjs",
     "smoke:adapter-readiness": "node smoke/run-adapter-readiness.mjs",
     "smoke:schemathesis": "node smoke/run-schemathesis-smoke.mjs",
+    "smoke:specmatic": "node smoke/run-specmatic-smoke.mjs",
+    "smoke:keploy": "node smoke/run-keploy-smoke.mjs",
     "smoke:reference-serious-saas": "node smoke/run-reference-serious-saas.mjs",
     "smoke:reference-proof-apps": "node smoke/run-reference-proof-apps.mjs",
     "smoke:golden-fixtures": "node smoke/run-golden-fixtures.mjs",
@@ -78,5 +80,8 @@
     "ajv": "^8.20.0",
     "typescript": "^5.8.0",
     "yaml": "^2.9.0"
+  },
+  "optionalDependencies": {
+    "specmatic": "^2.51.0"
   }
 }

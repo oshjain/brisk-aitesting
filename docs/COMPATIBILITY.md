@@ -13,7 +13,8 @@ This page explains where `brisk-aitesting` works best today.
 | UI testing | Browser flows through Playwright |
 | API testing | HTTP request/response checks |
 | Contract testing | OpenAPI parsing and response schema validation |
-| Replay compatibility | Declared HTTP replay plus Keploy-style HTTP case import/export |
+| Third-party contract adapters | Schemathesis and Specmatic through optional local runtimes |
+| Replay compatibility | Declared HTTP replay, Keploy-style HTTP case import/export, and optional Keploy CLI record/test execution |
 | AI providers | OpenAI-compatible chat-completions path plus custom provider interface |
 | Runtime | Node.js 20 or newer |
 
@@ -37,7 +38,8 @@ These require custom engines or future adapters:
 - binary protocols
 - database-specific assertions
 - queue and stream assertions
-- Pact, Specmatic, full Keploy recording/service virtualization, and live broker execution adapters
+- Pact and live broker execution adapters
+- deeper proof coverage for Specmatic stubbing and Keploy dependency virtualization in larger apps
 - full performance testing
 - full penetration testing
 

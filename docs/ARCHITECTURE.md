@@ -81,7 +81,15 @@ Host apps should not have to care about the moving parts. Developers should stil
    `SchemathesisOpenApiFuzzEngine` runs the real Schemathesis CLI for schema scenarios that explicitly ask for the Schemathesis adapter.
    It writes NDJSON, JUnit, HAR, log, and `brisk-aitesting.schemathesis-evidence.v1` artifacts.
 
-14. Adapter Readiness
+14. Specmatic Contract Testing And Mocking
+   `SpecmaticContractEngine` runs the real Specmatic CLI for contract scenarios that explicitly ask for the Specmatic adapter.
+   It writes command logs, report artifacts, and `brisk-aitesting.specmatic-evidence.v1`.
+
+15. Keploy Recording And Replay
+   `KeployCliEngine` runs the local Keploy CLI for replay scenarios that explicitly ask for the Keploy adapter.
+   It can call `keploy record` and `keploy test`, collect generated local files, and emit `brisk-aitesting.keploy-evidence.v1`.
+
+16. Adapter Readiness
    `adapters/manifest.json` uses `brisk-aitesting.adapter-manifest.v1` to declare adapters that are truly built.
    `npm run smoke:adapter-readiness` emits `brisk-aitesting.adapter-readiness.v1` and checks the adapter like a shipping checklist: source code, exports, docs, package inclusion, CI workflow, proof-app coverage, quality proof, evidence schema, and minimum coverage.
 ```
@@ -112,6 +120,10 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.extension-conformance-smoke.v1` | quality checks | Health-check proof that good extensions pass and unsafe extensions fail |
 | `brisk-aitesting.schemathesis-evidence.v1` | Schemathesis adapter | OpenAPI fuzz execution evidence |
 | `brisk-aitesting.schemathesis-smoke.v1` | Schemathesis adapter | Real adapter health-check report |
+| `brisk-aitesting.specmatic-evidence.v1` | Specmatic adapter | Contract test/mock execution evidence |
+| `brisk-aitesting.specmatic-smoke.v1` | Specmatic adapter | Real adapter health-check report |
+| `brisk-aitesting.keploy-evidence.v1` | Keploy adapter | Record/replay and local artifact evidence |
+| `brisk-aitesting.keploy-smoke.v1` | Keploy adapter | Real adapter health-check report |
 | `brisk-aitesting.reference-serious-saas.v1` | proof app | Serious SaaS proof-app report |
 | `brisk-aitesting.reference-proof-apps.v1` | proof apps | API-only, Todo, and multi-tenant proof-app report |
 | `brisk-aitesting.golden-fixtures.v1` | expected outputs | Stable scenario/result baseline report |

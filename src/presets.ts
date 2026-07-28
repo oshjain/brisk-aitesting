@@ -12,3 +12,6 @@ export {
   BuiltinReplayEngine,
   BuiltinSchemaFuzzEngine,
 } from './engines.js';
+export { KeployCliEngine } from './keploy-engine.js';
+export { SchemathesisOpenApiFuzzEngine } from './schemathesis.js';
+export { SpecmaticContractEngine } from './specmatic.js';

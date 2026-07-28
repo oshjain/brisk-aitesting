@@ -13,6 +13,8 @@ const requiredFiles = [
   '.github/workflows/ci.yml',
   '.github/workflows/real-ai-smoke.yml',
   '.github/workflows/schemathesis-smoke.yml',
+  '.github/workflows/specmatic-smoke.yml',
+  '.github/workflows/keploy-smoke.yml',
 ];
 const requiredScripts = [
   'release:check',
@@ -21,6 +23,8 @@ const requiredScripts = [
   'benchmark',
   'smoke:real-ai',
   'smoke:schemathesis',
+  'smoke:specmatic',
+  'smoke:keploy',
 ];
 const errors = [];
 

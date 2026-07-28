@@ -67,6 +67,14 @@ export {
 } from './schemathesis.js';
 
 export {
+  KeployCliEngine,
+} from './keploy-engine.js';
+
+export {
+  SpecmaticContractEngine,
+} from './specmatic.js';
+
+export {
   BuiltinApiEngine,
   BuiltinContractEngine,
   BuiltinMessageContractEngine,
@@ -143,6 +151,14 @@ export type {
 export type {
   SchemathesisEngineOptions,
 } from './schemathesis.js';
+
+export type {
+  KeployEngineOptions,
+} from './keploy-engine.js';
+
+export type {
+  SpecmaticEngineOptions,
+} from './specmatic.js';
 
 export type {
   SchemaValidationResult,

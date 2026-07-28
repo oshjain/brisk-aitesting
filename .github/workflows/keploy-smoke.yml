@@ -1,0 +1,48 @@
+name: Keploy Smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  keploy-smoke:
+    name: Real Keploy Adapter Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Keploy CLI
+        run: |
+          curl --silent --location https://keploy.io/ent/install.sh | bash
+
+      - name: Build
+        run: npm run build
+
+      - name: Run Keploy adapter smoke
+        env:
+          BRISK_AITESTING_REQUIRE_KEPLOY: 'true'
+        run: npm run smoke:keploy
+
+      - name: Upload Keploy artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: brisk-aitesting-keploy-artifacts
+          path: |
+            .brisk-aitesting-keploy-smoke/**
+          if-no-files-found: ignore
+          retention-days: 7
