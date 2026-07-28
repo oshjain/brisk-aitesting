@@ -100,34 +100,86 @@
   @media (min-width: 1024px) {
     .hero-logo-img { width: 220px; height: 220px; }
   }
+
+  /* ═══════════════════════════════════════════
+     DESKTOP SIDEBAR NAVIGATION
+     ═══════════════════════════════════════════ */
+  .page-layout { display:flex; min-height:100vh; }
+  .desktop-sidebar {
+    position:sticky; top:0; left:0; z-index:40;
+    height:100vh; width:240px; flex-shrink:0;
+    background:#fff; border-right:1px solid #e0e0e0;
+    display:none; flex-direction:column;
+    transition:width 0.25s ease;
+    overflow:hidden;
+  }
+  .desktop-sidebar.collapsed { width:64px; }
+  .desktop-sidebar .sidebar-header {
+    display:flex; align-items:center; gap:10px;
+    padding:16px; border-bottom:1px solid #e0e0e0;
+    min-height:65px;
+  }
+  .desktop-sidebar .sidebar-header .sidebar-logo-text {
+    font-weight:700; font-size:15px; color:#4A148C;
+    white-space:nowrap; overflow:hidden;
+    transition:opacity 0.15s ease, width 0.15s ease;
+  }
+  .desktop-sidebar.collapsed .sidebar-logo-text { opacity:0; width:0; }
+  .desktop-sidebar .sidebar-nav { flex:1; overflow-y:auto; overflow-x:hidden; padding:8px; }
+  .desktop-sidebar .sidebar-link {
+    display:flex; align-items:center; gap:12px;
+    padding:10px 12px; border-radius:8px;
+    font-size:13px; font-weight:500; color:#444;
+    white-space:nowrap; text-decoration:none;
+    transition:background 0.15s, color 0.15s;
+    margin-bottom:2px;
+  }
+  .desktop-sidebar .sidebar-link:hover { background:#f3e8ff; color:#4A148C; }
+  .desktop-sidebar .sidebar-link.nav-current {
+    background:#f3e8ff; color:#4A148C; font-weight:600;
+  }
+  .desktop-sidebar .sidebar-link .sidebar-icon { font-size:20px; flex-shrink:0; }
+  .desktop-sidebar .sidebar-link .sidebar-label {
+    opacity:1; transition:opacity 0.15s ease;
+  }
+  .desktop-sidebar.collapsed .sidebar-label { opacity:0; width:0; overflow:hidden; }
+  .desktop-sidebar .sidebar-collapse-btn {
+    display:flex; align-items:center; justify-content:center;
+    padding:12px; border-top:1px solid #e0e0e0;
+    cursor:pointer; color:#888; background:none; border-left:none; border-right:none; border-bottom:none;
+    transition:color 0.15s; width:100%;
+  }
+  .desktop-sidebar .sidebar-collapse-btn:hover { color:#4A148C; }
+  .desktop-sidebar.collapsed .sidebar-collapse-btn .material-symbols-outlined {
+    transform:rotate(180deg); transition:transform 0.25s ease;
+  }
+  .desktop-sidebar .sidebar-collapse-btn .material-symbols-outlined {
+    transition:transform 0.25s ease;
+  }
+  .main-content-area { flex:1; min-width:0; }
+  /* Show sidebar on desktop, hide on mobile */
+  @media (min-width:1024px) {
+    .desktop-sidebar { display:flex; }
+    .page-layout { display:flex; }
+  }
+  @media (max-width:1023px) {
+    .page-layout { display:block; }
+  }
 </style>
 </head>
 <body class="bg-[#FAFAFA] text-[#1A1A1A] font-sans antialiased">
 
 <a href="#main-content" class="skip-link">Skip to main content</a>
 
-<!-- ===== HEADER ===== -->
-<header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-brisk-gray-300" role="banner">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<!-- ===== HEADER (mobile only) ===== -->
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-brisk-gray-300 lg:hidden" role="banner">
+  <div class="px-4 sm:px-6">
     <div class="flex items-center justify-between h-16">
       <!-- Logo -->
       <a href="#home" class="flex items-center gap-3 shrink-0" aria-label="brisk-aitesting home">
         <img src="assets/logo_transparent.png" alt="Brisk logo" class="h-9 w-9" width="36" height="36">
         <span class="font-bold text-lg text-brisk-purple-900 hidden sm:inline">brisk-aitesting</span>
       </a>
-      <!-- Desktop nav -->
-      <nav class="hidden lg:flex items-center gap-1" aria-label="Main navigation">
-        <a href="#home" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">home</span>Home</a>
-        <a href="#why-brisk" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">lightbulb</span>Why Brisk</a>
-        <a href="#compare" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">compare</span>Compare</a>
-        <a href="#how-it-works" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">account_tree</span>How It Works</a>
-        <a href="#capabilities" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">bolt</span>Capabilities</a>
-        <a href="#ai-control" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">shield</span>AI Control</a>
-        <a href="#evidence" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">description</span>Evidence</a>
-        <a href="#status" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">info</span>Status</a>
-        <a href="#get-started" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">rocket_launch</span>Get Started</a>
-        <a href="#roadmap" class="nav-link px-3 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-1.5"><span class="material-symbols-outlined text-base">map</span>Roadmap</a>
-      </nav>
       <!-- Actions -->
       <div class="flex items-center gap-3">
         <a href="https://github.com/oshjain/brisk-aitesting" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-brisk-gray-800 hover:text-brisk-purple-800 rounded-lg hover:bg-brisk-gray-300/50 transition-colors" aria-label="View on GitHub">
@@ -136,7 +188,7 @@
         </a>
         <a href="#get-started" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-brisk-yellow-600 text-brisk-gray-950 rounded-lg hover:bg-brisk-yellow-900 hover:text-white transition-colors">Get started</a>
         <!-- Mobile menu button -->
-        <button id="menu-toggle" type="button" class="lg:hidden p-2 rounded-md text-brisk-gray-800 hover:bg-brisk-gray-300/50" aria-expanded="false" aria-controls="mobile-drawer" aria-label="Open navigation menu">
+        <button id="menu-toggle" type="button" class="p-2 rounded-md text-brisk-gray-800 hover:bg-brisk-gray-300/50" aria-expanded="false" aria-controls="mobile-drawer" aria-label="Open navigation menu">
           <span class="material-symbols-outlined">menu</span>
         </button>
       </div>
@@ -169,7 +221,34 @@
   </nav>
 </div>
 
-<main id="main-content">
+<div class="page-layout">
+
+<!-- ===== DESKTOP SIDEBAR ===== -->
+<aside class="desktop-sidebar" aria-label="Desktop navigation">
+  <div class="sidebar-header">
+    <a href="#home" class="shrink-0" aria-label="brisk-aitesting home">
+      <img src="assets/logo_transparent.png" alt="Brisk logo" class="h-8 w-8" width="32" height="32">
+    </a>
+    <span class="sidebar-logo-text">brisk-aitesting</span>
+  </div>
+  <nav class="sidebar-nav" aria-label="Main navigation">
+    <a href="#home" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">home</span><span class="sidebar-label">Home</span></a>
+    <a href="#why-brisk" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">lightbulb</span><span class="sidebar-label">Why Brisk</span></a>
+    <a href="#compare" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">compare</span><span class="sidebar-label">Compare</span></a>
+    <a href="#how-it-works" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">account_tree</span><span class="sidebar-label">How It Works</span></a>
+    <a href="#capabilities" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">bolt</span><span class="sidebar-label">Capabilities</span></a>
+    <a href="#ai-control" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">shield</span><span class="sidebar-label">AI Control</span></a>
+    <a href="#evidence" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">description</span><span class="sidebar-label">Evidence &amp; Integration</span></a>
+    <a href="#status" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">info</span><span class="sidebar-label">Product Status</span></a>
+    <a href="#get-started" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">rocket_launch</span><span class="sidebar-label">Get Started</span></a>
+    <a href="#roadmap" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">map</span><span class="sidebar-label">Roadmap</span></a>
+  </nav>
+  <button class="sidebar-collapse-btn" id="sidebar-toggle" type="button" aria-label="Toggle sidebar">
+    <span class="material-symbols-outlined">chevron_left</span>
+  </button>
+</aside>
+
+<main id="main-content" class="main-content-area">
 
 <!-- ===== HOME / HERO ===== -->
 <section id="home" class="relative overflow-hidden bg-white" aria-labelledby="hero-heading">
@@ -1225,6 +1304,7 @@ function requiredEnv(name: string): string {
 </section>
 
 </main>
+</div><!-- close .page-layout -->
 
 <!-- ===== FOOTER ===== -->
 <footer class="bg-brisk-gray-950 text-white py-12" role="contentinfo">
@@ -1324,6 +1404,24 @@ function requiredEnv(name: string): string {
     const last = focusable[focusable.length-1];
     if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+})();
+
+// ── Desktop Sidebar Toggle ──────────────────────────
+(function(){
+  const sidebar = document.querySelector('.desktop-sidebar');
+  const toggleBtn = document.getElementById('sidebar-toggle');
+  if (!sidebar || !toggleBtn) return;
+
+  // Restore saved state
+  const saved = localStorage.getItem('brisk-sidebar-collapsed');
+  if (saved === 'true') sidebar.classList.add('collapsed');
+
+  toggleBtn.addEventListener('click', () => {
+    const collapsed = sidebar.classList.toggle('collapsed');
+    localStorage.setItem('brisk-sidebar-collapsed', collapsed);
+    // Update aria-label
+    toggleBtn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
   });
 })();
 
@@ -1660,7 +1758,7 @@ function requiredEnv(name: string): string {
 // ── Scroll-aware navigation state ───────────────────
 (function(){
   const sections = document.querySelectorAll('section[id]');
-  const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link');
+  const navLinks = document.querySelectorAll('.sidebar-link, .mobile-nav-link');
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
