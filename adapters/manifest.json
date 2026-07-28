@@ -77,7 +77,7 @@
       "conformance": "runEnginePluginConformance",
       "evidenceSchema": "brisk-aitesting.keploy-evidence.v1",
       "smokeSchema": "brisk-aitesting.keploy-smoke.v1",
-      "optionalDependency": "keploy",
+      "optionalDependency": "external:keploy-cli",
       "coverageMinimums": {
         "events": 1,
         "selectedOperations": 1,

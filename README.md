@@ -718,6 +718,29 @@ npm install github:oshjain/brisk-aitesting
 
 ## ⚡ Quick Start
 
+### Optional Adapter Runtimes
+
+The npm package ships the adapter code. Heavy third-party runtimes stay optional so normal users do not inherit tools they do not need.
+
+| Adapter | What ships with Brisk | What users install only if needed |
+|:--------|:----------------------|:----------------------------------|
+| Specmatic | `SpecmaticContractEngine`, smoke script, workflow, evidence contract | Java plus the optional `specmatic` runtime |
+| Keploy | `KeployCliEngine`, smoke script, workflow, evidence contract | Keploy CLI installed on the host machine or CI image |
+
+Specmatic can test any HTTP/OpenAPI provider. The app under test does not have to be Java. Java is needed because the Specmatic runtime itself is Java-based.
+
+Keploy CLI is not an npm package. Brisk includes `KeployCliEngine`, but the actual `keploy` binary must be installed locally or in CI. If `keploy` is on `PATH`, Brisk will use it. Otherwise set:
+
+```bash
+export BRISK_AITESTING_KEPLOY_COMMAND=keploy
+```
+
+PowerShell:
+
+```powershell
+$env:BRISK_AITESTING_KEPLOY_COMMAND = "keploy"
+```
+
 <details open>
 <summary><strong>1️⃣ Create your config</strong></summary>
 

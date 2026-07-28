@@ -48,3 +48,7 @@ These require custom engines or future adapters:
 The package is designed for Windows, macOS, and Linux. The CI matrix should keep all three honest.
 
 Browser execution also depends on Playwright browser installation in the host environment.
+
+Specmatic execution depends on Java because the Specmatic runtime is Java-based. It can still test APIs written in any backend language.
+
+Keploy execution depends on the Keploy CLI being installed locally. Brisk ships the adapter, not the Keploy binary.
