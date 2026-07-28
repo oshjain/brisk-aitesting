@@ -34,7 +34,7 @@
   ],
   "scripts": {
     "prepare": "npm run build",
-    "build": "tsc",
+    "build": "npm run clean && tsc",
     "smoke": "node smoke/run-smoke.mjs",
     "smoke:contracts": "node smoke/run-contracts.mjs",
     "smoke:engine-conformance": "node smoke/run-engine-conformance.mjs",

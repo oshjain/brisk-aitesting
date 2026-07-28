@@ -77,6 +77,7 @@ const forbiddenPatterns = [
   /^package\/test-results\//,
   /^package\/playwright-report\//,
   /^package\/.*\.log$/i,
+  /^package\/dist\/keploy/i,
 ];
 
 await rm(packDir, { recursive: true, force: true });
