@@ -40,6 +40,7 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 - Built-in OpenAPI contract engine.
 - Built-in lightweight schema fuzz engine.
 - Built-in replay engine for declared HTTP interactions.
+- Keploy-style HTTP replay import/export.
 - Built-in AsyncAPI message-contract inspection engine.
 - External engine quality API and automated health gate.
 - Non-engine extension quality API and automated health gate.
@@ -58,7 +59,7 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 ## Gaps
 
 - No built-in Specmatic adapter yet.
-- No built-in Keploy adapter yet.
+- No full Keploy recording/service virtualization yet.
 - No built-in Pact or live message-broker execution engine yet.
 - No full proof app collection yet; e-commerce and event/messaging are still pending.
 - No shared business rule catalog yet.
@@ -114,24 +115,24 @@ Every adapter marked as built must also appear in `adapters/manifest.json` and p
 
 Future non-engine quality checks should define the stable output contract for each extension type.
 
-### 4. Replay Importers
+### 4. Replay Depth
 
-The built-in replay engine can run declared HTTP interactions today. The remaining product work is to add importers/exporters for traffic captured by existing tools, starting with a Keploy-compatible path:
+The built-in replay engine can run declared HTTP interactions today. Keploy-style HTTP cases can now import into replay and export from replay requests.
 
-- captured request input
-- expected response or invariant
-- replay target
-- diff artifact
-- pass/fail mapping
+Remaining depth:
+
+- full Keploy recording/service virtualization
+- richer response diff artifacts
+- multi-step traffic session replay
+- captured traffic privacy controls
 
 ### 5. Message And Contract Engines
 
 Add adapters in this order:
 
-- AsyncAPI summary parser
-- message contract scenario type
 - Pact adapter
 - Specmatic adapter
+ - live message-broker execution
 
 These should remain optional dependencies or separate packages if they add heavy runtime requirements.
 

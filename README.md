@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/badge/status-alpha-orange" alt="Status: Alpha" />
     <img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs Welcome" />
     <img src="https://img.shields.io/badge/local-first-yes-8A2BE2" alt="Local First" />
-    <img src="https://img.shields.io/badge/engines-UI_|_API_|_Contract_|_Schema_|_Replay-blue" alt="Built-in engines" />
+    <img src="https://img.shields.io/badge/engines-UI_|_API_|_Contract_|_Schema_|_Replay_|_Message-blue" alt="Built-in engines" />
   </p>
 </div>
 
@@ -206,7 +206,7 @@ This section keeps the promise honest: what is built, what is partly built, and 
 | Replay engine | Built | Reruns declared HTTP interactions to catch regressions quickly, with evidence in the same result contract. |
 | Message/event testing | Partly built | Built-in AsyncAPI message-contract inspection is available; Pact and live broker execution are not built yet. |
 | Specmatic adapter | Expansion work | Planned as an optional adapter for teams that want Specmatic-backed contract execution. |
-| Keploy compatibility | Expansion work | Built-in replay exists today; Keploy import/export compatibility is not built yet. |
+| Keploy compatibility | Partly built | Keploy-style HTTP cases can import into replay and export from replay requests; full Keploy recording/service virtualization is not built. |
 | UI healing | Built | If a grounded UI action has stale evidence but clear intent, Brisk captures fresh page evidence, retries once, and records what changed. |
 | Serious SaaS proof app | Built | A real sample product used to prove auth, roles, UI, API, OpenAPI, negative cases, state changes, and saved evidence. |
 | Proof app collection | Partly built | Serious SaaS, API-only, Todo, and multi-tenant proof apps run today; e-commerce and event/messaging proof apps are still pending. |
@@ -242,6 +242,7 @@ These are the real remaining product areas, listed separately so nobody confuses
 |:----------------|:------------|
 | More proof apps | More confidence across e-commerce and event-driven systems. |
 | Message adapters | Deeper coverage beyond AsyncAPI inspection, including Pact and live broker execution. |
+| Keploy depth | Full Keploy recording/service virtualization beyond HTTP replay import/export. |
 
 ## What It Solves
 
@@ -980,7 +981,7 @@ The AI planner returns JSON shaped as `brisk-aitesting.plan.v1`. The engine then
 | Principle | Guard |
 |:---------:|:------|
 | 🤖 AI can **suggest** what should be tested | ✅ Allowed |
-| 🤖 AI can **choose** whether a scenario is UI, API, contract, schema, replay, or custom | ✅ Allowed |
+| 🤖 AI can **choose** whether a scenario is UI, API, contract, schema, replay, message, or custom | ✅ Allowed |
 | 🤖 AI can **enrich UI actions** only from captured page evidence | ✅ Allowed |
 | ❌ AI cannot **invent selectors** and force execution | 🚫 Blocked |
 | ❌ AI cannot **bypass validation** | 🚫 Blocked |
@@ -1022,7 +1023,7 @@ The AI planner returns JSON shaped as `brisk-aitesting.plan.v1`. The engine then
 
 <br />
 
-> 🧩 **Extensible.** Built-in engines cover UI, API, contract, schema fuzzing, and declared HTTP replay. Custom engines can still be plugged in for database, messaging, mobile, or enterprise-specific systems.
+> 🧩 **Extensible.** Built-in engines cover UI, API, contract, schema fuzzing, declared HTTP replay, Keploy-style HTTP replay import/export, and AsyncAPI message-contract inspection. Custom engines can still be plugged in for database, live brokers, mobile, or enterprise-specific systems.
 
 ### 🏭 Controlled Factory Line
 
@@ -1204,7 +1205,7 @@ Some command names are developer shorthand, so here is the plain meaning:
 | Check | Description |
 |:-----:|:------------|
 | Contract/schema registry checks | Make sure every public JSON shape Brisk promises is still documented and exported. |
-| Built-in engine quality checks | Make sure Playwright, API, contract, schema fuzz, and replay engines run correctly and return the same clean result shape. |
+| Built-in engine quality checks | Make sure Playwright, API, contract, schema fuzz, replay, and message engines run correctly and return the same clean result shape. |
 | External engine quality checks | Make sure third-party engines cannot claim support unless they route correctly, time out safely, and avoid obvious secret leakage. |
 | Non-engine extension quality checks | Make sure custom discovery, planning, validation, UI grounding, and AI provider extensions return the shapes Brisk expects. |
 | Adapter readiness checks | Make sure every adapter marked "built" has code, docs, package files, CI wiring, proof-app coverage, and saved evidence. |
@@ -1353,11 +1354,11 @@ Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads 
     <td>🧪</td>
     <td>More golden expected outputs</td>
     <td>🔁</td>
-    <td>Keploy-compatible replay importer/exporter</td>
+    <td>Full Keploy recording/service virtualization</td>
   </tr>
   <tr>
     <td>📨</td>
-    <td>AsyncAPI / Pact / message-contract adapters</td>
+    <td>Pact and live message-broker adapters beyond AsyncAPI inspection</td>
     <td>🩹</td>
     <td>Deeper multi-page UI resilience and flake analysis</td>
   </tr>

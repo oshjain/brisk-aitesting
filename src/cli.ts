@@ -94,7 +94,7 @@ function help(): void {
     '  --config <path>              config file path',
     '  --goal <text>                test goal; positional goal is also supported',
     '  --scenarios <number>         number of scenarios to plan',
-    '  --mode <automatic|ui|api|contract|schema|replay|custom>',
+    '  --mode <automatic|ui|api|contract|schema|replay|message|custom>',
     '  --required-type <type>       require a scenario type; can be repeated',
     '  --ui-action-feedback <off|when-missing|always>',
     '  --json                       print machine-readable run summary',
@@ -263,7 +263,7 @@ function parseRunArgs(args: readonly string[]): {
 }
 
 function parseMode(value: string | undefined): 'automatic' | EngineType {
-  const allowed = ['automatic', 'ui', 'api', 'contract', 'schema', 'replay', 'custom'] as const;
+  const allowed = ['automatic', 'ui', 'api', 'contract', 'schema', 'replay', 'message', 'custom'] as const;
   if (value !== undefined && allowed.includes(value as typeof allowed[number])) {
     return value as 'automatic' | EngineType;
   }

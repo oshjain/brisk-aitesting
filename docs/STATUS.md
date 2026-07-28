@@ -16,6 +16,7 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - OpenAPI JSON/YAML parsing.
 - Built-in lightweight OpenAPI schema fuzz engine: `brisk-aitesting.schema-fuzz-evidence.v1`.
 - Built-in replay engine for declared HTTP interactions: `brisk-aitesting.replay-evidence.v1`.
+- Keploy-style HTTP replay import/export around the built-in replay engine.
 - Built-in AsyncAPI message-contract inspection engine: `brisk-aitesting.message-contract-evidence.v1`.
 - OpenAPI route discovery, schema extraction, generated API scenarios, and response schema validation.
 - Implementation-vs-OpenAPI drift report: `brisk-aitesting.contract-drift.v1`.
@@ -57,7 +58,8 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - AI-generated Playwright code is not accepted.
 - AI-generated selectors are not trusted.
 - Real provider quality is not compared across multiple AI models yet.
-- Built-in Specmatic, Keploy, Pact, or live message-broker adapters.
+- Built-in Specmatic, Pact, or live message-broker adapters.
+- Full Keploy recording/service virtualization.
 - Full proof app collection beyond serious-saas, API-only, Todo, and multi-tenant.
 
 ## Next Work
@@ -65,7 +67,7 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - Add proof apps: E-commerce and Event/messaging.
 - Add more golden expected outputs for stable plan/result comparison.
 - Add source-route discovery adapters for Python, .NET, Go, Java, and generated-route systems.
-- Add a Keploy-compatible replay importer/exporter around the built-in replay engine.
-- Add AsyncAPI/Pact/message-contract adapter support.
+- Add full Keploy recording/service virtualization if we choose to support that depth.
+- Add Pact/live message-broker adapter support beyond AsyncAPI inspection.
 - Add multi-provider benchmark scoring.
 - Add npm publish workflow automation when release governance is ready.

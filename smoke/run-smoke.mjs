@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createBriskAiTesting, defineConfig, normalizeConfig, parseAiPlanForTesting } from '../dist/index.js';
+import { createBriskAiTesting, defineConfig, normalizeConfig, parseAiPlanForTesting, replayRequestsToKeployCases } from '../dist/index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const appRoot = join(here, 'site');
@@ -295,6 +295,62 @@ try {
   }
   if (generatedErrors.length > 0) {
     console.error(JSON.stringify({ generatedErrors, status: generatedResult.status, summary: generatedResult.summary, plan: generatedResult.plan }, null, 2));
+    process.exitCode = 1;
+  }
+
+  const keployPlanner = {
+    name: 'keploy-replay-planner',
+    async plan(context) {
+      return {
+        schemaVersion: 'brisk-aitesting.plan.v1',
+        runId: context.runId,
+        goal: context.input.goal,
+        mode: 'automatic',
+        discovery: context.discovery,
+        createdAt: new Date().toISOString(),
+        warnings: [],
+        scenarios: [
+          {
+            id: 'keploy_replay_health',
+            name: 'Keploy-compatible health replay',
+            type: 'replay',
+            objective: 'Keploy-style HTTP case imports into the replay engine.',
+            assertions: ['Keploy HTTP case replays'],
+            evidenceRequired: ['api'],
+            metadata: {
+              replay: {
+                keploy: [
+                  {
+                    kind: 'Http',
+                    name: 'health',
+                    spec: {
+                      req: { method: 'GET', url: '/api/health' },
+                      resp: { status_code: 200 },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        ],
+      };
+    },
+  };
+  const keployTester = createBriskAiTesting(config, { planner: keployPlanner });
+  const keployResult = await keployTester.run({
+    goal: 'Replay Keploy-compatible HTTP cases',
+    scenarios: 1,
+    mode: 'automatic',
+  });
+  const keployErrors = [];
+  if (keployResult.summary.passed !== 1) keployErrors.push(`expected Keploy replay to pass, got ${keployResult.status}`);
+  const exportedKeploy = replayRequestsToKeployCases('health', [{ method: 'GET', path: '/api/health', expectStatus: 200 }]);
+  if (exportedKeploy[0]?.spec?.req === undefined || exportedKeploy[0]?.spec?.resp === undefined) keployErrors.push('Keploy export did not produce req/resp shape');
+  if (!keployResult.artifacts.some((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.replay-evidence.v1' && artifact.metadata?.interactions === 1)) {
+    keployErrors.push('Keploy replay did not produce replay evidence');
+  }
+  if (keployErrors.length > 0) {
+    console.error(JSON.stringify({ keployErrors, status: keployResult.status, summary: keployResult.summary, plan: keployResult.plan }, null, 2));
     process.exitCode = 1;
   }
 

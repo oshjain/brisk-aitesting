@@ -1,15 +1,10 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { scenarioReplayRequests, type BriskReplayRequest } from '../keploy.js';
 import type { ArtifactRef, Engine, EngineContext, EngineRunResult, ScenarioPlan, ScenarioResult } from '../types.js';
 import { authHeaders, hasHeader, isHostAllowed, parseJsonOrNull, redactHeaders, redactValue, scenarioEvidence, scenarioResult } from './shared.js';
 
-type ReplayRequest = {
-  readonly method: string;
-  readonly path: string;
-  readonly headers?: Record<string, string>;
-  readonly body?: unknown;
-  readonly expectStatus?: number;
-};
+type ReplayRequest = BriskReplayRequest;
 
 export class BuiltinReplayEngine implements Engine {
   readonly name = 'builtin-replay-engine';
@@ -151,32 +146,6 @@ async function replayRequest(context: EngineContext, request: ReplayRequest): Pr
 }
 
 function replayRequests(scenario: ScenarioPlan): readonly ReplayRequest[] {
-  const replay = scenario.metadata?.replay;
-  if (!isRecord(replay) || !Array.isArray(replay.requests)) return [];
-  return replay.requests
-    .map(normalizeReplayRequest)
-    .filter((request): request is ReplayRequest => request !== undefined);
+  return scenarioReplayRequests(scenario);
 }
 
-function normalizeReplayRequest(value: unknown): ReplayRequest | undefined {
-  if (!isRecord(value) || typeof value.path !== 'string') return undefined;
-  const method = typeof value.method === 'string' ? value.method.toUpperCase() : 'GET';
-  if (!['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) return undefined;
-  const headers = isStringRecord(value.headers) ? value.headers : undefined;
-  const expectStatus = typeof value.expectStatus === 'number' && Number.isInteger(value.expectStatus) ? value.expectStatus : undefined;
-  return {
-    method,
-    path: value.path,
-    ...(headers !== undefined ? { headers } : {}),
-    ...(value.body !== undefined ? { body: value.body } : {}),
-    ...(expectStatus !== undefined ? { expectStatus } : {}),
-  };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function isStringRecord(value: unknown): value is Record<string, string> {
-  return isRecord(value) && Object.values(value).every((entry) => typeof entry === 'string');
-}

@@ -21,7 +21,7 @@ const result = await tester.run({
 |:------|:-----|:--------|
 | `goal` | `string` | What should be tested |
 | `scenarios` | `number` | Desired scenario count |
-| `mode` | `automatic`, `ui`, `api`, `contract`, `schema`, `replay`, `custom` | How scenarios should be routed |
+| `mode` | `automatic`, `ui`, `api`, `contract`, `schema`, `replay`, `message`, `custom` | How scenarios should be routed |
 | `requiredTypes` | array | Force at least one scenario of a type |
 | `uiActionFeedback` | `off`, `when-missing`, `always` | Whether UI actions should be grounded before execution |
 | `metadata` | object | Host-owned metadata |

@@ -46,6 +46,12 @@ export {
 } from './schema.js';
 
 export {
+  keployToReplayRequests,
+  replayRequestsToKeployCases,
+  scenarioReplayRequests,
+} from './keploy.js';
+
+export {
   BriskAiTestingProviderError,
   createAiProviderFromConfig,
   OpenAiCompatibleProvider,
@@ -118,6 +124,11 @@ export type {
   ValidationIssue,
   ValidationResult,
 } from './types.js';
+
+export type {
+  BriskReplayRequest,
+  KeployHttpTestCase,
+} from './keploy.js';
 
 export type {
   EnginePluginConformanceCase,

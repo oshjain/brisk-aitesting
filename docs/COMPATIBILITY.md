@@ -9,9 +9,11 @@ This page explains where `brisk-aitesting` works best today.
 | Frontend apps | React, Next.js, Vite, Angular, Vue, Svelte, static HTML, and browser-rendered apps Playwright can open |
 | Backend APIs | Any HTTP API reachable from the runtime |
 | API contracts | OpenAPI 3.x JSON or YAML |
+| Message contracts | AsyncAPI JSON or YAML inspection |
 | UI testing | Browser flows through Playwright |
 | API testing | HTTP request/response checks |
 | Contract testing | OpenAPI parsing and response schema validation |
+| Replay compatibility | Declared HTTP replay plus Keploy-style HTTP case import/export |
 | AI providers | OpenAI-compatible chat-completions path plus custom provider interface |
 | Runtime | Node.js 20 or newer |
 
@@ -35,7 +37,7 @@ These require custom engines or future adapters:
 - binary protocols
 - database-specific assertions
 - queue and stream assertions
-- Pact, AsyncAPI, Specmatic, or Keploy built-in adapters
+- Pact, Specmatic, full Keploy recording/service virtualization, and live broker execution adapters
 - full performance testing
 - full penetration testing
 
@@ -44,4 +46,3 @@ These require custom engines or future adapters:
 The package is designed for Windows, macOS, and Linux. The CI matrix should keep all three honest.
 
 Browser execution also depends on Playwright browser installation in the host environment.
-
