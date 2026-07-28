@@ -99,6 +99,18 @@
   }
   @media (min-width: 1024px) {
     .hero-logo-img { width: 220px; height: 220px; }
+    /* Hero section: more top/bottom breathing room */
+    .hero-inner { padding-top: 8rem; padding-bottom: 10rem; }
+    /* Badges: more vertical space between rows and bigger touch targets */
+    #home .flex.flex-wrap.justify-center.gap-2 { gap: 1rem; margin-bottom: 4rem; }
+    #home .flex.flex-wrap.justify-center.gap-2 > span { padding: 0.5rem 1.25rem; font-size: 0.875rem; }
+    /* Pipeline: vertical spacing above and below the row */
+    #home [aria-label*="pipeline"] { margin-top: 3rem; margin-bottom: 3rem; }
+    /* Pipeline nodes: taller on desktop */
+    #home .pipeline-node { padding-top: 2rem; padding-bottom: 2rem; }
+    #home .pipeline-node .material-symbols-outlined { font-size: 3rem; margin-bottom: 1rem; }
+    /* Pipeline flex row: gap between cards */
+    #home [aria-label*="pipeline"] > .flex { gap: 0.5rem; }
   }
 
   /* ═══════════════════════════════════════════
@@ -265,7 +277,7 @@
     <div class="absolute inset-0 hero-dot-grid"></div>
   </div>
 
-  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 lg:pt-32 pb-20 sm:pb-32 lg:pb-40">
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-20 sm:pb-28 hero-inner">
 
     <!-- ═══════════ BRAND BLOCK ═══════════ -->
     <div class="flex flex-col items-center text-center mb-14">
@@ -829,7 +841,7 @@
         <span class="material-symbols-outlined text-3xl text-green-600 mb-3 block">bar_chart</span>
         <p class="text-3xl sm:text-4xl font-extrabold text-green-700">100<span class="text-lg text-green-500">%</span></p>
         <p class="text-sm font-semibold text-brisk-gray-800 mt-1">Benchmark Pass Rate</p>
-        <p class="text-xs text-brisk-gray-500 mt-0.5">10/10 cases across 7 areas</p>
+        <p class="text-xs text-brisk-gray-500 mt-0.5">57/57 cases across 10 areas</p>
       </div>
       <div class="bg-white border-2 border-brisk-yellow-200 rounded-2xl p-6 text-center hover:shadow-lg transition-shadow">
         <span class="material-symbols-outlined text-3xl text-brisk-yellow-700 mb-3 block">verified</span>
@@ -1386,7 +1398,7 @@ function requiredEnv(name: string): string {
       <div class="roadmap-card bg-brisk-purple-50 rounded-xl p-6" data-category="proof">
         <div class="flex items-center gap-2 mb-3"><span class="material-symbols-outlined text-brisk-purple-800">science</span><h3 class="text-lg font-bold text-brisk-gray-950">Product proof</h3></div>
         <ul class="space-y-2 text-sm text-brisk-gray-600">
-          <li class="flex gap-2"><span class="material-symbols-outlined text-brisk-purple-400 text-base">arrow_right</span>Full proof app collection</li>
+          <li class="flex gap-2"><span class="material-symbols-outlined text-brisk-purple-400 text-base">arrow_right</span>More enterprise proof apps</li>
           <li class="flex gap-2"><span class="material-symbols-outlined text-brisk-purple-400 text-base">arrow_right</span>Framework-specific examples</li>
         </ul>
       </div>
