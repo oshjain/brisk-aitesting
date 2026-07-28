@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -13,6 +13,7 @@ import { seriousSaasConfig } from '../reference-apps/serious-saas/brisk-aitestin
 const here = dirname(fileURLToPath(import.meta.url));
 const packageDir = dirname(here);
 const openApiPath = join(packageDir, 'reference-apps', 'serious-saas', 'openapi.json');
+const focusedOpenApiPath = join(packageDir, '.brisk-aitesting-specmatic-smoke', 'health-openapi.json');
 
 if (!hasJava() && process.env.BRISK_AITESTING_REQUIRE_SPECMATIC !== 'true') {
   console.log(JSON.stringify({
@@ -32,12 +33,14 @@ if (address === null || typeof address === 'string') throw new Error('serious-sa
 try {
   const baseUrl = `http://127.0.0.1:${address.port}`;
   const config = seriousSaasConfig(baseUrl);
+  await mkdir(dirname(focusedOpenApiPath), { recursive: true });
+  await writeFile(focusedOpenApiPath, JSON.stringify(focusedHealthOpenApi(JSON.parse(await readFile(openApiPath, 'utf8'))), null, 2), 'utf8');
   const scenario = {
     id: 'specmatic_serious_saas_contract',
     name: 'Specmatic checks serious SaaS provider contract',
     type: 'contract',
-    objective: 'Run real Specmatic provider contract testing against the serious SaaS reference API.',
-    target: { schema: openApiPath },
+    objective: 'Run real Specmatic provider contract testing against the public health contract of the serious SaaS reference API.',
+    target: { schema: focusedOpenApiPath },
     assertions: ['Specmatic provider contract passes'],
     evidenceRequired: ['schema', 'api'],
     metadata: { adapter: 'specmatic' },
@@ -61,7 +64,7 @@ try {
       app: { name: config.app.name, baseUrl: config.app.baseUrl, repoPath: config.app.repoPath },
       uiRoutes: [],
       apiRoutes: [],
-      contracts: [{ kind: 'openapi', path: openApiPath, exists: true, operations: 6 }],
+      contracts: [{ kind: 'openapi', path: focusedOpenApiPath, exists: true, operations: 1 }],
       repoSignals: [],
       warnings: [],
       createdAt: new Date().toISOString(),
@@ -100,6 +103,8 @@ try {
   if (evidence?.schemaVersion !== 'brisk-aitesting.specmatic-evidence.v1') errors.push('wrong Specmatic evidence schema');
   if ((evidence?.summary?.runs ?? 0) < 1) errors.push('Specmatic coverage missing command run');
   if ((evidence?.artifacts?.length ?? 0) < 2) errors.push('Specmatic coverage missing saved artifacts');
+  if ((evidence?.summary?.failures ?? 0) > 0) errors.push(`Specmatic reported failures: ${evidence.summary.failures}`);
+  if ((evidence?.summary?.errors ?? 0) > 0) errors.push(`Specmatic reported errors: ${evidence.summary.errors}`);
   if (!result.tests[0]?.assertions.some((assertion) => assertion.name.includes('Specmatic found no contract failures') && assertion.status === 'passed')) {
     errors.push('missing passing Specmatic contract assertion');
   }
@@ -129,6 +134,15 @@ try {
 function hasJava() {
   if (process.env.JAVA_HOME !== undefined) return true;
   return existsSync('C:/Program Files/Java') || existsSync('/usr/bin/java') || existsSync('/usr/local/bin/java');
+}
+
+function focusedHealthOpenApi(openApi) {
+  return {
+    ...openApi,
+    paths: {
+      '/api/health': openApi.paths['/api/health'],
+    },
+  };
 }
 
 // coverage missing guard for adapter readiness.

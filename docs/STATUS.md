@@ -16,9 +16,9 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - OpenAPI JSON/YAML parsing.
 - Built-in lightweight OpenAPI schema fuzz engine: `brisk-aitesting.schema-fuzz-evidence.v1`.
 - Built-in replay engine for declared HTTP interactions: `brisk-aitesting.replay-evidence.v1`.
-- Keploy-style HTTP replay import/export around the built-in replay engine.
-- Optional Keploy CLI adapter for local record/test flows and generated artifact collection: `brisk-aitesting.keploy-smoke.v1` and `brisk-aitesting.keploy-evidence.v1`.
 - Built-in AsyncAPI message-contract inspection engine: `brisk-aitesting.message-contract-evidence.v1`.
+- Built-in live message-flow engine: `brisk-aitesting.live-message-evidence.v1`.
+- Optional Pact message adapter: `brisk-aitesting.pact-message-smoke.v1` and `brisk-aitesting.pact-message-evidence.v1`.
 - OpenAPI route discovery, schema extraction, generated API scenarios, and response schema validation.
 - Implementation-vs-OpenAPI drift report: `brisk-aitesting.contract-drift.v1`.
 - Playwright UI execution with grounded locator evidence.
@@ -39,7 +39,7 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - Schemathesis adapter readiness now requires real event evidence, selected operations, successful scenarios, saved artifacts, CI workflow wiring, docs, package inclusion, and plugin quality proof.
 - Optional Specmatic contract adapter and run report: `brisk-aitesting.specmatic-smoke.v1` and `brisk-aitesting.specmatic-evidence.v1`.
 - Serious SaaS proof app report: `brisk-aitesting.reference-serious-saas.v1`.
-- API-only, Todo, and multi-tenant proof app report: `brisk-aitesting.reference-proof-apps.v1`.
+- API-only, Todo, multi-tenant, e-commerce, and event/messaging proof app report: `brisk-aitesting.reference-proof-apps.v1`.
 - Golden expected-output report: `brisk-aitesting.golden-fixtures.v1`.
 - Release readiness check and versioned changelog: `brisk-aitesting.release-readiness.v1`.
 - npm package publication path.
@@ -52,7 +52,7 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - Analytics exist as structured summaries and benchmark reports, but richer trend analytics are future work.
 - Business-intent scenarios can be expressed in goals/objectives/assertions, but reusable rule IDs, rule coverage, and contradiction checks are future work.
 - Scenario routing already understands `schema`, `replay`, and `custom` types. Schemathesis covers optional deep OpenAPI checking now. Built-in replay covers declared HTTP interactions.
-- Message/event testing can inspect AsyncAPI channel/message contracts, but live broker execution and Pact compatibility are future work.
+- Message/event testing can inspect AsyncAPI channel/message contracts, run local live message publish/verify flows, and verify Pact message contracts. Broker-specific adapters are future expansion.
 
 ## Not Built Yet
 
@@ -60,16 +60,14 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - AI-generated Playwright code is not accepted.
 - AI-generated selectors are not trusted.
 - Real provider quality is not compared across multiple AI models yet.
-- Built-in Pact or live message-broker adapters.
-- Broader proof coverage for Specmatic service virtualization and Keploy dependency virtualization across larger apps.
-- Full proof app collection beyond serious-saas, API-only, Todo, and multi-tenant.
+- Broader proof coverage for Specmatic service virtualization across larger apps.
+- More enterprise proof apps beyond the current serious-saas, API-only, Todo, multi-tenant, e-commerce, and event/messaging set.
 
 ## Next Work
 
-- Add proof apps: E-commerce and Event/messaging.
 - Add more golden expected outputs for stable plan/result comparison.
 - Add source-route discovery adapters for Python, .NET, Go, Java, and generated-route systems.
-- Add deeper Specmatic stub and Keploy dependency-virtualization proof cases.
-- Add Pact/live message-broker adapter support beyond AsyncAPI inspection.
+- Add deeper Specmatic stub/service-virtualization proof cases.
+- Add broker-specific message adapters for Kafka, RabbitMQ, and cloud queues when those runtimes are selected.
 - Add multi-provider benchmark scoring.
 - Add npm publish workflow automation when release governance is ready.

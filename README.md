@@ -158,7 +158,7 @@ Brisk is designed differently: local, embeddable, evidence-first, and built arou
 |:------------------|:-----------------------|
 | Local by default | Use it inside your own product, CLI, or CI without forcing a hosted dashboard |
 | AI with control | AI proposes structured plans; Brisk validates before execution |
-| Multi-engine core | UI, API, OpenAPI contracts, schema fuzzing, replay, Playwright, Schemathesis, Specmatic, and Keploy can share one pipeline |
+| Multi-engine core | UI, API, OpenAPI contracts, schema fuzzing, replay, Playwright, Schemathesis, Specmatic, and Pact can share one pipeline |
 | Evidence handover | Results come back as versioned JSON your product can store, render, or send to CI |
 | Extensible by design | Custom engines and adapters fit the same result contract |
 
@@ -204,12 +204,11 @@ This section keeps the promise honest: what is built, what is partly built, and 
 | Local SDK/CLI | Built | Use it inside your app or from the command line. No hosted platform required. |
 | Schemathesis OpenAPI deep API checker | Built | Optional Python/Schemathesis engine that sends many real OpenAPI request variations. |
 | Replay engine | Built | Reruns declared HTTP interactions to catch regressions quickly, with evidence in the same result contract. |
-| Message/event testing | Partly built | Built-in AsyncAPI message-contract inspection is available; Pact and live broker execution are not built yet. |
+| Message/event testing | Built | AsyncAPI message-contract inspection, local live publish/verify flows, and Pact message verification are available. |
 | Specmatic adapter | Built | Optional Specmatic CLI engine for provider contract testing and mock/service-virtualization flows, with Brisk evidence output. Requires Java plus the `specmatic` package/runtime. |
-| Keploy compatibility | Built | Keploy-style HTTP cases can import/export, and the optional Keploy CLI engine can run local `keploy record` / `keploy test` flows and collect generated artifacts. Requires the Keploy CLI. |
 | UI healing | Built | If a grounded UI action has stale evidence but clear intent, Brisk captures fresh page evidence, retries once, and records what changed. |
 | Serious SaaS proof app | Built | A real sample product used to prove auth, roles, UI, API, OpenAPI, negative cases, state changes, and saved evidence. |
-| Proof app collection | Partly built | Serious SaaS, API-only, Todo, and multi-tenant proof apps run today; e-commerce and event/messaging proof apps are still pending. |
+| Proof app collection | Built | Serious SaaS, API-only, Todo, multi-tenant, e-commerce, and event/messaging proof apps run today. |
 | Built-in engine quality check | Built | Built-in engines must prove they can run, return the expected result shape, and save evidence. |
 | External engine quality check | Built for engines | Third-party engines must prove routing, result shape, artifact shape, timeout handling, and secret safety before being trusted. |
 | Non-engine extension checks | Built | Discoverer, planner, validator, UI grounder, and AI provider extensions have a conformance gate. |
@@ -229,7 +228,6 @@ These are not future promises anymore:
 | Specmatic contract adapter | Brisk can run Specmatic provider contract checks and collect the result as `brisk-aitesting.specmatic-evidence.v1`. |
 | Built-in schema fuzzing | Brisk can run fast malformed-request checks from OpenAPI request schemas without Python. |
 | Built-in replay engine | Brisk can rerun declared HTTP interactions and show exactly what changed. |
-| Keploy CLI adapter | Brisk can call local Keploy record/test flows and collect generated test, mock, report, and evidence files as `brisk-aitesting.keploy-evidence.v1`. |
 | Adapter readiness gate | If we call an adapter "built", automation checks code, docs, packaging, CI wiring, proof app coverage, and result evidence. |
 | Non-engine extension conformance | Custom discoverers, planners, validators, UI grounders, and AI providers can be checked before teams trust them. |
 | Rejected-action state proof | API scenarios can capture before/after snapshots and prove a rejected action did not change state. |
@@ -242,9 +240,9 @@ These are the real remaining product areas, listed separately so nobody confuses
 
 | Still to build | User impact |
 |:----------------|:------------|
-| More proof apps | More confidence across e-commerce and event-driven systems. |
-| Message adapters | Deeper coverage beyond AsyncAPI inspection, including Pact and live broker execution. |
-| Adapter depth | More behavior checks for Specmatic stubs and Keploy dependency virtualization across larger proof apps. |
+| More golden outputs | More stable expected-result baselines across app shapes. |
+| Message depth | More broker-specific adapters for systems such as Kafka, RabbitMQ, or cloud queues. |
+| Adapter depth | More behavior checks for Specmatic mock/service-virtualization across larger proof apps. |
 
 ## What It Solves
 
@@ -725,20 +723,9 @@ The npm package ships the adapter code. Heavy third-party runtimes stay optional
 | Adapter | What ships with Brisk | What users install only if needed |
 |:--------|:----------------------|:----------------------------------|
 | Specmatic | `SpecmaticContractEngine`, smoke script, workflow, evidence contract | Java plus the optional `specmatic` runtime |
-| Keploy | `KeployCliEngine`, smoke script, workflow, evidence contract | Keploy CLI installed on the host machine or CI image |
 
 Specmatic can test any HTTP/OpenAPI provider. The app under test does not have to be Java. Java is needed because the Specmatic runtime itself is Java-based.
 
-Keploy CLI is not an npm package. Brisk includes `KeployCliEngine`, but the actual `keploy` binary must be installed locally or in CI. If `keploy` is on `PATH`, Brisk will use it. Otherwise set:
-
-```bash
-export BRISK_AITESTING_KEPLOY_COMMAND=keploy
-```
-
-PowerShell:
-
-```powershell
-$env:BRISK_AITESTING_KEPLOY_COMMAND = "keploy"
 ```
 
 <details open>
@@ -1048,7 +1035,7 @@ The AI planner returns JSON shaped as `brisk-aitesting.plan.v1`. The engine then
 
 <br />
 
-> 🧩 **Extensible.** Built-in engines cover UI, API, contract, schema fuzzing, declared HTTP replay, Keploy-style HTTP replay import/export, AsyncAPI message-contract inspection, plus optional Schemathesis, Specmatic, and Keploy CLI adapters. Custom engines can still be plugged in for database, live brokers, mobile, or enterprise-specific systems.
+> 🧩 **Extensible.** Built-in engines cover UI, API, contract, schema fuzzing, declared HTTP replay, AsyncAPI message-contract inspection, plus optional Schemathesis, Specmatic, and Pact adapters. Custom engines can still be plugged in for database, live brokers, mobile, or enterprise-specific systems.
 
 ### 🏭 Controlled Factory Line
 
@@ -1160,8 +1147,6 @@ This may be the most valuable part of the product for enterprise teams. The resu
 | `brisk-aitesting.schemathesis-smoke.v1` | Schemathesis Health Check |
 | `brisk-aitesting.specmatic-evidence.v1` | Specmatic Evidence |
 | `brisk-aitesting.specmatic-smoke.v1` | Specmatic Health Check |
-| `brisk-aitesting.keploy-evidence.v1` | Keploy Evidence |
-| `brisk-aitesting.keploy-smoke.v1` | Keploy Health Check |
 | `brisk-aitesting.reference-serious-saas.v1` | Serious SaaS Proof App |
 | `brisk-aitesting.reference-proof-apps.v1` | Reference Proof Apps |
 | `brisk-aitesting.golden-fixtures.v1` | Golden Expected Outputs |
@@ -1171,6 +1156,9 @@ This may be the most valuable part of the product for enterprise teams. The resu
 | `brisk-aitesting.replay-evidence.v1` | Replay Evidence |
 | `brisk-aitesting.api-evidence.v1` | 📡 API Evidence |
 | `brisk-aitesting.message-contract-evidence.v1` | Message Contract Evidence |
+| `brisk-aitesting.live-message-evidence.v1` | Live Message Evidence |
+| `brisk-aitesting.pact-message-evidence.v1` | Pact Message Evidence |
+| `brisk-aitesting.pact-message-smoke.v1` | Pact Message Health Check |
 | `brisk-aitesting.openapi-summary.v1` | 📜 OpenAPI Summary |
 | `brisk-aitesting.playwright-evidence.v1` | 🎭 Playwright Evidence |
 | `brisk-aitesting.ui-grounding.v1` | 🎯 UI Grounding |
@@ -1239,7 +1227,7 @@ Some command names are developer shorthand, so here is the plain meaning:
 | Non-engine extension quality checks | Make sure custom discovery, planning, validation, UI grounding, and AI provider extensions return the shapes Brisk expects. |
 | Adapter readiness checks | Make sure every adapter marked "built" has code, docs, package files, CI wiring, proof-app coverage, and saved evidence. |
 | Serious SaaS proof app checks | Run Brisk against a real SaaS-style app with auth, roles, UI, API, OpenAPI, negative cases, state changes, and artifacts. |
-| Reference proof app checks | Run Brisk against API-only, Todo, and multi-tenant apps so the product is proven across more than one app shape. |
+| Reference proof app checks | Run Brisk against API-only, Todo, multi-tenant, e-commerce, and event/messaging apps so the product is proven across more than one app shape. |
 | Golden expected-output checks | Compare today's output with known-good output so quiet weakening is caught. |
 | CLI checks | Make sure command-line usage returns the right exit codes and JSON. |
 | AI repair checks | Make sure invalid AI plans are rejected or repaired instead of being blindly executed. |
@@ -1275,19 +1263,20 @@ The adapter is exported as `SpecmaticContractEngine`:
 import { SpecmaticContractEngine } from 'brisk-aitesting';
 ```
 
-Optional Keploy adapter check:
+Optional Pact message adapter check:
 
 ```bash
-npm run smoke:keploy
+npm run smoke:pact
 ```
 
-This runs the real Keploy CLI when Keploy is installed. In simple words: Keploy can record/replay local traffic and dependency behavior; Brisk starts the adapter, collects the generated local Keploy files, and returns `brisk-aitesting.keploy-evidence.v1`.
+This runs real Pact message verification against the event/messaging proof app. In simple words: Pact checks that the provider can produce the event message a consumer contract expects, and Brisk records the result as `brisk-aitesting.pact-message-evidence.v1`.
 
-The adapter is exported as `KeployCliEngine`:
+The adapter is exported as `PactMessageEngine`:
 
 ```ts
-import { KeployCliEngine } from 'brisk-aitesting';
+import { PactMessageEngine } from 'brisk-aitesting';
 ```
+
 
 Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads `adapters/manifest.json` and checks the adapter like a shipping checklist: source code exists, exports exist, docs mention it, package includes it, CI can run it, proof-app coverage exists, quality checks pass, and evidence is saved. It emits `brisk-aitesting.adapter-readiness.v1` for machines to read.
 
@@ -1295,11 +1284,14 @@ Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads 
 
 | Check | Description |
 |:-----:|:------------|
+| Config safety | Brisk should reject missing app settings, unsafe API-key handling, and invalid retry settings. |
 | Broken contract files | Brisk should explain the problem instead of crashing. |
+| OpenAPI and schema behavior | Brisk should parse JSON/YAML contracts, resolve nested refs, and create valid/invalid schema examples. |
 | Contract drift | Brisk should report implemented-but-undocumented, documented-but-missing, and matched API routes. |
-| Bad AI output | Brisk should reject messy AI responses instead of running unsafe tests. |
-| Wrong response shape | Brisk should catch when an API returns the wrong JSON shape. |
-| Undocumented HTTP status | Brisk should catch when an API returns a status code missing from the contract. |
+| Bad AI output | Brisk should repair common AI formatting issues, normalize aliases, and reject unsafe plan shapes. |
+| Plan validation | Brisk should block duplicate IDs, invalid routes, bad UI evidence IDs, unsupported message targets, and extra fields. |
+| API execution | Brisk should check status values, response bodies, text responses, OpenAPI schemas, and rejected-action unchanged state. |
+| Replay | Brisk should rerun declared HTTP interactions and skip empty replay plans clearly. |
 | Blocked network calls | Brisk should respect the configured network boundary. |
 | CLI setup errors | Brisk should give clear setup errors and the right exit code. |
 
@@ -1378,7 +1370,7 @@ Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads 
   </tr>
   <tr>
     <td>🧪</td>
-    <td>API-only, Todo, and multi-tenant proof apps</td>
+    <td>API-only, Todo, multi-tenant, e-commerce, and event/messaging proof apps</td>
     <td>🔌</td>
     <td>Non-engine extension quality checks</td>
   </tr>
@@ -1397,25 +1389,25 @@ Adapter readiness is not trusted by text alone. `smoke:adapter-readiness` reads 
 <table>
   <tr>
     <td>📦</td>
-    <td>E-commerce and event/messaging proof apps</td>
-    <td>🏆</td>
     <td>Multi-provider benchmark scoring</td>
+    <td>🏆</td>
+    <td>Built-in analytics module</td>
   </tr>
   <tr>
     <td>📊</td>
-    <td>Built-in analytics module</td>
-    <td>📚</td>
     <td>More framework-specific examples</td>
+    <td>📚</td>
+    <td>More golden expected outputs</td>
   </tr>
   <tr>
     <td>🧪</td>
-    <td>More golden expected outputs</td>
+    <td>More enterprise proof apps</td>
     <td>🔁</td>
-    <td>Deeper Keploy dependency virtualization proof</td>
+    <td>Richer replay diff artifacts</td>
   </tr>
   <tr>
     <td>📨</td>
-    <td>Pact and live message-broker adapters beyond AsyncAPI inspection</td>
+    <td>Broker-specific message adapters beyond AsyncAPI, live-message hooks, and Pact files</td>
     <td>🩹</td>
     <td>Deeper multi-page UI resilience and flake analysis</td>
   </tr>

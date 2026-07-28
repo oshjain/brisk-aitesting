@@ -4,6 +4,8 @@ import { createBriskAiTesting, defineConfig } from '../dist/index.js';
 import { createApiOnlyServer } from '../reference-apps/api-only/server.mjs';
 import { createTodoServer } from '../reference-apps/todo/server.mjs';
 import { createMultiTenantServer } from '../reference-apps/multi-tenant/server.mjs';
+import { createEcommerceServer } from '../reference-apps/e-commerce/server.mjs';
+import { createEventMessagingServer } from '../reference-apps/event-messaging/server.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const packageDir = dirname(here);
@@ -32,6 +34,23 @@ const apps = [
     openApiPath: join(packageDir, 'reference-apps', 'multi-tenant', 'openapi.json'),
     scenarios: multiTenantScenarios,
     expected: { total: 7, types: ['ui', 'api', 'contract', 'schema'] },
+  },
+  {
+    id: 'e-commerce',
+    name: 'E-commerce reference app',
+    createServer: createEcommerceServer,
+    openApiPath: join(packageDir, 'reference-apps', 'e-commerce', 'openapi.json'),
+    scenarios: ecommerceScenarios,
+    expected: { total: 8, types: ['ui', 'api', 'contract', 'schema'] },
+  },
+  {
+    id: 'event-messaging',
+    name: 'Event/messaging reference app',
+    createServer: createEventMessagingServer,
+    openApiPath: join(packageDir, 'reference-apps', 'event-messaging', 'openapi.json'),
+    asyncApiPath: join(packageDir, 'reference-apps', 'event-messaging', 'asyncapi.json'),
+    scenarios: eventMessagingScenarios,
+    expected: { total: 10, types: ['ui', 'api', 'contract', 'schema', 'message'] },
   },
 ];
 
@@ -76,7 +95,7 @@ async function runApp(app, baseUrl) {
   const config = defineConfig({
     app: { name: app.name, baseUrl, repoPath: packageDir, env: 'local' },
     auth: { type: 'none' },
-    contracts: { openApiPath: app.openApiPath },
+    contracts: { openApiPath: app.openApiPath, ...(app.asyncApiPath !== undefined ? { asyncApiPath: app.asyncApiPath } : {}) },
     runtime: { artifactsDir: `.brisk-aitesting-reference-${app.id}/artifacts`, timeoutMs: 30000, retries: 0, headless: true, dryRun: false },
     discovery: { includeRepo: false, includeUi: true, includeApi: false, includeContracts: true },
     security: { networkPolicy: 'localhost-only', allowedHosts: ['localhost', '127.0.0.1', '::1'], redactSecrets: true },
@@ -90,7 +109,7 @@ async function runApp(app, baseUrl) {
         goal: context.input.goal,
         mode: 'automatic',
         discovery: context.discovery,
-        scenarios: app.scenarios(app.openApiPath),
+        scenarios: app.scenarios(app.openApiPath, app.asyncApiPath),
         warnings: [],
         createdAt: new Date().toISOString(),
       };
@@ -114,6 +133,7 @@ function validateAppResult(app, result) {
   if (app.expected.types.includes('ui') && !result.artifacts.some((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.playwright-evidence.v1')) appErrors.push('missing Playwright evidence');
   if (app.expected.types.includes('schema') && !result.artifacts.some((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.schema-fuzz-evidence.v1')) appErrors.push('missing schema fuzz evidence');
   if (app.expected.types.includes('replay') && !result.artifacts.some((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.replay-evidence.v1')) appErrors.push('missing replay evidence');
+  if (app.expected.types.includes('message') && !result.artifacts.some((artifact) => ['brisk-aitesting.message-contract-evidence.v1', 'brisk-aitesting.live-message-evidence.v1'].includes(artifact.metadata?.schemaVersion))) appErrors.push('missing message evidence');
   return appErrors;
 }
 
@@ -152,6 +172,34 @@ function multiTenantScenarios(openApiPath) {
   ];
 }
 
+function ecommerceScenarios(openApiPath) {
+  return [
+    ui('commerce_ui_home', 'commerce homepage loads', '/'),
+    api('commerce_health', 'commerce health works', 'GET', '/api/health', undefined, { status: 200, json: { service: 'e-commerce' } }),
+    api('commerce_products', 'products can be listed', 'GET', '/api/products', undefined, { status: 200, json: { total: 2 } }),
+    api('commerce_add_item', 'available item can be added to cart', 'POST', '/api/carts/cart_main/items', { body: { productId: 'prod_keyboard', quantity: 2 } }, { status: 201, json: { totalItems: 2, total: 258 } }),
+    api('commerce_out_of_stock', 'out of stock product is rejected and cart stays unchanged', 'POST', '/api/carts/cart_main/items', { body: { productId: 'prod_monitor', quantity: 1 } }, { status: 409, json: { 'error.code': 'OUT_OF_STOCK' }, unchanged: [{ name: 'cart_main', target: { method: 'GET', path: '/api/carts/cart_main' }, json: { totalItems: 2, total: 258 } }] }),
+    api('commerce_checkout', 'cart can be checked out', 'POST', '/api/carts/cart_main/checkout', undefined, { status: 201, json: { 'order.status': 'confirmed', 'order.total': 258 } }),
+    contract('commerce_contract', 'E-commerce OpenAPI parses', openApiPath),
+    schema('commerce_schema_fuzz', 'E-commerce schema rejects malformed requests', openApiPath),
+  ];
+}
+
+function eventMessagingScenarios(openApiPath, asyncApiPath) {
+  return [
+    ui('event_ui_home', 'event messaging homepage loads', '/'),
+    ui('event_ui_playground', 'messaging playground loads', '/playground'),
+    api('event_channels', 'channels can be listed', 'GET', '/api/channels', undefined, { status: 200, json: { total: 1 } }),
+    api('event_create_channel', 'channel can be created', 'POST', '/api/channels', { body: { name: 'Payments' } }, { status: 201, json: { 'channel.name': 'Payments' } }),
+    api('event_create_topic', 'topic can be created under default channel', 'POST', '/api/channels/channel_default/topics', { body: { name: 'payments.received' } }, { status: 201, json: { 'topic.name': 'payments.received' } }),
+    messageContract('event_asyncapi_contract', 'AsyncAPI contract exposes order event channel', asyncApiPath, 'orders.created'),
+    liveMessage('event_publish_delivery', 'published message reaches subscribers', asyncApiPath),
+    api('event_metrics', 'metrics show publish and delivery activity', 'GET', '/api/metrics', undefined, { status: 200, json: { published: 1, delivered: 1 } }),
+    contract('event_contract', 'Event messaging OpenAPI parses', openApiPath),
+    schema('event_schema_fuzz', 'Event messaging schema rejects malformed requests', openApiPath),
+  ];
+}
+
 function ui(id, name, route) {
   return { id, name, type: 'ui', objective: name, target: { route }, assertions: ['body is visible'], evidenceRequired: ['ui'] };
 }
@@ -170,4 +218,45 @@ function schema(id, name, schemaPath) {
 
 function replay(id, name, requests) {
   return { id, name, type: 'replay', objective: name, assertions: ['recorded HTTP interaction replays'], evidenceRequired: ['api'], metadata: { replay: { requests } } };
+}
+
+function liveMessage(id, name, schemaPath) {
+  return {
+    id,
+    name,
+    type: 'message',
+    objective: name,
+    target: { schema: schemaPath, channel: 'orders.created' },
+    assertions: ['message is published and delivered'],
+    evidenceRequired: ['message', 'api'],
+    metadata: {
+      adapter: 'live-message',
+      liveMessage: {
+        publish: {
+          method: 'POST',
+          path: '/api/topics/topic_default/messages',
+          body: { payload: { orderId: 'order_1', amount: 42 } },
+          expect: { status: 202, json: { delivered: 1 } },
+        },
+        verify: {
+          method: 'GET',
+          path: '/api/subscriptions/sub_default/messages',
+          expect: { status: 200, json: { total: 1 } },
+        },
+        poll: { attempts: 5, intervalMs: 25 },
+      },
+    },
+  };
+}
+
+function messageContract(id, name, schemaPath, channel) {
+  return {
+    id,
+    name,
+    type: 'message',
+    objective: name,
+    target: { schema: schemaPath, channel },
+    assertions: ['message contract exposes expected channel and payload'],
+    evidenceRequired: ['message', 'schema'],
+  };
 }

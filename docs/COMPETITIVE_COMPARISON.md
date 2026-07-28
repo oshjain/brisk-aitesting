@@ -395,7 +395,7 @@ Brisk is designed for a different job.
   <tr>
     <td width="33%"><strong>&#127919; Embeddable by design</strong><br />Brisk can sit inside a SaaS product, internal platform, developer portal, or CI pipeline.</td>
     <td width="33%"><strong>&#128737; AI with control</strong><br />AI proposes the plan. Brisk validates, normalizes, routes, and executes through engines.</td>
-    <td width="33%"><strong>&#128230; One evidence shape</strong><br />UI, API, OpenAPI, Schemathesis, Specmatic, Keploy, artifacts, assertions, diagnostics, and final results return through a stable contract.</td>
+    <td width="33%"><strong>&#128230; One evidence shape</strong><br />UI, API, OpenAPI, Schemathesis, Specmatic, Pact, artifacts, assertions, diagnostics, and final results return through a stable contract.</td>
   </tr>
 </table>
 
@@ -430,7 +430,7 @@ Brisk includes a local benchmark command:
 npm run benchmark
 ```
 
-Current benchmark coverage is 10 cases across config safety, OpenAPI parsing, discovery warnings, implementation-contract drift detection, AI plan parsing, API schema validation, undocumented status detection, network policy, and CLI behavior.
+Current benchmark coverage is 57 cases across config safety, OpenAPI parsing, schema generation, discovery warnings, implementation-contract drift detection, AI response handling, plan validation, API execution, replay, network policy, and CLI behavior.
 
 This is Brisk's internal proof line. A full public benchmark should add repeated UI flakiness runs, exact business-value checks, state-unchanged checks, changed-selector checks, and cross-vendor execution on the same benchmark app.
 

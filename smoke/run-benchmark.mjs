@@ -5,18 +5,26 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  BuiltinPlanValidator,
   BuiltinDiscoverer,
+  createInvalidSchemaExample,
   createBriskAiTesting,
+  createSchemaExample,
   defineConfig,
+  defineConfigFromHost,
   loadOpenApiSummary,
+  mergeConfig,
   normalizeConfig,
   parseAiPlanForTesting,
+  validateJsonSchema,
+  validatePlanJsonContract,
 } from '../dist/index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const packageDir = dirname(here);
 const workDir = join(packageDir, '.brisk-aitesting-benchmark');
 const reportPath = join(workDir, 'benchmark-report.json');
+const minimumBenchmarkCases = 50;
 
 await rm(workDir, { recursive: true, force: true });
 await mkdir(workDir, { recursive: true });
@@ -54,14 +62,41 @@ await writeFile(join(workDir, 'src', 'nest-controller.ts'), [
 ].join('\n'), 'utf8');
 
 const server = createServer(async (request, response) => {
-  if (request.url === '/api/wrong-schema') {
+  const url = new URL(request.url ?? '/', 'http://127.0.0.1');
+  if (url.pathname === '/api/wrong-schema') {
     response.writeHead(200, { 'content-type': 'application/json' });
     response.end(JSON.stringify({ ok: 'not-a-boolean' }));
     return;
   }
-  if (request.url === '/api/undocumented-status') {
+  if (url.pathname === '/api/undocumented-status') {
     response.writeHead(418, { 'content-type': 'application/json' });
     response.end(JSON.stringify({ ok: true }));
+    return;
+  }
+  if (url.pathname === '/api/query') {
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.end(JSON.stringify({ mode: url.searchParams.get('mode') ?? 'missing' }));
+    return;
+  }
+  if (url.pathname === '/api/echo' && request.method === 'POST') {
+    const body = await readJson(request);
+    response.writeHead(201, { 'content-type': 'application/json' });
+    response.end(JSON.stringify({ received: body }));
+    return;
+  }
+  if (url.pathname === '/api/text') {
+    response.writeHead(200, { 'content-type': 'text/plain' });
+    response.end('hello brisk');
+    return;
+  }
+  if (url.pathname === '/api/state') {
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.end(JSON.stringify({ count: 3 }));
+    return;
+  }
+  if (url.pathname === '/api/rejected-action' && request.method === 'POST') {
+    response.writeHead(409, { 'content-type': 'application/json' });
+    response.end(JSON.stringify({ error: { code: 'LOCKED' } }));
     return;
   }
   response.writeHead(404, { 'content-type': 'application/json' });
@@ -96,6 +131,8 @@ try {
     },
   });
 
+  await runBenchmarkGroup(cases, configBenchmarkCases(baseUrl));
+
   await benchmark(cases, {
     id: 'openapi.malformed-yaml-fails',
     area: 'openapi',
@@ -120,6 +157,8 @@ try {
       return { passed, observed: JSON.stringify({ operations: summary.operations.length, diagnostics: summary.diagnostics }) };
     },
   });
+
+  await runBenchmarkGroup(cases, openApiBenchmarkCases(baseUrl, contractPath));
 
   await benchmark(cases, {
     id: 'discovery.missing-openapi-reported',
@@ -192,6 +231,9 @@ try {
     },
   });
 
+  await runBenchmarkGroup(cases, aiParserBenchmarkCases(baseUrl));
+  await runBenchmarkGroup(cases, validationBenchmarkCases(baseUrl));
+
   await benchmark(cases, {
     id: 'api.response-schema-mismatch-fails',
     area: 'api',
@@ -233,6 +275,8 @@ try {
     },
   });
 
+  await runBenchmarkGroup(cases, apiRuntimeBenchmarkCases(baseUrl, contractPath));
+
   await benchmark(cases, {
     id: 'security.network-policy-blocks-disallowed-host',
     area: 'security',
@@ -265,10 +309,22 @@ try {
       return { passed, observed: JSON.stringify(cli) };
     },
   });
+
+  await runBenchmarkGroup(cases, cliBenchmarkCases(baseUrl));
 } finally {
   await new Promise((resolve) => server.close(resolve));
 }
 
+if (cases.length < minimumBenchmarkCases) {
+  cases.push({
+    id: 'benchmark.minimum-case-count',
+    area: 'benchmark',
+    status: 'failed',
+    expected: `benchmark suite has at least ${minimumBenchmarkCases} meaningful cases`,
+    observed: `only ${cases.length} cases were registered`,
+    durationMs: 0,
+  });
+}
 const passed = cases.filter((entry) => entry.status === 'passed').length;
 const failed = cases.filter((entry) => entry.status === 'failed').length;
 const report = {
@@ -311,6 +367,12 @@ async function benchmark(cases, testCase) {
   }
 }
 
+async function runBenchmarkGroup(cases, testCases) {
+  for (const testCase of testCases) {
+    await benchmark(cases, testCase);
+  }
+}
+
 async function plannerContext(baseUrl) {
   const config = normalizeConfig(defineConfig({
     app: { name: 'planner context', baseUrl },
@@ -319,6 +381,321 @@ async function plannerContext(baseUrl) {
   const runId = `bench_${randomUUID()}`;
   const discovery = await new BuiltinDiscoverer().discover({ config, input: { goal: 'planner context' }, runId });
   return { config, input: { goal: 'planner context', scenarios: 1, mode: 'automatic' }, runId, discovery };
+}
+
+function configBenchmarkCases(baseUrl) {
+  return [
+    {
+      id: 'config.normalizes-trailing-base-url-slashes',
+      area: 'config',
+      expected: 'baseUrl is normalized without trailing slashes',
+      run: async () => {
+        const config = normalizeConfig(defineConfig({ app: { name: 'slash app', baseUrl: `${baseUrl}///` } }));
+        return { passed: config.app.baseUrl === baseUrl, observed: config.app.baseUrl };
+      },
+    },
+    {
+      id: 'config.defaults-runtime-security-discovery',
+      area: 'config',
+      expected: 'runtime, discovery, auth, and security defaults are filled',
+      run: async () => {
+        const config = normalizeConfig(defineConfig({ app: { name: 'defaults app', baseUrl } }));
+        const passed = config.auth.type === 'none'
+          && config.runtime.timeoutMs === 120000
+          && config.runtime.retries === 1
+          && config.discovery.includeRepo === true
+          && config.security.networkPolicy === 'localhost-only';
+        return { passed, observed: JSON.stringify({ auth: config.auth, runtime: config.runtime, discovery: config.discovery, security: config.security }) };
+      },
+    },
+    {
+      id: 'config.rejects-empty-app-name',
+      area: 'config',
+      expected: 'empty app.name is rejected',
+      run: async () => {
+        const error = captureError(() => normalizeConfig(defineConfig({ app: { name: ' ', baseUrl } })));
+        return { passed: /app\.name is required/.test(error), observed: error };
+      },
+    },
+    {
+      id: 'config.rejects-empty-base-url',
+      area: 'config',
+      expected: 'empty app.baseUrl is rejected',
+      run: async () => {
+        const error = captureError(() => normalizeConfig(defineConfig({ app: { name: 'bad url', baseUrl: ' ' } })));
+        return { passed: /app\.baseUrl is required/.test(error), observed: error };
+      },
+    },
+    {
+      id: 'config.rejects-empty-ai-model',
+      area: 'config',
+      expected: 'AI config requires a non-empty model',
+      run: async () => {
+        const error = captureError(() => normalizeConfig(defineConfig({ app: { name: 'bad model', baseUrl }, ai: { provider: 'openai-compatible', model: ' ' } })));
+        return { passed: /ai\.model is required/.test(error), observed: error };
+      },
+    },
+    {
+      id: 'config.rejects-negative-repair-attempts',
+      area: 'config',
+      expected: 'negative repairAttempts are rejected',
+      run: async () => {
+        const error = captureError(() => normalizeConfig(defineConfig({ app: { name: 'bad repair', baseUrl }, ai: { provider: 'openai-compatible', model: 'm', repairAttempts: -1 } })));
+        return { passed: /repairAttempts/.test(error), observed: error };
+      },
+    },
+    {
+      id: 'config.rejects-too-many-repair-attempts',
+      area: 'config',
+      expected: 'repairAttempts above the allowed limit are rejected',
+      run: async () => {
+        const error = captureError(() => normalizeConfig(defineConfig({ app: { name: 'bad repair high', baseUrl }, ai: { provider: 'openai-compatible', model: 'm', repairAttempts: 99 } })));
+        return { passed: /repairAttempts/.test(error), observed: error };
+      },
+    },
+    {
+      id: 'config.merge-preserves-nested-values',
+      area: 'config',
+      expected: 'mergeConfig preserves nested values while applying overrides',
+      run: async () => {
+        const merged = mergeConfig(
+          defineConfig({ app: { name: 'base', baseUrl }, ai: { provider: 'openai-compatible', model: 'old', endpoint: 'http://ai.local' } }),
+          { app: { name: 'override', baseUrl }, ai: { model: 'new' } },
+        );
+        const passed = merged.app.name === 'override' && merged.ai?.provider === 'openai-compatible' && merged.ai.endpoint === 'http://ai.local' && merged.ai.model === 'new';
+        return { passed, observed: JSON.stringify(merged.ai) };
+      },
+    },
+    {
+      id: 'config.host-bridge-maps-source-config',
+      area: 'config',
+      expected: 'defineConfigFromHost maps host config without duplicating setup',
+      run: async () => {
+        const host = { product: 'Host Product', urls: { test: baseUrl }, ai: { model: 'host-model' } };
+        const config = defineConfigFromHost(host, (source) => ({ app: { name: source.product, baseUrl: source.urls.test }, ai: { provider: 'openai-compatible', model: source.ai.model } }));
+        const passed = config.app.name === 'Host Product' && config.ai?.model === 'host-model';
+        return { passed, observed: JSON.stringify(config) };
+      },
+    },
+  ];
+}
+
+function openApiBenchmarkCases(baseUrl, contractPath) {
+  return [
+    {
+      id: 'openapi.json-summary-has-title-version-and-operations',
+      area: 'openapi',
+      expected: 'OpenAPI JSON summary preserves title, version, and operations',
+      run: async () => {
+        const summary = await loadOpenApiSummary(contractPath);
+        const passed = summary.title === 'Benchmark API' && summary.version === '1.0.0' && summary.operations.length >= 7;
+        return { passed, observed: JSON.stringify({ title: summary.title, version: summary.version, operations: summary.operations.length }) };
+      },
+    },
+    {
+      id: 'openapi.valid-yaml-parses',
+      area: 'openapi',
+      expected: 'valid YAML OpenAPI files parse successfully',
+      run: async () => {
+        const yamlPath = join(workDir, 'valid-openapi.yaml');
+        await writeFile(yamlPath, ['openapi: 3.0.3', 'info:', '  title: YAML API', '  version: 1.0.0', 'paths:', '  /api/yaml:', '    get:', '      responses:', '        "204":', '          description: ok'].join('\n'), 'utf8');
+        const summary = await loadOpenApiSummary(yamlPath);
+        return { passed: summary.format === 'yaml' && summary.operations[0]?.statusCodes[0] === 204, observed: JSON.stringify(summary) };
+      },
+    },
+    {
+      id: 'openapi.nested-response-refs-are-resolved',
+      area: 'openapi',
+      expected: 'nested response schema refs are resolved before AJV validation',
+      run: async () => {
+        const summary = await loadOpenApiSummary(contractPath);
+        const operation = summary.operations.find((entry) => entry.path === '/api/nested-ref');
+        const schema = operation?.responseSchemas[0]?.schema;
+        const validation = validateJsonSchema(schema, { wrapper: { id: 'a', nested: { ok: true } } });
+        return { passed: validation.valid, observed: JSON.stringify({ schema, errors: validation.errors }) };
+      },
+    },
+    {
+      id: 'openapi.request-example-created-from-required-fields',
+      area: 'openapi',
+      expected: 'request examples are generated from required schema fields',
+      run: async () => {
+        const summary = await loadOpenApiSummary(contractPath);
+        const operation = summary.operations.find((entry) => entry.path === '/api/echo');
+        const passed = operation?.requestExample?.name === 'example' && operation.requestBodyRequired === true;
+        return { passed, observed: JSON.stringify(operation?.requestExample) };
+      },
+    },
+    {
+      id: 'openapi.invalid-request-example-created',
+      area: 'openapi',
+      expected: 'invalid request examples are generated for schema fuzzing',
+      run: async () => {
+        const summary = await loadOpenApiSummary(contractPath);
+        const operation = summary.operations.find((entry) => entry.path === '/api/echo');
+        const passed = operation?.invalidRequestExample !== undefined && !validateJsonSchema(operation.requestSchema, operation.invalidRequestExample).valid;
+        return { passed, observed: JSON.stringify(operation?.invalidRequestExample) };
+      },
+    },
+    {
+      id: 'schema.create-object-example',
+      area: 'schema',
+      expected: 'schema example generation fills object properties',
+      run: async () => {
+        const example = createSchemaExample({ type: 'object', required: ['email'], properties: { email: { type: 'string', format: 'email' }, active: { type: 'boolean' } } });
+        return { passed: example.email === 'user@example.com', observed: JSON.stringify(example) };
+      },
+    },
+    {
+      id: 'schema.create-invalid-number-example',
+      area: 'schema',
+      expected: 'invalid example generation breaks numeric schemas',
+      run: async () => {
+        const invalid = createInvalidSchemaExample({ type: 'integer', minimum: 1 });
+        const validation = validateJsonSchema({ type: 'integer', minimum: 1 }, invalid);
+        return { passed: invalid === 'not-a-number' && !validation.valid, observed: JSON.stringify({ invalid, validation }) };
+      },
+    },
+    {
+      id: 'schema.enum-example-uses-first-value',
+      area: 'schema',
+      expected: 'enum examples use a valid enum member',
+      run: async () => {
+        const example = createSchemaExample({ type: 'string', enum: ['draft', 'sent'] });
+        return { passed: example === 'draft', observed: String(example) };
+      },
+    },
+  ];
+}
+
+function aiParserBenchmarkCases(baseUrl) {
+  return [
+    aiCase(baseUrl, 'ai-parser.extracts-fenced-json', 'fenced JSON is extracted', '```json\n{ "scenarios": [{ "name": "Fenced", "type": "api", "target": { "method": "GET", "path": "/api/query" }, "assertions": ["runs"], "evidenceRequired": ["api"] }] }\n```', (plan) => plan.scenarios[0]?.name === 'Fenced'),
+    aiCase(baseUrl, 'ai-parser.repairs-unquoted-keys', 'simple unquoted keys are repaired', '{ scenarios: [{ name: "Unquoted", type: "backend", target: { method: "GET", path: "/api/query" }, assertions: ["runs"], evidenceRequired: ["api"] }] }', (plan) => plan.scenarios[0]?.type === 'api'),
+    aiCase(baseUrl, 'ai-parser.repairs-trailing-commas', 'trailing commas are repaired', '{ "scenarios": [{ "name": "Comma", "type": "api", "target": { "method": "GET", "path": "/api/query", }, "assertions": ["runs"], "evidenceRequired": ["api"], }, ], }', (plan) => plan.scenarios[0]?.target?.path === '/api/query'),
+    aiCase(baseUrl, 'ai-parser.unwraps-plan-object', 'plan wrapper objects are unwrapped', '{ "plan": { "scenarios": [{ "name": "Wrapped", "type": "api", "target": { "method": "GET", "path": "/api/query" }, "assertions": ["runs"], "evidenceRequired": ["api"] }] } }', (plan) => plan.scenarios[0]?.name === 'Wrapped'),
+    aiCase(baseUrl, 'ai-parser.backend-alias-becomes-api', 'backend alias routes to API', '{ "scenarios": [{ "name": "Backend", "type": "backend", "target": { "method": "GET", "path": "/api/query" }, "assertions": ["runs"], "evidenceRequired": ["api"] }] }', (plan) => plan.scenarios[0]?.type === 'api'),
+    aiCase(baseUrl, 'ai-parser.e2e-alias-becomes-ui', 'e2e alias routes to UI', '{ "scenarios": [{ "name": "Browser", "type": "e2e", "target": { "route": "/" }, "assertions": ["runs"], "evidenceRequired": ["ui"] }] }', (plan) => plan.scenarios[0]?.type === 'ui'),
+    aiCase(baseUrl, 'ai-parser.integration-alias-becomes-ui', 'integration alias routes to UI', '{ "scenarios": [{ "name": "Integration", "type": "integration", "target": { "route": "/" }, "assertions": ["runs"], "evidenceRequired": ["ui"] }] }', (plan) => plan.scenarios[0]?.type === 'ui'),
+    aiCase(baseUrl, 'ai-parser.asyncapi-alias-becomes-message', 'asyncapi alias routes to message', '{ "scenarios": [{ "name": "Message", "type": "asyncapi", "target": { "schema": "asyncapi.json", "channel": "orders.created" }, "assertions": ["runs"], "evidenceRequired": ["message"] }] }', (plan) => plan.scenarios[0]?.type === 'message'),
+    aiCase(baseUrl, 'ai-parser.status-string-becomes-number', 'status strings are normalized', '{ "scenarios": [{ "name": "Status", "type": "api", "target": { "method": "GET", "path": "/api/query" }, "expect": { "status": "200" }, "assertions": ["runs"], "evidenceRequired": ["api"] }] }', (plan) => plan.scenarios[0]?.expect?.status === 200),
+    aiCase(baseUrl, 'ai-parser.url-target-normalized-to-path', 'absolute URL targets become paths', `{ "scenarios": [{ "name": "URL", "type": "api", "target": { "method": "GET", "url": "${baseUrl}/api/query?mode=fast" }, "assertions": ["runs"], "evidenceRequired": ["api"] }] }`, (plan) => plan.scenarios[0]?.target?.path === '/api/query'),
+    aiCase(baseUrl, 'ai-parser.ui-action-aliases-normalized', 'UI action aliases are normalized to supported actions', '{ "scenarios": [{ "name": "Actions", "type": "ui", "target": { "route": "/" }, "steps": [{ "type": "type", "elementId": "ui_el_001", "text": "hello" }, { "type": "tap", "elementId": "ui_el_002" }], "assertions": ["runs"], "evidenceRequired": ["ui"] }] }', (plan) => plan.scenarios[0]?.uiActions?.[0]?.action === 'fill' && plan.scenarios[0]?.uiActions?.[1]?.action === 'click'),
+  ];
+}
+
+function validationBenchmarkCases(baseUrl) {
+  const validator = new BuiltinPlanValidator();
+  return [
+    validationCase(baseUrl, validator, 'validation.duplicate-scenario-id-fails', 'duplicate scenario ids are rejected', (plan) => ({ ...plan, scenarios: [apiScenario('dup'), apiScenario('dup')] }), /DUPLICATE_ID/),
+    validationCase(baseUrl, validator, 'validation.api-missing-path-fails', 'API scenarios need paths', (plan) => ({ ...plan, scenarios: [{ ...apiScenario('api_missing_path'), target: { method: 'GET' } }] }), /REQUIRED_API_PATH/),
+    validationCase(baseUrl, validator, 'validation.ui-route-must-start-with-slash', 'UI routes must start with slash', (plan) => ({ ...plan, scenarios: [{ ...uiScenario('bad_ui'), target: { route: 'dashboard' } }] }), /REQUIRED_UI_ROUTE/),
+    validationCase(baseUrl, validator, 'validation.message-channel-required', 'message scenarios require channel', (plan) => ({ ...plan, scenarios: [{ ...messageScenario('bad_message'), target: { schema: 'asyncapi.json' } }] }), /REQUIRED_MESSAGE_CHANNEL/),
+    validationCase(baseUrl, validator, 'validation.bad-ui-evidence-id-fails', 'UI actions need evidence IDs', (plan) => ({ ...plan, scenarios: [{ ...uiScenario('bad_action'), uiActions: [{ action: 'click', evidenceId: 'button1' }] }] }), /PLAN_CONTRACT_INVALID_SHAPE|INVALID_UI_EVIDENCE_ID/),
+    validationCase(baseUrl, validator, 'validation.unchanged-only-api', 'unchanged state checks are API-only', (plan) => ({ ...plan, scenarios: [{ ...uiScenario('bad_unchanged'), expect: { unchanged: [{ target: { path: '/api/state' } }] } }] }), /UNCHANGED_ON_NON_API_SCENARIO/),
+    validationCase(baseUrl, validator, 'validation.required-type-is-enforced', 'requiredTypes input is enforced', (plan) => ({ ...plan, scenarios: [apiScenario('only_api')] }), /MISSING_REQUIRED_TYPE/, { requiredTypes: ['message'] }),
+    {
+      id: 'validation.public-contract-blocks-extra-step-key',
+      area: 'validation',
+      expected: 'public plan contract rejects unrecognized scenario keys',
+      run: async () => {
+        const issues = validatePlanJsonContract({ ...basePlan(baseUrl), scenarios: [{ ...apiScenario('extra_key'), headers: { authorization: 'Bearer secret' } }] });
+        return { passed: issues.some((issue) => issue.code === 'PLAN_CONTRACT_UNRECOGNIZED_KEY'), observed: JSON.stringify(issues) };
+      },
+    },
+  ];
+}
+
+function apiRuntimeBenchmarkCases(baseUrl, contractPath) {
+  return [
+    apiRunCase(baseUrl, contractPath, 'api.query-expectation-passes', 'query params are sent and asserted', { ...apiScenario('api_query'), target: { method: 'GET', path: '/api/query' }, request: { query: { mode: 'fast' } }, expect: { status: 200, json: { mode: 'fast' } } }, (result) => result.status === 'passed'),
+    apiRunCase(baseUrl, contractPath, 'api.post-body-is-serialized', 'JSON bodies are serialized and echoed', { ...apiScenario('api_echo'), target: { method: 'POST', path: '/api/echo' }, request: { body: { name: 'Brisk' } }, expect: { status: 201, json: { 'received.name': 'Brisk' } } }, (result) => result.status === 'passed'),
+    apiRunCase(baseUrl, contractPath, 'api.contains-text-assertion-passes', 'text response contains checks work', { ...apiScenario('api_text'), target: { method: 'GET', path: '/api/text' }, expect: { status: 200, contains: 'hello brisk' } }, (result) => result.status === 'passed'),
+    apiRunCase(baseUrl, contractPath, 'api.rejected-action-state-unchanged-passes', 'before/after snapshots prove rejected actions do not mutate state', { ...apiScenario('api_rejected_state'), target: { method: 'POST', path: '/api/rejected-action' }, expect: { status: 409, json: { 'error.code': 'LOCKED' }, unchanged: [{ target: { method: 'GET', path: '/api/state' }, json: { count: 3 } }] } }, (result) => result.status === 'passed'),
+    apiRunCase(baseUrl, contractPath, 'api.expected-status-array-passes', 'status arrays are accepted', { ...apiScenario('api_status_array'), target: { method: 'GET', path: '/api/query' }, expect: { status: [200, 204] } }, (result) => result.status === 'passed'),
+    apiRunCase(baseUrl, contractPath, 'api.expected-status-range-passes', 'status ranges are accepted', { ...apiScenario('api_status_range'), target: { method: 'GET', path: '/api/query' }, expect: { status: { min: 200, max: 299 } } }, (result) => result.status === 'passed'),
+    apiRunCase(baseUrl, undefined, 'replay.native-http-replay-passes', 'built-in replay reruns declared HTTP interactions', { id: 'replay_query', name: 'Replay query', type: 'replay', objective: 'Replay query request.', assertions: ['replay works'], evidenceRequired: ['api'], metadata: { replay: { requests: [{ method: 'GET', path: '/api/query?mode=fast', expectStatus: 200 }] } } }, (result) => result.status === 'passed' && result.artifacts.some((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.replay-evidence.v1')),
+    apiRunCase(baseUrl, undefined, 'replay.empty-requests-skips', 'replay scenarios without requests skip cleanly', { id: 'replay_empty', name: 'Empty replay', type: 'replay', objective: 'Empty replay should skip.', assertions: ['skip'], evidenceRequired: ['api'], metadata: { replay: { requests: [] } } }, (result) => result.status === 'skipped'),
+  ];
+}
+
+function cliBenchmarkCases(baseUrl) {
+  return [
+    {
+      id: 'cli.missing-config-exits-2',
+      area: 'cli',
+      expected: 'missing config path exits with setup code 2',
+      run: async () => {
+        const cli = await runCli(['run', '--config', join(workDir, 'missing.config.mjs'), '--goal', 'missing config']);
+        return { passed: cli.code === 2, observed: JSON.stringify(cli) };
+      },
+    },
+    {
+      id: 'cli.empty-goal-exits-2',
+      area: 'cli',
+      expected: 'empty CLI goal exits with setup code 2',
+      run: async () => {
+        const configPath = join(workDir, 'cli-empty-goal.config.mjs');
+        await writeFile(configPath, `export default { app: { name: 'CLI benchmark', baseUrl: ${JSON.stringify(baseUrl)} } };\n`, 'utf8');
+        const cli = await runCli(['run', '--config', configPath, '--goal', ' ']);
+        return { passed: cli.code === 2, observed: JSON.stringify(cli) };
+      },
+    },
+    {
+      id: 'cli.json-success-emits-cli-result-schema',
+      area: 'cli',
+      expected: 'CLI --json success emits the stable CLI result schema',
+      run: async () => {
+        const configPath = join(workDir, 'cli-json-success.config.mjs');
+        await writeFile(configPath, `export default { app: { name: 'CLI benchmark', baseUrl: ${JSON.stringify(baseUrl)} }, discovery: { includeUi: false, includeApi: true, includeRepo: false, includeContracts: false } };\n`, 'utf8');
+        const cli = await runCli(['run', '--config', configPath, '--goal', 'health check', '--scenarios', '1', '--json']);
+        const parsed = parseJsonFromOutput(cli.stdout);
+        return { passed: cli.code === 0 && parsed?.schemaVersion === 'brisk-aitesting.cli-result.v1', observed: JSON.stringify({ code: cli.code, parsed }) };
+      },
+    },
+  ];
+}
+
+function aiCase(baseUrl, id, expected, content, predicate) {
+  return {
+    id,
+    area: 'ai',
+    expected,
+    run: async () => {
+      const context = await plannerContext(baseUrl);
+      const plan = parseAiPlanForTesting(content, context);
+      const passed = predicate(plan);
+      return { passed, observed: JSON.stringify(plan.scenarios) };
+    },
+  };
+}
+
+function validationCase(baseUrl, validator, id, expected, mutatePlan, pattern, inputOverride = {}) {
+  return {
+    id,
+    area: 'validation',
+    expected,
+    run: async () => {
+      const config = normalizeConfig(defineConfig({ app: { name: 'validation benchmark', baseUrl } }));
+      const input = { goal: expected, scenarios: 1, mode: 'automatic', ...inputOverride };
+      const plan = mutatePlan(basePlan(baseUrl));
+      const result = validator.validate({ config, input, plan });
+      const observed = JSON.stringify(result.issues);
+      return { passed: result.valid === false && pattern.test(observed), observed };
+    },
+  };
+}
+
+function apiRunCase(baseUrl, contractPath, id, expected, scenario, predicate) {
+  return {
+    id,
+    area: scenario.type === 'replay' ? 'replay' : 'api',
+    expected,
+    run: async () => {
+      const result = await runApiScenario(baseUrl, contractPath, scenario);
+      return { passed: predicate(result), observed: JSON.stringify({ status: result.status, tests: result.tests, artifacts: result.artifacts }) };
+    },
+  };
 }
 
 async function runApiScenario(baseUrl, contractPath, scenario, security = {}) {
@@ -367,11 +744,200 @@ async function runApiScenario(baseUrl, contractPath, scenario, security = {}) {
   });
 }
 
+function basePlan(baseUrl) {
+  return {
+    schemaVersion: 'brisk-aitesting.plan.v1',
+    runId: `bench_${randomUUID()}`,
+    goal: 'benchmark validation',
+    mode: 'automatic',
+    discovery: {
+      schemaVersion: 'brisk-aitesting.discovery.v1',
+      app: { name: 'benchmark app', baseUrl },
+      uiRoutes: [{ path: '/', source: 'config', confidence: 1 }],
+      apiRoutes: [{ method: 'GET', path: '/api/query', source: 'runtime', confidence: 1 }],
+      contracts: [],
+      repoSignals: [],
+      warnings: [],
+      createdAt: new Date().toISOString(),
+    },
+    warnings: [],
+    createdAt: new Date().toISOString(),
+    scenarios: [apiScenario('base_api')],
+  };
+}
+
+function apiScenario(id) {
+  return {
+    id,
+    name: id.replace(/[_-]/g, ' '),
+    type: 'api',
+    objective: `Run ${id}.`,
+    target: { method: 'GET', path: '/api/query' },
+    expect: { status: 200 },
+    assertions: ['response is valid'],
+    evidenceRequired: ['api'],
+  };
+}
+
+function uiScenario(id) {
+  return {
+    id,
+    name: id.replace(/[_-]/g, ' '),
+    type: 'ui',
+    objective: `Run ${id}.`,
+    target: { route: '/' },
+    assertions: ['page is usable'],
+    uiActions: [{ action: 'click', evidenceId: 'ui_el_001' }],
+    evidenceRequired: ['ui'],
+  };
+}
+
+function messageScenario(id) {
+  return {
+    id,
+    name: id.replace(/[_-]/g, ' '),
+    type: 'message',
+    objective: `Run ${id}.`,
+    target: { schema: 'asyncapi.json', channel: 'orders.created' },
+    assertions: ['message contract is valid'],
+    evidenceRequired: ['message'],
+  };
+}
+
 function benchmarkOpenApi() {
   return {
     openapi: '3.0.3',
     info: { title: 'Benchmark API', version: '1.0.0' },
     paths: {
+      '/api/query': {
+        get: {
+          operationId: 'getQuery',
+          parameters: [{ name: 'mode', in: 'query', required: false, schema: { type: 'string' } }],
+          responses: {
+            200: {
+              description: 'Query endpoint',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['mode'],
+                    properties: { mode: { type: 'string' } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/api/echo': {
+        post: {
+          operationId: 'postEcho',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['name'],
+                  properties: { name: { type: 'string' } },
+                },
+              },
+            },
+          },
+          responses: {
+            201: {
+              description: 'Echo endpoint',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['received'],
+                    properties: {
+                      received: {
+                        type: 'object',
+                        required: ['name'],
+                        properties: { name: { type: 'string' } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/api/text': {
+        get: {
+          operationId: 'getText',
+          responses: {
+            200: {
+              description: 'Text endpoint',
+              content: {
+                'text/plain': { schema: { type: 'string' } },
+              },
+            },
+          },
+        },
+      },
+      '/api/state': {
+        get: {
+          operationId: 'getState',
+          responses: {
+            200: {
+              description: 'State endpoint',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['count'],
+                    properties: { count: { type: 'integer' } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/api/rejected-action': {
+        post: {
+          operationId: 'postRejectedAction',
+          responses: {
+            409: {
+              description: 'Rejected action',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['error'],
+                    properties: {
+                      error: {
+                        type: 'object',
+                        required: ['code'],
+                        properties: { code: { type: 'string', enum: ['LOCKED'] } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/api/nested-ref': {
+        get: {
+          operationId: 'getNestedRef',
+          responses: {
+            200: {
+              description: 'Nested ref endpoint',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Wrapper' },
+                },
+              },
+            },
+          },
+        },
+      },
       '/api/wrong-schema': {
         get: {
           operationId: 'getWrongSchema',
@@ -411,7 +977,59 @@ function benchmarkOpenApi() {
         },
       },
     },
+    components: {
+      schemas: {
+        Wrapper: {
+          type: 'object',
+          required: ['wrapper'],
+          properties: { wrapper: { $ref: '#/components/schemas/Item' } },
+        },
+        Item: {
+          type: 'object',
+          required: ['id', 'nested'],
+          properties: {
+            id: { type: 'string' },
+            nested: { $ref: '#/components/schemas/Nested' },
+          },
+        },
+        Nested: {
+          type: 'object',
+          required: ['ok'],
+          properties: { ok: { type: 'boolean' } },
+        },
+      },
+    },
   };
+}
+
+function captureError(fn) {
+  try {
+    fn();
+    return '';
+  } catch (error) {
+    return error instanceof Error ? error.message : String(error);
+  }
+}
+
+function parseJsonFromOutput(stdout) {
+  const trimmed = stdout.trim();
+  if (trimmed.length === 0) return undefined;
+  const start = trimmed.indexOf('{');
+  const end = trimmed.lastIndexOf('}');
+  if (start === -1 || end === -1 || end < start) return undefined;
+  try {
+    return JSON.parse(trimmed.slice(start, end + 1));
+  } catch {
+    return undefined;
+  }
+}
+
+async function readJson(request) {
+  const chunks = [];
+  for await (const chunk of request) chunks.push(Buffer.from(chunk));
+  const text = Buffer.concat(chunks).toString('utf8').trim();
+  if (text.length === 0) return undefined;
+  return JSON.parse(text);
 }
 
 function driftOpenApi() {

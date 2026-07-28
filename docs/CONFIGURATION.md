@@ -88,7 +88,6 @@ Third-party adapters are local and opt-in.
 
 | Setting | Meaning |
 |:--------|:--------|
-| `BRISK_AITESTING_KEPLOY_COMMAND` | Path or command name for the local Keploy CLI. Defaults to `keploy` when not set. |
 | `BRISK_AITESTING_SCHEMATHESIS_COMMAND` | Path or command name for Schemathesis. Defaults to `st`. |
 
 Specmatic is loaded through the optional `specmatic` npm runtime and still needs Java available on the machine.

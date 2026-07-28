@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { scenarioReplayRequests, type BriskReplayRequest } from '../keploy.js';
+import { scenarioReplayRequests, type BriskReplayRequest } from '../replay.js';
 import type { ArtifactRef, Engine, EngineContext, EngineRunResult, ScenarioPlan, ScenarioResult } from '../types.js';
 import { authHeaders, hasHeader, isHostAllowed, parseJsonOrNull, redactHeaders, redactValue, scenarioEvidence, scenarioResult } from './shared.js';
 

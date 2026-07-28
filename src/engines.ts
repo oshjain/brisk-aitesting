@@ -1,6 +1,7 @@
 export {
   BuiltinApiEngine,
   BuiltinContractEngine,
+  BuiltinLiveMessageEngine,
   BuiltinMessageContractEngine,
   BuiltinPlaywrightEngine,
   BuiltinPlaywrightRouteGrounder,

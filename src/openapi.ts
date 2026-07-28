@@ -180,40 +180,42 @@ function firstContentSchema(value: JsonRecord | undefined): unknown {
   return undefined;
 }
 
-function resolveSchema(schema: unknown, document: JsonRecord): unknown {
+function resolveSchema(schema: unknown, document: JsonRecord, seenRefs = new Set<string>()): unknown {
   if (!isRecord(schema)) return schema;
   if (typeof schema.$ref === 'string') {
+    if (seenRefs.has(schema.$ref)) return schema;
     const resolved = resolveLocalRef(schema.$ref, document);
-    return resolved === undefined ? schema : resolved;
+    if (resolved === undefined) return schema;
+    return resolveSchema(resolved, document, new Set([...seenRefs, schema.$ref]));
   }
   if (schema.allOf !== undefined && Array.isArray(schema.allOf)) {
     return {
       ...schema,
-      allOf: schema.allOf.map((entry) => resolveSchema(entry, document)),
+      allOf: schema.allOf.map((entry) => resolveSchema(entry, document, seenRefs)),
     };
   }
   if (schema.oneOf !== undefined && Array.isArray(schema.oneOf)) {
     return {
       ...schema,
-      oneOf: schema.oneOf.map((entry) => resolveSchema(entry, document)),
+      oneOf: schema.oneOf.map((entry) => resolveSchema(entry, document, seenRefs)),
     };
   }
   if (schema.anyOf !== undefined && Array.isArray(schema.anyOf)) {
     return {
       ...schema,
-      anyOf: schema.anyOf.map((entry) => resolveSchema(entry, document)),
+      anyOf: schema.anyOf.map((entry) => resolveSchema(entry, document, seenRefs)),
     };
   }
   if (isRecord(schema.items)) {
     return {
       ...schema,
-      items: resolveSchema(schema.items, document),
+      items: resolveSchema(schema.items, document, seenRefs),
     };
   }
   if (isRecord(schema.properties)) {
     return {
       ...schema,
-      properties: Object.fromEntries(Object.entries(schema.properties).map(([key, value]) => [key, resolveSchema(value, document)])),
+      properties: Object.fromEntries(Object.entries(schema.properties).map(([key, value]) => [key, resolveSchema(value, document, seenRefs)])),
     };
   }
   return schema;

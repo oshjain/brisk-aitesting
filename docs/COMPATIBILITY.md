@@ -14,7 +14,7 @@ This page explains where `brisk-aitesting` works best today.
 | API testing | HTTP request/response checks |
 | Contract testing | OpenAPI parsing and response schema validation |
 | Third-party contract adapters | Schemathesis and Specmatic through optional local runtimes |
-| Replay compatibility | Declared HTTP replay, Keploy-style HTTP case import/export, and optional Keploy CLI record/test execution |
+| Replay compatibility | Declared HTTP replay through Brisk replay scenarios |
 | AI providers | OpenAI-compatible chat-completions path plus custom provider interface |
 | Runtime | Node.js 20 or newer |
 
@@ -38,8 +38,7 @@ These require custom engines or future adapters:
 - binary protocols
 - database-specific assertions
 - queue and stream assertions
-- Pact and live broker execution adapters
-- deeper proof coverage for Specmatic stubbing and Keploy dependency virtualization in larger apps
+- deeper proof coverage for Specmatic stubbing in larger apps
 - full performance testing
 - full penetration testing
 
@@ -50,5 +49,3 @@ The package is designed for Windows, macOS, and Linux. The CI matrix should keep
 Browser execution also depends on Playwright browser installation in the host environment.
 
 Specmatic execution depends on Java because the Specmatic runtime is Java-based. It can still test APIs written in any backend language.
-
-Keploy execution depends on the Keploy CLI being installed locally. Brisk ships the adapter, not the Keploy binary.

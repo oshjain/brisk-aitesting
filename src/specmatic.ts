@@ -74,11 +74,12 @@ export class SpecmaticContractEngine implements Engine {
       ...runs.flatMap((run) => run.diagnostics),
       ...(reportFiles.length === 0 ? ['Specmatic did not write report files in the configured reports directory.'] : []),
     ];
+    const hasReportedFailures = numericSummaryValue(summary, 'failures') > 0 || numericSummaryValue(summary, 'errors') > 0;
     const status = runs.length === 0
       ? 'skipped'
       : runs.some((run) => run.timedOut || run.exitCode === null)
         ? 'error'
-        : runs.some((run) => run.exitCode !== 0)
+        : runs.some((run) => run.exitCode !== 0) || hasReportedFailures
           ? 'failed'
           : 'passed';
 
@@ -244,6 +245,11 @@ function summarizeSpecmatic(runs: readonly SpecmaticCommandRun[], reportFiles: r
     coveragePercent: numberAfter(combined, /(\d+(?:\.\d+)?)%\s+API Coverage/i),
     scenarios: scenarioLines(combined),
   };
+}
+
+function numericSummaryValue(summary: Record<string, unknown>, key: string): number {
+  const value = summary[key];
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
 }
 
 function numberAfter(value: string, pattern: RegExp): number | undefined {

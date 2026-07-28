@@ -48,6 +48,7 @@ Host apps should not have to care about the moving parts. Developers should stil
     BuiltinApiEngine validates JSON responses against OpenAPI response schemas when available.
     BuiltinSchemaFuzzEngine sends lightweight malformed OpenAPI requests and records rejection evidence.
     BuiltinReplayEngine reruns declared HTTP interactions and records response evidence.
+    BuiltinLiveMessageEngine runs configured local publish/verify message flows and records `brisk-aitesting.live-message-evidence.v1`.
     BuiltinPlaywrightEngine executes UI scenarios and grounded UI actions.
     BuiltinContractEngine parses OpenAPI JSON/YAML contracts and emits operation summaries.
 
@@ -85,9 +86,9 @@ Host apps should not have to care about the moving parts. Developers should stil
    `SpecmaticContractEngine` runs the real Specmatic CLI for contract scenarios that explicitly ask for the Specmatic adapter.
    It writes command logs, report artifacts, and `brisk-aitesting.specmatic-evidence.v1`.
 
-15. Keploy Recording And Replay
-   `KeployCliEngine` runs the local Keploy CLI for replay scenarios that explicitly ask for the Keploy adapter.
-   It can call `keploy record` and `keploy test`, collect generated local files, and emit `brisk-aitesting.keploy-evidence.v1`.
+15. Pact Message Verification
+   `PactMessageEngine` runs real Pact message provider verification for message scenarios that explicitly ask for the Pact adapter.
+   It writes logs and `brisk-aitesting.pact-message-evidence.v1`.
 
 16. Adapter Readiness
    `adapters/manifest.json` uses `brisk-aitesting.adapter-manifest.v1` to declare adapters that are truly built.
@@ -122,10 +123,10 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.schemathesis-smoke.v1` | Schemathesis adapter | Real adapter health-check report |
 | `brisk-aitesting.specmatic-evidence.v1` | Specmatic adapter | Contract test/mock execution evidence |
 | `brisk-aitesting.specmatic-smoke.v1` | Specmatic adapter | Real adapter health-check report |
-| `brisk-aitesting.keploy-evidence.v1` | Keploy adapter | Record/replay and local artifact evidence |
-| `brisk-aitesting.keploy-smoke.v1` | Keploy adapter | Real adapter health-check report |
+| `brisk-aitesting.pact-message-evidence.v1` | Pact adapter | Pact message verification evidence |
+| `brisk-aitesting.pact-message-smoke.v1` | Pact adapter | Real Pact message health-check report |
 | `brisk-aitesting.reference-serious-saas.v1` | proof app | Serious SaaS proof-app report |
-| `brisk-aitesting.reference-proof-apps.v1` | proof apps | API-only, Todo, and multi-tenant proof-app report |
+| `brisk-aitesting.reference-proof-apps.v1` | proof apps | API-only, Todo, multi-tenant, e-commerce, and event/messaging proof-app report |
 | `brisk-aitesting.golden-fixtures.v1` | expected outputs | Stable scenario/result baseline report |
 | `brisk-aitesting.junit-report.v1` | handover | JUnit XML report artifact |
 | `brisk-aitesting.html-report.v1` | handover | HTML report artifact |
@@ -133,6 +134,7 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.replay-evidence.v1` | replay engine | Declared HTTP interaction replay evidence |
 | `brisk-aitesting.api-evidence.v1` | API engine | Request/response evidence |
 | `brisk-aitesting.message-contract-evidence.v1` | message engine | AsyncAPI channel and message payload evidence |
+| `brisk-aitesting.live-message-evidence.v1` | message engine | Local publish/verify message-flow evidence |
 | `brisk-aitesting.openapi-summary.v1` | contract engine/discoverer | OpenAPI JSON/YAML operation summary |
 | `brisk-aitesting.playwright-evidence.v1` | UI engine | UI execution manifest |
 | `brisk-aitesting.ui-grounding.v1` | UI grounder/engine | Real page element evidence |
@@ -166,6 +168,7 @@ Built-in engine code is split by responsibility:
 | `src/engines/playwright-grounder.ts` | Pre-execution UI evidence capture |
 | `src/engines/schema-fuzz.ts` | Lightweight malformed-request checks from OpenAPI request schemas |
 | `src/engines/replay.ts` | Declared HTTP interaction replay checks |
+| `src/engines/live-message.ts` | Local publish/verify message-flow checks |
 | `src/engines/shared.ts` | Shared result, artifact, Playwright, API, redaction, and assertion helpers |
 
 `src/engines/builtin.ts` remains a compatibility export file so existing imports keep working.
@@ -245,7 +248,7 @@ Built:
 - Non-engine extension quality API and health-check gate for `Discoverer`, `Planner`, `PlanValidator`, `UiRouteGrounder`, and `AiPlannerProvider` implementations.
 - Optional Schemathesis OpenAPI deep API checker.
 - Serious SaaS proof app.
-- API-only, Todo, and multi-tenant proof apps.
+- API-only, Todo, multi-tenant, e-commerce, and event/messaging proof apps.
 - Release readiness automation and versioned changelog.
 - Golden expected-output baseline for serious SaaS scenario/result stability.
 

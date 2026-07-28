@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { AiPlanner } from './ai-planner.js';
 import { normalizeConfig, type UserConfig } from './config.js';
 import { BuiltinDiscoverer } from './discovery.js';
-import { BuiltinApiEngine, BuiltinContractEngine, BuiltinMessageContractEngine, BuiltinPlaywrightEngine, BuiltinPlaywrightRouteGrounder, BuiltinReplayEngine, BuiltinSchemaFuzzEngine } from './engines.js';
+import { BuiltinApiEngine, BuiltinContractEngine, BuiltinLiveMessageEngine, BuiltinMessageContractEngine, BuiltinPlaywrightEngine, BuiltinPlaywrightRouteGrounder, BuiltinReplayEngine, BuiltinSchemaFuzzEngine } from './engines.js';
 import { buildResult, persistCiReports, persistResult } from './handover.js';
 import { BuiltinPlanner } from './planner.js';
 import { BuiltinPlanValidator } from './validation.js';
@@ -47,6 +47,7 @@ export class BriskAiTesting {
       new BuiltinPlaywrightEngine(),
       new BuiltinSchemaFuzzEngine(),
       new BuiltinReplayEngine(),
+      new BuiltinLiveMessageEngine(),
       new BuiltinMessageContractEngine(),
       new BuiltinContractEngine(),
     ];

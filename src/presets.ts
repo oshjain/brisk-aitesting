@@ -6,12 +6,13 @@ export { createAiProviderFromConfig, OpenAiCompatibleProvider } from './provider
 export {
   BuiltinApiEngine,
   BuiltinContractEngine,
+  BuiltinLiveMessageEngine,
   BuiltinMessageContractEngine,
   BuiltinPlaywrightEngine,
   BuiltinPlaywrightRouteGrounder,
   BuiltinReplayEngine,
   BuiltinSchemaFuzzEngine,
 } from './engines.js';
-export { KeployCliEngine } from './keploy-engine.js';
+export { PactMessageEngine } from './pact.js';
 export { SchemathesisOpenApiFuzzEngine } from './schemathesis.js';
 export { SpecmaticContractEngine } from './specmatic.js';

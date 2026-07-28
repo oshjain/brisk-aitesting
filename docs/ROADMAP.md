@@ -40,9 +40,9 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 - Built-in OpenAPI contract engine.
 - Built-in lightweight schema fuzz engine.
 - Built-in replay engine for declared HTTP interactions.
-- Keploy-style HTTP replay import/export.
-- Optional Keploy CLI adapter for local `keploy record` / `keploy test` flows.
 - Built-in AsyncAPI message-contract inspection engine.
+- Built-in live message-flow engine.
+- Optional Pact message adapter with smoke gate.
 - External engine quality API and automated health gate.
 - Non-engine extension quality API and automated health gate.
 - Optional Schemathesis OpenAPI deep API checker with readiness manifest and coverage gate.
@@ -56,13 +56,11 @@ Teams should be able to give Brisk a testing goal, let it inspect the app, get a
 - Deterministic release, bad-input, package, and real-AI gates.
 - Adapter readiness gate for built adapters.
 - Release readiness automation and versioned changelog.
-- Serious SaaS, API-only, Todo, and multi-tenant proof apps.
+- Serious SaaS, API-only, Todo, multi-tenant, e-commerce, and event/messaging proof apps.
 
 ## Gaps
 
-- No built-in Pact or live message-broker execution engine yet.
-- Specmatic mock/service virtualization and Keploy dependency virtualization need broader proof-app coverage.
-- No full proof app collection yet; e-commerce and event/messaging are still pending.
+- Specmatic mock/service virtualization needs broader proof-app coverage.
 - No shared business rule catalog yet.
 
 ## How We Finish It Properly
@@ -118,22 +116,20 @@ Future non-engine quality checks should define the stable output contract for ea
 
 ### 4. Replay Depth
 
-The built-in replay engine can run declared HTTP interactions today. Keploy-style HTTP cases can import into replay and export from replay requests. The optional `KeployCliEngine` can also call local `keploy record` and `keploy test` flows and collect the generated local files.
+The built-in replay engine can run declared HTTP interactions today. It intentionally stays local, lightweight, and independent of external replay runtimes.
 
 Remaining depth:
 
-- broader Keploy dependency virtualization proof against larger apps
 - richer response diff artifacts
 - multi-step traffic session replay
 - captured traffic privacy controls
 
 ### 5. Message And Contract Engines
 
-Add adapters in this order:
+AsyncAPI inspection, local live message-flow checks, and Pact message verification are built. Next depth should be broker-specific adapters only when a real runtime is selected.
 
-- Pact adapter
-- live message-broker execution
 - deeper Specmatic mock behavior checks
+- Kafka/RabbitMQ/cloud-queue adapters when their local or CI runtime is available
 
 These should remain optional dependencies or separate packages if they add heavy runtime requirements.
 

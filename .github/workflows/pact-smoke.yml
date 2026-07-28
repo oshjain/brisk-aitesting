@@ -1,4 +1,4 @@
-name: Keploy Smoke
+name: Pact Smoke
 
 on:
   workflow_dispatch:
@@ -7,8 +7,8 @@ permissions:
   contents: read
 
 jobs:
-  keploy-smoke:
-    name: Real Keploy Adapter Smoke
+  pact-smoke:
+    name: Real Pact Message Adapter Smoke
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -25,24 +25,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Keploy CLI
-        run: |
-          curl --silent --location https://keploy.io/ent/install.sh | bash
-
       - name: Build
         run: npm run build
 
-      - name: Run Keploy adapter smoke
-        env:
-          BRISK_AITESTING_REQUIRE_KEPLOY: 'true'
-        run: npm run smoke:keploy
+      - name: Run Pact adapter smoke
+        run: npm run smoke:pact
 
-      - name: Upload Keploy artifacts
+      - name: Upload Pact artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: brisk-aitesting-keploy-artifacts
+          name: brisk-aitesting-pact-artifacts
           path: |
-            .brisk-aitesting-keploy-smoke/**
+            .brisk-aitesting-pact-smoke/**
           if-no-files-found: ignore
           retention-days: 7

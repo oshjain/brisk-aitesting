@@ -17,17 +17,15 @@ npx playwright install chromium
 
 ## Optional Adapter Runtimes
 
-Brisk ships the adapter code for Schemathesis, Specmatic, and Keploy. The external tools stay optional.
+Brisk ships adapter code for Schemathesis, Specmatic, and Pact. The external tools stay optional.
 
 | Adapter | Install only when you need it |
 | --- | --- |
 | Schemathesis | Python plus Schemathesis |
 | Specmatic | Java plus the optional `specmatic` runtime |
-| Keploy | Keploy CLI on `PATH`, or set `BRISK_AITESTING_KEPLOY_COMMAND` |
 
 Specmatic can test any HTTP/OpenAPI provider; the app under test does not have to be Java. Java is needed because the Specmatic runtime uses a Java executable.
 
-Keploy CLI is not an npm package. Brisk includes `KeployCliEngine`, but the actual `keploy` binary must be installed on the host or CI image.
 
 ## Create Config
 

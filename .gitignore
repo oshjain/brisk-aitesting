@@ -1,8 +1,10 @@
 node_modules/
 dist/
+build/
 coverage/
 .brisk-aitesting/
 .brisk-aitesting-*/
+.brisk-tools/
 .schemathesis/
 .hypothesis/
 playwright-work/
