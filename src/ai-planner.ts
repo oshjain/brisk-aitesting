@@ -111,10 +111,16 @@ function buildUserPrompt(context: PlannerContext): string {
   return JSON.stringify({
     goal: context.input.goal,
     scenarios: context.input.scenarios ?? 5,
+    scenarioCountPolicy: context.input.scenarioCountPolicy ?? 'flexible',
     mode: context.input.mode ?? 'automatic',
     requiredTypes: context.input.requiredTypes ?? [],
     app: context.config.app,
     discovery: summarizeDiscovery(context.discovery),
+    planningRules: {
+      scenarioCount: context.input.scenarioCountPolicy === 'exact' && context.input.scenarios !== undefined
+        ? `Return exactly ${context.input.scenarios} scenarios. Do not return fewer or more.`
+        : 'Use the requested scenario count as guidance unless the host policy says exact.',
+    },
     outputShape: {
       mode: 'automatic',
       warnings: [],
@@ -147,6 +153,8 @@ function buildRepairUserPrompt(context: PlannerRepairContext): string {
     attempt: context.attempt,
     maxAttempts: context.maxAttempts,
     mode: context.input.mode ?? 'automatic',
+    scenarios: context.input.scenarios ?? 5,
+    scenarioCountPolicy: context.input.scenarioCountPolicy ?? 'flexible',
     requiredTypes: context.input.requiredTypes ?? [],
     app: context.config.app,
     discovery: summarizeDiscovery(context.discovery),
@@ -157,6 +165,11 @@ function buildRepairUserPrompt(context: PlannerRepairContext): string {
       message: issue.message,
     })),
     invalidPlan: sanitizePlanForRepair(context.invalidPlan),
+    planningRules: {
+      scenarioCount: context.input.scenarioCountPolicy === 'exact' && context.input.scenarios !== undefined
+        ? `Repair must return exactly ${context.input.scenarios} scenarios. If the invalid plan has too many, keep the strongest proven scenarios. If it has too few, add proven scenarios from discovery or contract evidence.`
+        : 'Use the requested scenario count as guidance unless the host policy says exact.',
+    },
     outputShape: {
       mode: context.input.mode ?? 'automatic',
       warnings: ['fixed validation issues'],

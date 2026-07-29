@@ -629,6 +629,19 @@ function validationBenchmarkCases(baseUrl) {
     validationCase(baseUrl, validator, 'validation.bad-ui-evidence-id-fails', 'UI actions need evidence IDs', (plan) => ({ ...plan, scenarios: [{ ...uiScenario('bad_action'), uiActions: [{ action: 'click', evidenceId: 'button1' }] }] }), /PLAN_CONTRACT_INVALID_SHAPE|INVALID_UI_EVIDENCE_ID/),
     validationCase(baseUrl, validator, 'validation.unchanged-only-api', 'unchanged state checks are API-only', (plan) => ({ ...plan, scenarios: [{ ...uiScenario('bad_unchanged'), expect: { unchanged: [{ target: { path: '/api/state' } }] } }] }), /UNCHANGED_ON_NON_API_SCENARIO/),
     validationCase(baseUrl, validator, 'validation.required-type-is-enforced', 'requiredTypes input is enforced', (plan) => ({ ...plan, scenarios: [apiScenario('only_api')] }), /MISSING_REQUIRED_TYPE/, { requiredTypes: ['message'] }),
+    validationCase(baseUrl, validator, 'validation.exact-scenario-count-too-low-fails', 'exact scenario count rejects too few scenarios', (plan) => ({ ...plan, scenarios: [apiScenario('one_of_three')] }), /SCENARIO_COUNT_MISMATCH/, { scenarios: 3, scenarioCountPolicy: 'exact' }),
+    validationCase(baseUrl, validator, 'validation.exact-scenario-count-too-high-fails', 'exact scenario count rejects too many scenarios', (plan) => ({ ...plan, scenarios: [apiScenario('one_of_one'), apiScenario('two_of_one')] }), /SCENARIO_COUNT_MISMATCH/, { scenarios: 1, scenarioCountPolicy: 'exact' }),
+    {
+      id: 'validation.exact-scenario-count-passes',
+      area: 'validation',
+      expected: 'exact scenario count accepts the requested number of scenarios',
+      run: async () => {
+        const config = normalizeConfig(defineConfig({ app: { name: 'scenario count validation', baseUrl } }));
+        const plan = { ...basePlan(baseUrl), scenarios: [apiScenario('one'), apiScenario('two')] };
+        const result = validator.validate({ config, input: { goal: 'exact count', scenarios: 2, scenarioCountPolicy: 'exact', mode: 'automatic' }, plan });
+        return { passed: result.valid === true, observed: JSON.stringify(result.issues) };
+      },
+    },
     {
       id: 'validation.dynamic-route-placeholder-matches-discovery',
       area: 'validation',

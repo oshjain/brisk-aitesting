@@ -2,6 +2,13 @@
 
 All notable changes to `brisk-aitesting` are recorded here.
 
+## 0.1.10
+
+- Added `scenarioCountPolicy` to run input so hosts can make scenario count an exact validation contract instead of a loose planning hint.
+- Added validation that rejects too few or too many scenarios when `scenarioCountPolicy` is `exact`.
+- Passed exact scenario count rules into AI planning and repair prompts so repaired plans must preserve the requested count.
+- Added benchmark coverage for exact scenario count pass, too-low, and too-high cases.
+
 ## 0.1.9
 
 - Fixed AI plan normalization so model output can no longer self-certify targets with `sourceOfTruth: "user"`; user provenance is now reserved for host-supplied targets only.

@@ -46,6 +46,7 @@ export class BuiltinPlanValidator implements PlanValidator {
     if (plan.scenarios.length === 0) {
       issues.push(error('plan.scenarios', 'REQUIRED', 'Plan must contain at least one scenario.'));
     }
+    validateScenarioCount(plan.scenarios.length, context.input.scenarios, context.input.scenarioCountPolicy, issues);
     if (plan.mode !== 'automatic' && !ENGINE_TYPES.has(plan.mode)) {
       issues.push(error('plan.mode', 'INVALID_MODE', `Unsupported plan mode "${plan.mode}".`));
     }
@@ -97,6 +98,26 @@ export class BuiltinPlanValidator implements PlanValidator {
       valid: !issues.some((issue) => issue.severity === 'error'),
       issues,
     };
+  }
+}
+
+function validateScenarioCount(
+  actual: number,
+  requested: number | undefined,
+  policy: PlanValidatorContext['input']['scenarioCountPolicy'],
+  issues: ValidationIssue[],
+): void {
+  if (requested === undefined || policy === undefined || policy === 'flexible') return;
+  if (!Number.isFinite(requested) || requested <= 0) return;
+  const expected = Math.round(requested);
+  if (policy === 'exact' && actual !== expected) {
+    issues.push(error('plan.scenarios', 'SCENARIO_COUNT_MISMATCH', `Plan must contain exactly ${expected} scenario(s); received ${actual}.`));
+  }
+  if (policy === 'at-least' && actual < expected) {
+    issues.push(error('plan.scenarios', 'SCENARIO_COUNT_TOO_LOW', `Plan must contain at least ${expected} scenario(s); received ${actual}.`));
+  }
+  if (policy === 'at-most' && actual > expected) {
+    issues.push(error('plan.scenarios', 'SCENARIO_COUNT_TOO_HIGH', `Plan must contain at most ${expected} scenario(s); received ${actual}.`));
   }
 }
 

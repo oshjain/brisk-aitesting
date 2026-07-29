@@ -11,6 +11,7 @@ const tester = createBriskAiTesting(config);
 const result = await tester.run({
   goal: 'Test login, dashboard, API contracts, and permissions',
   scenarios: 10,
+  scenarioCountPolicy: 'exact',
   mode: 'automatic',
 });
 ```
@@ -20,7 +21,8 @@ const result = await tester.run({
 | Field | Type | Meaning |
 |:------|:-----|:--------|
 | `goal` | `string` | What should be tested |
-| `scenarios` | `number` | Desired scenario count |
+| `scenarios` | `number` | Scenario count requested by the host app |
+| `scenarioCountPolicy` | `exact`, `at-least`, `at-most`, `flexible` | Whether the requested count is a hard contract or guidance |
 | `mode` | `automatic`, `ui`, `api`, `contract`, `schema`, `replay`, `message`, `custom` | How scenarios should be routed |
 | `requiredTypes` | array | Force at least one scenario of a type |
 | `uiActionFeedback` | `off`, `when-missing`, `always` | Whether UI actions should be grounded before execution |

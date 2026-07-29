@@ -94,6 +94,7 @@ export interface BriskAiTestingConfig {
 export interface BriskAiTestingRunInput {
   readonly goal: string;
   readonly scenarios?: number;
+  readonly scenarioCountPolicy?: 'exact' | 'at-least' | 'at-most' | 'flexible';
   readonly mode?: 'automatic' | EngineType;
   readonly requiredTypes?: readonly EngineType[];
   readonly uiActionFeedback?: 'off' | 'when-missing' | 'always';
