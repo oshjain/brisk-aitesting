@@ -13,6 +13,7 @@ const required = [
   'package/CHANGELOG.md',
   'package/adapters/manifest.json',
   'package/docs/ARCHITECTURE.md',
+  'package/docs/AI_PROMPTS.md',
   'package/docs/STATUS.md',
   'package/docs/ROADMAP.md',
   'package/docs/GETTING_STARTED.md',
