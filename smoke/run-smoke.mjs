@@ -343,12 +343,7 @@ try {
   };
   const repairableTester = createBriskAiTesting({
     ...config,
-    ai: {
-      provider: 'minimax',
-      model: 'MiniMax-M3',
-      apiKeyEnv: 'BRISK_AITESTING_AI_API_KEY',
-      repairAttempts: 1,
-    },
+    planning: { repairAttempts: 1 },
   }, { planner: repairablePlanner });
   const repairableResult = await repairableTester.run({
     goal: 'Repair invalid API plan before execution',

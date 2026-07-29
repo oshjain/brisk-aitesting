@@ -72,10 +72,15 @@ export interface SecurityConfig {
   readonly uiHealing?: 'off' | 'safe' | 'aggressive';
 }
 
+export interface PlanningConfig {
+  readonly repairAttempts?: number;
+}
+
 export interface BriskAiTestingConfig {
   readonly app: AppConfig;
   readonly auth: AuthConfig;
   readonly ai?: AiProviderConfig;
+  readonly planning?: PlanningConfig;
   readonly contracts?: ContractConfig;
   readonly runtime: RuntimeConfig;
   readonly discovery: DiscoveryConfig;

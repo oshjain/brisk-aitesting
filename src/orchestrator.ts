@@ -204,7 +204,7 @@ export class BriskAiTesting {
     let validation = await this.validator.validate({ config: this.config, input: params.input, plan });
     this.emit({ type: 'plan.validated', runId: params.runId, validation });
 
-    const maxAttempts = normalizeRepairAttempts(this.config.ai?.repairAttempts);
+    const maxAttempts = normalizeRepairAttempts(this.config.planning?.repairAttempts ?? this.config.ai?.repairAttempts);
     for (let attempt = 1; !validation.valid && attempt <= maxAttempts && this.planner.repair !== undefined; attempt += 1) {
       this.emit({ type: 'plan.repair.started', runId: params.runId, attempt, validation });
       const repaired = await this.planner.repair({

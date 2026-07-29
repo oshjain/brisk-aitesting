@@ -458,6 +458,24 @@ function configBenchmarkCases(baseUrl) {
       },
     },
     {
+      id: 'config.accepts-planning-repair-attempts',
+      area: 'config',
+      expected: 'planning.repairAttempts is accepted without SDK-owned AI provider config',
+      run: async () => {
+        const config = normalizeConfig(defineConfig({ app: { name: 'planning repair', baseUrl }, planning: { repairAttempts: 2 } }));
+        return { passed: config.planning?.repairAttempts === 2 && config.ai === undefined, observed: JSON.stringify({ planning: config.planning, ai: config.ai }) };
+      },
+    },
+    {
+      id: 'config.rejects-invalid-planning-repair-attempts',
+      area: 'config',
+      expected: 'invalid planning.repairAttempts values are rejected',
+      run: async () => {
+        const error = captureError(() => normalizeConfig(defineConfig({ app: { name: 'bad planning repair', baseUrl }, planning: { repairAttempts: 99 } })));
+        return { passed: /planning\.repairAttempts/.test(error), observed: error };
+      },
+    },
+    {
       id: 'config.merge-preserves-nested-values',
       area: 'config',
       expected: 'mergeConfig preserves nested values while applying overrides',

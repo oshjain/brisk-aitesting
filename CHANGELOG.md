@@ -9,8 +9,10 @@ All notable changes to `brisk-aitesting` are recorded here.
 - Validated scenario dependency order so a test can only depend on earlier scenarios in the same plan.
 - Preserved `blocked` in result, diagnosis, JUnit, and HTML reporting contracts.
 - Changed config-discovered targets from `user` to `observed`, so host config does not weaken execution proof.
+- Added `planning.repairAttempts` so host products can control validation repair without pretending the SDK owns their AI provider/model config.
 - Added smoke coverage for fake user provenance, explicit host targets, failed producers, and blocked dependent scenarios.
 - Fixed the benchmark CLI success case to use a real OpenAPI-backed route and keep the benchmark honest.
+- Added benchmark coverage for host-controlled planning repair configuration.
 
 ## 0.1.7
 

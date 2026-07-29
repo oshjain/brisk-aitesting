@@ -27,6 +27,7 @@ export function mergeConfig(base: UserConfig, override: Partial<UserConfig>): Us
     app: { ...base.app, ...override.app },
     ...(base.auth !== undefined || override.auth !== undefined ? { auth: override.auth ?? base.auth } : {}),
     ...(base.ai !== undefined || override.ai !== undefined ? { ai: { ...base.ai, ...override.ai } as NonNullable<UserConfig['ai']> } : {}),
+    ...(base.planning !== undefined || override.planning !== undefined ? { planning: { ...base.planning, ...override.planning } as NonNullable<UserConfig['planning']> } : {}),
     ...(base.contracts !== undefined || override.contracts !== undefined ? { contracts: { ...base.contracts, ...override.contracts } } : {}),
     ...(base.runtime !== undefined || override.runtime !== undefined ? { runtime: { ...base.runtime, ...override.runtime } as NonNullable<UserConfig['runtime']> } : {}),
     ...(base.discovery !== undefined || override.discovery !== undefined ? { discovery: { ...base.discovery, ...override.discovery } as NonNullable<UserConfig['discovery']> } : {}),
@@ -65,6 +66,7 @@ export function normalizeConfig(input: UserConfig): BriskAiTestingConfig {
   if (input.app.name.trim().length === 0) throw new Error('app.name is required');
   if (input.app.baseUrl.trim().length === 0) throw new Error('app.baseUrl is required');
   validateAiConfig(input.ai);
+  validatePlanningConfig(input.planning);
 
   const artifactsDir = input.runtime?.artifactsDir ?? '.brisk-aitesting/artifacts';
   const timeoutMs = input.runtime?.timeoutMs ?? 120_000;
@@ -79,6 +81,7 @@ export function normalizeConfig(input: UserConfig): BriskAiTestingConfig {
     },
     auth: input.auth ?? { type: 'none' },
     ...(input.ai !== undefined ? { ai: input.ai } : {}),
+    ...(input.planning !== undefined ? { planning: input.planning } : {}),
     ...(input.contracts !== undefined ? { contracts: input.contracts } : {}),
     runtime: {
       artifactsDir,
@@ -122,5 +125,12 @@ function validateAiConfig(ai: UserConfig['ai']): void {
   }
   if (ai.repairAttempts !== undefined && (!Number.isFinite(ai.repairAttempts) || ai.repairAttempts < 0 || ai.repairAttempts > 5)) {
     throw new Error('ai.repairAttempts must be a number between 0 and 5.');
+  }
+}
+
+function validatePlanningConfig(planning: UserConfig['planning']): void {
+  if (planning === undefined) return;
+  if (planning.repairAttempts !== undefined && (!Number.isFinite(planning.repairAttempts) || planning.repairAttempts < 0 || planning.repairAttempts > 5)) {
+    throw new Error('planning.repairAttempts must be a number between 0 and 5.');
   }
 }
