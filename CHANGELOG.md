@@ -2,6 +2,16 @@
 
 All notable changes to `brisk-aitesting` are recorded here.
 
+## 0.1.8
+
+- Added a proven-plan execution gate so AI cannot mark routes as user-supplied unless the host explicitly provides those targets.
+- Added dependency blocking: scenarios that need a failed earlier scenario or missing captured value are marked `blocked` instead of running with misleading 404/400 failures.
+- Validated scenario dependency order so a test can only depend on earlier scenarios in the same plan.
+- Preserved `blocked` in result, diagnosis, JUnit, and HTML reporting contracts.
+- Changed config-discovered targets from `user` to `observed`, so host config does not weaken execution proof.
+- Added smoke coverage for fake user provenance, explicit host targets, failed producers, and blocked dependent scenarios.
+- Fixed the benchmark CLI success case to use a real OpenAPI-backed route and keep the benchmark honest.
+
 ## 0.1.7
 
 - Blocked AI-derived executable targets by default in strict mode unless the host explicitly opts in.

@@ -31,7 +31,7 @@ export function buildResult(params: {
     tests: params.tests,
     artifacts: params.artifacts,
     diagnosis: params.tests
-      .filter((test) => test.status === 'failed' || test.status === 'error')
+      .filter((test) => test.status === 'failed' || test.status === 'error' || test.status === 'blocked')
       .map((test) => diagnoseTest(test)),
     handover: buildHandover(params.config, params.runId),
   };
@@ -45,6 +45,16 @@ function diagnoseTest(test: ScenarioResult): BriskAiTestingResult['diagnosis'][n
   const reason = details || `${test.name} did not pass`;
   const lower = reason.toLowerCase();
 
+  if (test.status === 'blocked' || lower.includes('dependency') || lower.includes('required value')) {
+    return {
+      scenarioId: test.scenarioId,
+      reason,
+      suggestedFixes: [
+        'This scenario did not run because an earlier required scenario or captured value was not proven.',
+        'Fix the upstream route, payload, or capture first; then retry the same plan instead of regenerating tokens.',
+      ],
+    };
+  }
   if (lower.includes('unresolved workflow variable') || lower.includes('missing value for') || lower.includes('unbound_workflow_variable')) {
     return {
       scenarioId: test.scenarioId,
@@ -159,7 +169,7 @@ function summarize(tests: readonly ScenarioResult[], durationMs: number): BriskA
     total,
     passed,
     failed,
-    skipped,
+    skipped: skipped + tests.filter((test) => test.status === 'blocked').length,
     errors,
     passRate: total === 0 ? 0 : Math.round((passed / total) * 10000) / 100,
     durationMs,
@@ -198,7 +208,7 @@ function junitReport(result: BriskAiTestingResult): string {
       ? `\n    <failure message=${quoteXml(details || 'Test failed')}>${escapeXml(details)}</failure>`
       : test.status === 'error'
         ? `\n    <error message=${quoteXml(details || 'Test errored')}>${escapeXml(details)}</error>`
-        : test.status === 'skipped'
+        : test.status === 'skipped' || test.status === 'blocked'
           ? '\n    <skipped />'
           : '';
     return `  <testcase classname=${quoteXml(`brisk.${test.type}`)} name=${quoteXml(test.name)} time=${quoteXml(String(timeSeconds))}>${problem}\n  </testcase>`;
@@ -241,6 +251,7 @@ function htmlReport(result: BriskAiTestingResult): string {
       .failed { background: #fee2e2; color: #991b1b; }
       .error { background: #ffedd5; color: #9a3412; }
       .skipped { background: #e5e7eb; color: #374151; }
+      .blocked { background: #fef3c7; color: #92400e; }
     </style>
   </head>
   <body>

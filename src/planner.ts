@@ -243,6 +243,5 @@ function defaultScenariosFromDiscovery(context: PlannerContext): Omit<ScenarioPl
 
 function provenanceFromDiscoverySource(source: 'config' | 'repo' | 'runtime' | 'contract'): NonNullable<NonNullable<ScenarioPlan['target']>['sourceOfTruth']> {
   if (source === 'contract') return 'contract';
-  if (source === 'config') return 'user';
   return 'observed';
 }

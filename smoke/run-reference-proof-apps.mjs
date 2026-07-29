@@ -116,7 +116,22 @@ async function runApp(app, baseUrl) {
     },
   };
   const tester = createBriskAiTesting(config, { planner });
-  return tester.run({ goal: `Verify ${app.name}`, scenarios: app.expected.total, mode: 'automatic' });
+  return tester.run({
+    goal: `Verify ${app.name}`,
+    scenarios: app.expected.total,
+    mode: 'automatic',
+    metadata: { explicitUserTargets: explicitUserTargetsFor(app.scenarios(app.openApiPath, app.asyncApiPath)) },
+  });
+}
+
+function explicitUserTargetsFor(scenarios) {
+  return scenarios
+    .filter((scenario) => scenario.target?.sourceOfTruth === 'user')
+    .flatMap((scenario) => {
+      if (scenario.type === 'ui' && scenario.target?.route !== undefined) return [`ui ${scenario.target.route}`];
+      if (scenario.type === 'api' && scenario.target?.method !== undefined && scenario.target?.path !== undefined) return [`${scenario.target.method} ${scenario.target.path}`];
+      return [];
+    });
 }
 
 function validateAppResult(app, result) {

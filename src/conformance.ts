@@ -257,7 +257,7 @@ async function checkEngine(params: {
       runId: params.runId,
       plan: params.plan,
       scenario: params.validScenario,
-      runState: { variables: {}, captures: {}, cleanup: [] },
+      runState: { variables: {}, captures: {}, cleanup: [], scenarioStatus: {} },
     }), params.config.runtime.timeoutMs);
     record('run returns output object', isRecord(output));
   } catch (error) {
@@ -302,7 +302,7 @@ function validateEngineOutput(
   record('result.name is non-empty', typeof result.name === 'string' && result.name.trim().length > 0);
   record('result.type matches scenario', result.type === scenario.type);
   record('result.engine is non-empty', typeof result.engine === 'string' && result.engine.trim().length > 0);
-  record('result.status is valid', ['passed', 'failed', 'error', 'skipped'].includes(result.status as string));
+  record('result.status is valid', ['passed', 'failed', 'error', 'skipped', 'blocked'].includes(result.status as string));
   record('valid scenario passes', result.status === 'passed', String(result.status));
   record('result.durationMs is a finite number', typeof result.durationMs === 'number' && Number.isFinite(result.durationMs));
   record('result.assertions is an array', Array.isArray(result.assertions));
@@ -336,7 +336,7 @@ function validateEngineOutput(
 function isValidAssertion(value: unknown): boolean {
   if (!isRecord(value)) return false;
   return typeof value.name === 'string'
-    && ['passed', 'failed', 'error', 'skipped'].includes(String(value.status))
+    && ['passed', 'failed', 'error', 'skipped', 'blocked'].includes(String(value.status))
     && (value.message === undefined || typeof value.message === 'string');
 }
 

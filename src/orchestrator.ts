@@ -83,13 +83,35 @@ export class BriskAiTesting {
 
     const tests: ScenarioResult[] = [];
     const artifacts = [];
-    const runState: EngineRunState = { variables: {}, captures: {}, cleanup: [] };
+    const runState: EngineRunState = { variables: {}, captures: {}, cleanup: [], scenarioStatus: {} };
     const enriched = await this.enrichUiActionsFromGrounding({ input, runId, discovery, plan });
     plan = enriched.plan;
     artifacts.push(...enriched.artifacts);
 
     for (const scenario of plan.scenarios) {
       this.emit({ type: 'scenario.started', runId, scenario });
+      const blockedBy = blockingReasons(scenario, plan, runState);
+      if (blockedBy.length > 0) {
+        const result: ScenarioResult = {
+          scenarioId: scenario.id,
+          name: scenario.name,
+          type: scenario.type,
+          engine: 'dependency-gate',
+          status: 'blocked',
+          durationMs: 0,
+          assertions: scenario.assertions.map((assertion) => ({
+            name: assertion,
+            status: 'blocked',
+            message: blockedBy.join('; '),
+          })),
+          artifacts: [],
+          diagnostics: blockedBy,
+        };
+        runState.scenarioStatus[scenario.id] = result.status;
+        tests.push(result);
+        this.emit({ type: 'scenario.completed', runId, result });
+        continue;
+      }
       const engine = this.engines.find((candidate) => candidate.canRun(scenario));
       if (engine === undefined) {
         const result: ScenarioResult = {
@@ -103,6 +125,7 @@ export class BriskAiTesting {
           artifacts: [],
           diagnostics: [`No engine registered for scenario type "${scenario.type}".`],
         };
+        runState.scenarioStatus[scenario.id] = result.status;
         tests.push(result);
         this.emit({ type: 'scenario.completed', runId, result });
         continue;
@@ -110,6 +133,7 @@ export class BriskAiTesting {
 
       const output = await engine.run({ config: this.config, runId, plan, scenario, runState });
       if (output.artifacts !== undefined) artifacts.push(...output.artifacts);
+      runState.scenarioStatus[scenario.id] = output.result.status;
       tests.push(output.result);
       this.emit({ type: 'scenario.completed', runId, result: output.result });
     }
@@ -253,6 +277,74 @@ export class BriskAiTesting {
     this.emit({ type: 'plan.enriched', runId: params.runId, plan });
     return { plan, artifacts };
   }
+}
+
+function blockingReasons(
+  scenario: TestPlan['scenarios'][number],
+  plan: TestPlan,
+  runState: EngineRunState,
+): readonly string[] {
+  const reasons: string[] = [];
+  for (const dependencyId of scenario.dependsOn ?? []) {
+    const dependencyStatus = runState.scenarioStatus[dependencyId];
+    if (dependencyStatus === undefined) {
+      reasons.push(`Dependency ${dependencyId} has not completed before ${scenario.id}.`);
+    } else if (dependencyStatus !== 'passed') {
+      reasons.push(`Dependency ${dependencyId} finished with status ${dependencyStatus}.`);
+    }
+  }
+
+  const producers = captureProducers(plan);
+  for (const reference of collectScenarioReferences(scenario)) {
+    if (isBuiltinWorkflowVariable(reference)) continue;
+    const producerId = producers.get(reference);
+    if (producerId === undefined) continue;
+    const producerStatus = runState.scenarioStatus[producerId];
+    if (producerStatus === undefined) {
+      reasons.push(`Required value ${reference} is produced by ${producerId}, but that scenario has not completed.`);
+    } else if (producerStatus !== 'passed') {
+      reasons.push(`Required value ${reference} depends on ${producerId}, which finished with status ${producerStatus}.`);
+    }
+  }
+  return [...new Set(reasons)];
+}
+
+function captureProducers(plan: TestPlan): ReadonlyMap<string, string> {
+  const producers = new Map<string, string>();
+  for (const scenario of plan.scenarios) {
+    for (const capture of scenario.capture ?? []) producers.set(capture.name, scenario.id);
+  }
+  return producers;
+}
+
+function collectScenarioReferences(scenario: TestPlan['scenarios'][number]): readonly string[] {
+  const found = new Set<string>();
+  collectReferences({
+    path: scenario.target?.path,
+    request: scenario.request,
+    expect: scenario.expect,
+    cleanup: scenario.cleanup,
+  }, found);
+  return [...found];
+}
+
+function collectReferences(value: unknown, found: Set<string>): void {
+  if (typeof value === 'string') {
+    for (const match of value.matchAll(/<([A-Za-z_$][A-Za-z0-9_$-]*)>/g)) found.add(match[1]!);
+    for (const match of value.matchAll(/\{([A-Za-z_$][A-Za-z0-9_$-]*)\}/g)) found.add(match[1]!);
+    return;
+  }
+  if (Array.isArray(value)) {
+    for (const entry of value) collectReferences(entry, found);
+    return;
+  }
+  if (value !== null && typeof value === 'object') {
+    for (const entry of Object.values(value)) collectReferences(entry, found);
+  }
+}
+
+function isBuiltinWorkflowVariable(name: string): boolean {
+  return ['unique', 'uuid', 'timestamp', 'now'].includes(name.toLowerCase());
 }
 
 function cleanupScenario(cleanup: ApiCleanupStep, index: number): TestPlan['scenarios'][number] {

@@ -335,7 +335,7 @@ async function checkApiRedaction({ config, discovery }) {
     });
     if (!passed) errors.push(`${name}${detail !== undefined ? `: ${detail}` : ''}`);
   };
-  const output = await engine.run({ config, runId: plan.runId, plan, scenario, runState: { variables: {}, captures: {}, cleanup: [] } });
+  const output = await engine.run({ config, runId: plan.runId, plan, scenario, runState: { variables: {}, captures: {}, cleanup: [], scenarioStatus: {} } });
   const artifactPath = output.result.artifacts[0]?.path;
   const artifactText = artifactPath === undefined ? '' : await readFile(artifactPath, 'utf8');
   record('secret endpoint run passes', output.result.status === 'passed', output.result.diagnostics.join('; '));
@@ -434,7 +434,7 @@ async function checkEngine({ config, plan, engine, validScenario, unrelatedScena
 
   let output;
   try {
-    output = await engine.run({ config, runId: `engine_conformance_${engine.type}`, plan, scenario: validScenario, runState: { variables: {}, captures: {}, cleanup: [] } });
+    output = await engine.run({ config, runId: `engine_conformance_${engine.type}`, plan, scenario: validScenario, runState: { variables: {}, captures: {}, cleanup: [], scenarioStatus: {} } });
     record('run returns output object', isRecord(output));
   } catch (error) {
     record('run returns output object', false, error instanceof Error ? error.message : String(error));

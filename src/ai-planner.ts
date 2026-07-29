@@ -706,7 +706,6 @@ function provenanceForUiRoute(path: string, discovery: DiscoveryResult): NonNull
   const route = discovery.uiRoutes.find((candidate) => candidate.path === path);
   if (route === undefined) return undefined;
   if (route.source === 'contract') return 'contract';
-  if (route.source === 'config') return 'user';
   return 'observed';
 }
 
@@ -714,7 +713,6 @@ function provenanceForApiRoute(method: string, path: string, discovery: Discover
   const route = discovery.apiRoutes.find((candidate) => candidate.method.toUpperCase() === method.toUpperCase() && candidate.path === path);
   if (route === undefined) return undefined;
   if (route.source === 'contract') return 'contract';
-  if (route.source === 'config') return 'user';
   return 'observed';
 }
 

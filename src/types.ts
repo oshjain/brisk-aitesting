@@ -1,5 +1,5 @@
 export type EngineType = 'ui' | 'api' | 'contract' | 'schema' | 'replay' | 'message' | 'custom';
-export type BriskAiTestingStatus = 'passed' | 'failed' | 'error' | 'skipped';
+export type BriskAiTestingStatus = 'passed' | 'failed' | 'error' | 'skipped' | 'blocked';
 
 export interface AppConfig {
   readonly name: string;
@@ -531,6 +531,7 @@ export interface EngineRunState {
     readonly path: string;
   }>;
   readonly cleanup: ApiCleanupStep[];
+  readonly scenarioStatus: Record<string, BriskAiTestingStatus>;
 }
 
 export interface EngineRunResult {

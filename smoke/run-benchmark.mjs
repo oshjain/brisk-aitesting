@@ -294,7 +294,7 @@ try {
         target: { method: 'GET', path: '/api/health', sourceOfTruth: 'user' },
         assertions: ['network policy blocks request'],
         evidenceRequired: ['api'],
-      }, { allowedHosts: ['127.0.0.1'] });
+      }, { allowedHosts: ['127.0.0.1'] }, { explicitUserTargets: ['GET /api/health'] });
       const test = result.tests[0];
       const passed = result.status === 'skipped' && test?.diagnostics.some((diagnostic) => /Network policy blocked host/i.test(diagnostic));
       return { passed, observed: JSON.stringify({ status: result.status, diagnostics: test?.diagnostics }) };
@@ -314,7 +314,7 @@ try {
     },
   });
 
-  await runBenchmarkGroup(cases, cliBenchmarkCases(baseUrl));
+  await runBenchmarkGroup(cases, cliBenchmarkCases(baseUrl, contractPath));
 } finally {
   await new Promise((resolve) => server.close(resolve));
 }
@@ -623,7 +623,7 @@ function apiRuntimeBenchmarkCases(baseUrl, contractPath) {
   ];
 }
 
-function cliBenchmarkCases(baseUrl) {
+function cliBenchmarkCases(baseUrl, contractPath) {
   return [
     {
       id: 'cli.missing-config-exits-2',
@@ -653,7 +653,8 @@ function cliBenchmarkCases(baseUrl) {
         const configPath = join(workDir, 'cli-json-success.config.mjs');
         await writeFile(configPath, `export default {
   app: { name: 'CLI benchmark', baseUrl: ${JSON.stringify(baseUrl)} },
-  discovery: { includeUi: false, includeApi: true, includeRepo: false, includeContracts: false },
+  contracts: { openApiPath: ${JSON.stringify(contractPath)} },
+  discovery: { includeUi: false, includeApi: true, includeRepo: false, includeContracts: true },
   aiProvider: {
     name: 'benchmark-provider',
     async complete() {
@@ -665,7 +666,7 @@ function cliBenchmarkCases(baseUrl) {
             name: 'CLI JSON query check',
             type: 'api',
             objective: 'Query endpoint responds through CLI JSON mode.',
-            target: { method: 'GET', path: '/api/query', sourceOfTruth: 'user' },
+            target: { method: 'GET', path: '/api/query', sourceOfTruth: 'contract' },
             expect: { status: 200 },
             assertions: ['status is 200'],
             evidenceRequired: ['api']
@@ -675,7 +676,7 @@ function cliBenchmarkCases(baseUrl) {
     }
   }
 };\n`, 'utf8');
-        const cli = await runCli(['run', '--config', configPath, '--goal', 'health check', '--scenarios', '1', '--json']);
+        const cli = await runCli(['run', '--config', configPath, '--goal', 'query check', '--scenarios', '1', '--json']);
         const parsed = parseJsonFromOutput(cli.stdout);
         return { passed: cli.code === 0 && parsed?.schemaVersion === 'brisk-aitesting.cli-result.v1', observed: JSON.stringify({ code: cli.code, parsed }) };
       },
@@ -743,7 +744,7 @@ function apiRunCase(baseUrl, contractPath, id, expected, scenario, predicate) {
   };
 }
 
-async function runApiScenario(baseUrl, contractPath, scenario, security = {}) {
+async function runApiScenario(baseUrl, contractPath, scenario, security = {}, metadata = {}) {
   const config = defineConfig({
     app: { name: 'benchmark app', baseUrl },
     ...(contractPath !== undefined ? { contracts: { openApiPath: contractPath } } : {}),
@@ -786,6 +787,7 @@ async function runApiScenario(baseUrl, contractPath, scenario, security = {}) {
     goal: scenario.objective,
     scenarios: 1,
     mode: 'automatic',
+    metadata,
   });
 }
 
@@ -843,7 +845,7 @@ function messageScenario(id) {
     name: id.replace(/[_-]/g, ' '),
     type: 'message',
     objective: `Run ${id}.`,
-    target: { schema: 'asyncapi.json', channel: 'orders.created', sourceOfTruth: 'user' },
+    target: { schema: 'asyncapi.json', channel: 'orders.created', sourceOfTruth: 'contract' },
     assertions: ['message contract is valid'],
     evidenceRequired: ['message'],
   };

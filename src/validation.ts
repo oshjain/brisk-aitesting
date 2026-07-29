@@ -87,7 +87,7 @@ export class BuiltinPlanValidator implements PlanValidator {
       validateEngineTarget(path, scenario, context, issues);
       validateRequest(path, scenario, issues);
       validateExpectations(path, scenario, issues);
-      validateWorkflow(path, scenario, plan.scenarios.map((candidate) => candidate.id), issues);
+      validateWorkflow(path, scenario, plan.scenarios.map((candidate) => candidate.id), plan.scenarios.slice(0, index).map((candidate) => candidate.id), issues);
       validateUiActions(path, scenario, issues);
     });
     validateWorkflowReferences(plan.scenarios, issues);
@@ -136,6 +136,8 @@ function validateEngineTarget(path: string, scenario: PlanValidatorContext['plan
     issues.push(error(`${path}.target.sourceOfTruth`, 'FALLBACK_TARGET_BLOCKED', 'Strict mode does not execute fallback/default targets because they were not supplied, observed, or contract-derived.'));
   } else if (target?.sourceOfTruth === 'ai' && context.config.security.strictMode !== false && context.config.security.allowAiTargets !== true) {
     issues.push(error(`${path}.target.sourceOfTruth`, 'AI_TARGET_BLOCKED', 'Strict mode does not execute AI-derived targets unless the host explicitly enables allowAiTargets.'));
+  } else if (target?.sourceOfTruth === 'user' && context.config.security.strictMode !== false && !isExplicitUserTarget(scenario, context)) {
+    issues.push(error(`${path}.target.sourceOfTruth`, 'USER_TARGET_NOT_SUPPLIED', 'sourceOfTruth "user" is only allowed when the host supplied this exact target outside the AI plan.'));
   }
   if (scenario.type === 'ui') {
     if (target?.route === undefined || !target.route.startsWith('/')) {
@@ -176,6 +178,49 @@ function validateEngineTarget(path: string, scenario: PlanValidatorContext['plan
   }
 }
 
+function isExplicitUserTarget(scenario: PlanValidatorContext['plan']['scenarios'][number], context: PlanValidatorContext): boolean {
+  const explicitTargets = explicitUserTargets(context.input.metadata);
+  if (explicitTargets.size === 0) return false;
+  for (const key of targetKeysForScenario(scenario)) {
+    if (explicitTargets.has(key)) return true;
+  }
+  return false;
+}
+
+function explicitUserTargets(metadata: Record<string, unknown> | undefined): ReadonlySet<string> {
+  const raw = metadata?.explicitUserTargets;
+  if (!Array.isArray(raw)) return new Set();
+  return new Set(raw.filter((entry): entry is string => typeof entry === 'string').map(normalizeTargetKey));
+}
+
+function targetKeysForScenario(scenario: PlanValidatorContext['plan']['scenarios'][number]): readonly string[] {
+  const target = scenario.target;
+  if (target === undefined) return [];
+  if (scenario.type === 'api' && target.method !== undefined && target.path !== undefined) {
+    return [
+      normalizeTargetKey(`${target.method.toUpperCase()} ${target.path}`),
+      normalizeTargetKey(`api ${target.method.toUpperCase()} ${target.path}`),
+    ];
+  }
+  if (scenario.type === 'ui' && target.route !== undefined) {
+    return [
+      normalizeTargetKey(target.route),
+      normalizeTargetKey(`ui ${target.route}`),
+    ];
+  }
+  if ((scenario.type === 'contract' || scenario.type === 'schema' || scenario.type === 'message') && target.schema !== undefined) {
+    return [
+      normalizeTargetKey(target.schema),
+      normalizeTargetKey(`${scenario.type} ${target.schema}`),
+    ];
+  }
+  return [];
+}
+
+function normalizeTargetKey(value: string): string {
+  return value.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
 function routePathMatches(discovered: string, planned: string): boolean {
   const discoveredSegments = normalizeRoutePath(discovered).split('/').filter(Boolean);
   const plannedSegments = normalizeRoutePath(planned).split('/').filter(Boolean);
@@ -191,11 +236,13 @@ function normalizeRoutePath(path: string): string {
     || '/';
 }
 
-function validateWorkflow(path: string, scenario: PlanValidatorContext['plan']['scenarios'][number], scenarioIds: readonly string[], issues: ValidationIssue[]): void {
+function validateWorkflow(path: string, scenario: PlanValidatorContext['plan']['scenarios'][number], scenarioIds: readonly string[], earlierScenarioIds: readonly string[], issues: ValidationIssue[]): void {
   if (scenario.dependsOn !== undefined) {
     scenario.dependsOn.forEach((dependency, index) => {
       if (!scenarioIds.includes(dependency)) {
         issues.push(error(`${path}.dependsOn.${index}`, 'UNKNOWN_DEPENDENCY', `Scenario dependsOn references unknown scenario id "${dependency}".`));
+      } else if (!earlierScenarioIds.includes(dependency)) {
+        issues.push(error(`${path}.dependsOn.${index}`, 'DEPENDENCY_MUST_BE_EARLIER', `Scenario dependsOn references "${dependency}", but dependencies must appear earlier in the plan.`));
       }
     });
   }

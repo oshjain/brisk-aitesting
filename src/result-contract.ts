@@ -11,7 +11,7 @@ export const resultJsonSchema = {
   properties: {
     schemaVersion: { const: 'brisk-aitesting.result.v1' },
     runId: { type: 'string', minLength: 1 },
-    status: { enum: ['passed', 'failed', 'error', 'skipped'] },
+    status: { enum: ['passed', 'failed', 'error', 'skipped', 'blocked'] },
     app: { type: 'object' },
     goal: { type: 'string', minLength: 1 },
     discovery: { type: 'object' },
@@ -60,7 +60,7 @@ export const resultJsonSchema = {
         name: { type: 'string', minLength: 1 },
         type: { enum: ['ui', 'api', 'contract', 'schema', 'replay', 'message', 'custom'] },
         engine: { type: 'string', minLength: 1 },
-        status: { enum: ['passed', 'failed', 'error', 'skipped'] },
+        status: { enum: ['passed', 'failed', 'error', 'skipped', 'blocked'] },
         durationMs: { type: 'number', minimum: 0 },
         assertions: { type: 'array' },
         artifacts: { type: 'array' },

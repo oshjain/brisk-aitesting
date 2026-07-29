@@ -38,6 +38,7 @@ try {
     goal: 'Verify serious SaaS reference app: auth, roles, users, audit, UI, API, and OpenAPI contracts',
     scenarios: 13,
     mode: 'automatic',
+    metadata: { explicitUserTargets: ['ui /users'] },
   });
 
   const errors = [];

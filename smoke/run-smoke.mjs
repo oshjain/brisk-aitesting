@@ -600,6 +600,119 @@ try {
     process.exitCode = 1;
   }
 
+  const fakeUserTargetPlanner = {
+    name: 'fake-user-target-smoke-planner',
+    async plan(context) {
+      return {
+        schemaVersion: 'brisk-aitesting.plan.v1',
+        runId: context.runId,
+        goal: context.input.goal,
+        mode: 'automatic',
+        discovery: context.discovery,
+        createdAt: new Date().toISOString(),
+        warnings: [],
+        scenarios: [
+          {
+            id: 'fake_user_target',
+            name: 'AI cannot claim user supplied a target',
+            type: 'api',
+            objective: 'sourceOfTruth user must come from host input, not AI output.',
+            target: { method: 'POST', path: '/api/messages', sourceOfTruth: 'user' },
+            request: { body: { text: 'hello' } },
+            expect: { status: 201 },
+            assertions: ['fake user provenance is rejected'],
+            evidenceRequired: ['api'],
+          },
+        ],
+      };
+    },
+  };
+  const fakeUserTargetTester = createBriskAiTesting(config, { planner: fakeUserTargetPlanner });
+  let fakeUserTargetBlocked = false;
+  try {
+    await fakeUserTargetTester.run({
+      goal: 'Reject AI claiming a user target',
+      scenarios: 1,
+      mode: 'automatic',
+    });
+  } catch (error) {
+    fakeUserTargetBlocked = error instanceof Error && error.message.includes('sourceOfTruth "user"');
+  }
+  if (!fakeUserTargetBlocked) {
+    console.error('Fake user target smoke did not reject sourceOfTruth user without host allowlist.');
+    process.exitCode = 1;
+  }
+
+  const explicitUserTargetTester = createBriskAiTesting(config, { planner: fakeUserTargetPlanner });
+  const explicitUserTargetResult = await explicitUserTargetTester.run({
+    goal: 'Allow host-supplied user target',
+    scenarios: 1,
+    mode: 'automatic',
+    metadata: { explicitUserTargets: ['POST /api/messages'] },
+  });
+  if (explicitUserTargetResult.summary.passed !== 1) {
+    console.error(JSON.stringify({ explicitUserTargetError: 'host supplied user target did not run', status: explicitUserTargetResult.status, summary: explicitUserTargetResult.summary, tests: explicitUserTargetResult.tests }, null, 2));
+    process.exitCode = 1;
+  }
+
+  const blockedDependencyPlanner = {
+    name: 'blocked-dependency-smoke-planner',
+    async plan(context) {
+      return {
+        schemaVersion: 'brisk-aitesting.plan.v1',
+        runId: context.runId,
+        goal: context.input.goal,
+        mode: 'automatic',
+        discovery: context.discovery,
+        createdAt: new Date().toISOString(),
+        warnings: [],
+        scenarios: [
+          {
+            id: 'producer_message',
+            name: 'Producer message creation fails validation',
+            type: 'api',
+            objective: 'This scenario intentionally fails before producing messageId.',
+            target: { method: 'POST', path: '/api/messages', sourceOfTruth: 'contract' },
+            request: { body: {} },
+            expect: { status: 201 },
+            capture: [{ name: 'messageId', from: 'response.body', path: 'id' }],
+            assertions: ['message is created'],
+            evidenceRequired: ['api'],
+          },
+          {
+            id: 'consumer_message',
+            name: 'Consumer message scenario is blocked',
+            type: 'api',
+            objective: 'This scenario must not run when messageId was not proven.',
+            dependsOn: ['producer_message'],
+            target: { method: 'POST', path: '/api/messages', sourceOfTruth: 'contract' },
+            request: { body: { text: 'follow-up-{messageId}' } },
+            expect: { status: 201 },
+            assertions: ['consumer is blocked when producer fails'],
+            evidenceRequired: ['api'],
+          },
+        ],
+      };
+    },
+  };
+  const blockedDependencyTester = createBriskAiTesting(config, { planner: blockedDependencyPlanner });
+  const blockedDependencyResult = await blockedDependencyTester.run({
+    goal: 'Downstream workflow steps are blocked after producer failure',
+    scenarios: 2,
+    mode: 'automatic',
+  });
+  const producer = blockedDependencyResult.tests.find((test) => test.scenarioId === 'producer_message');
+  const consumer = blockedDependencyResult.tests.find((test) => test.scenarioId === 'consumer_message');
+  const blockedErrors = [];
+  if (producer?.status !== 'failed') blockedErrors.push(`expected producer failed, got ${producer?.status}`);
+  if (consumer?.status !== 'blocked') blockedErrors.push(`expected consumer blocked, got ${consumer?.status}`);
+  if (!consumer?.diagnostics.join(' ').includes('producer_message')) blockedErrors.push('blocked diagnostic did not name upstream producer');
+  if (blockedDependencyResult.summary.skipped < 1) blockedErrors.push('blocked scenario was not reflected in skipped/blocked summary bucket');
+  if (blockedErrors.length > 0) {
+    console.error(JSON.stringify({ blockedErrors, status: blockedDependencyResult.status, summary: blockedDependencyResult.summary, tests: blockedDependencyResult.tests }, null, 2));
+    process.exitCode = 1;
+  }
+
   const unboundWorkflowPlanner = {
     name: 'unbound-workflow-smoke-planner',
     async plan(context) {
