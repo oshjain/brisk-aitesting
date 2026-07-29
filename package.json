@@ -1,6 +1,6 @@
 {
   "name": "brisk-aitesting",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Locally embeddable software testing engine using AI planning and precise execution.",
   "type": "module",
   "license": "MIT",

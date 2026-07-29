@@ -225,7 +225,7 @@ function routePathMatches(discovered: string, planned: string): boolean {
   const discoveredSegments = normalizeRoutePath(discovered).split('/').filter(Boolean);
   const plannedSegments = normalizeRoutePath(planned).split('/').filter(Boolean);
   if (discoveredSegments.length !== plannedSegments.length) return false;
-  return discoveredSegments.every((segment, index) => segment === '{}' || segment === plannedSegments[index]);
+  return discoveredSegments.every((segment, index) => segment === '{}' || plannedSegments[index] === '{}' || segment === plannedSegments[index]);
 }
 
 function normalizeRoutePath(path: string): string {
@@ -233,6 +233,7 @@ function normalizeRoutePath(path: string): string {
     .replace(/\/+$/g, '')
     .replace(/:([A-Za-z_$][A-Za-z0-9_$-]*)/g, '{$1}')
     .replace(/\{[A-Za-z_$][A-Za-z0-9_$-]*\}/g, '{}')
+    .replace(/<([A-Za-z_$][A-Za-z0-9_$-]*)>/g, '{}')
     || '/';
 }
 

@@ -66,7 +66,9 @@ function buildSystemPrompt(): string {
     'For UI interactions, output uiActions with action intent and evidenceId only. Do not output CSS selectors or Playwright code.',
     'Each scenario must choose one type: ui, api, contract, schema, replay, or custom.',
     'UI scenarios need target.route. API scenarios need target.method and target.path.',
-    'Each target must include sourceOfTruth: user, observed, or contract. Use ai only when the host explicitly allows AI-derived targets.',
+    'Each target must include sourceOfTruth: observed, contract, or ai.',
+    'Never output sourceOfTruth: user. User provenance is reserved for exact targets supplied by the host app outside AI output.',
+    'Use observed only for routes listed in discovery. Use contract only for contract-backed routes. Use ai for inferred targets that still need validation or repair.',
     'For multi-step API workflows, every later {name} or <name> reference must be produced by an earlier explicit capture with the same name.',
     'Use built-in placeholders unique, uuid, timestamp, or now for generated values. Example: "resource-<unique>".',
     'Use cleanup for API scenarios that create durable data.',
@@ -82,8 +84,9 @@ function buildRepairSystemPrompt(): string {
     'Keep valid scenarios when possible. Change only fields needed to make the plan executable.',
     'Each scenario must choose one type: ui, api, contract, schema, replay, or custom.',
     'UI scenarios need target.route beginning with /. API scenarios need target.method and target.path beginning with /.',
-    'Each target must include sourceOfTruth: user, observed, or contract. Never use fallback in repaired AI output.',
-    'Use ai sourceOfTruth only when validation explicitly allows AI-derived targets.',
+    'Each target must include sourceOfTruth: observed, contract, or ai. Never use fallback in repaired AI output.',
+    'Never output sourceOfTruth: user. User provenance is reserved for exact targets supplied by the host app outside AI output.',
+    'Use observed only for routes listed in discovery. Use contract only for contract-backed routes. Use ai only when validation explicitly allows AI-derived targets.',
     'Successful POST/PUT/PATCH scenarios need a request body.',
     'For multi-step API workflows, every later {name} or <name> reference must be produced by an earlier explicit capture with the same name.',
     'Use built-in placeholders unique, uuid, timestamp, or now for generated values. Example: "resource-<unique>".',
@@ -525,7 +528,7 @@ function inferEngineTypeFromTarget(target: unknown): EngineType | undefined {
 
 function normalizeTarget(value: unknown, type: EngineType, discovery: DiscoveryResult): ScenarioPlan['target'] {
   const record = isRecord(value) ? value : {};
-  const explicitSource = normalizeSourceOfTruth(record.sourceOfTruth ?? record.provenance);
+  const explicitSource = normalizeAiDeclaredSourceOfTruth(record.sourceOfTruth ?? record.provenance);
   if (type === 'ui') {
     const direct = normalizePath(record.route ?? record.path ?? record.url);
     if (direct !== undefined) return { route: direct, sourceOfTruth: explicitSource ?? provenanceForUiRoute(direct, discovery) ?? 'ai' };
@@ -702,15 +705,21 @@ function normalizeSourceOfTruth(value: unknown): NonNullable<NonNullable<Scenari
   return undefined;
 }
 
+function normalizeAiDeclaredSourceOfTruth(value: unknown): NonNullable<NonNullable<ScenarioPlan['target']>['sourceOfTruth']> | undefined {
+  const source = normalizeSourceOfTruth(value);
+  if (source === 'user') return undefined;
+  return source;
+}
+
 function provenanceForUiRoute(path: string, discovery: DiscoveryResult): NonNullable<NonNullable<ScenarioPlan['target']>['sourceOfTruth']> | undefined {
-  const route = discovery.uiRoutes.find((candidate) => candidate.path === path);
+  const route = discovery.uiRoutes.find((candidate) => routePathMatches(candidate.path, path));
   if (route === undefined) return undefined;
   if (route.source === 'contract') return 'contract';
   return 'observed';
 }
 
 function provenanceForApiRoute(method: string, path: string, discovery: DiscoveryResult): NonNullable<NonNullable<ScenarioPlan['target']>['sourceOfTruth']> | undefined {
-  const route = discovery.apiRoutes.find((candidate) => candidate.method.toUpperCase() === method.toUpperCase() && candidate.path === path);
+  const route = discovery.apiRoutes.find((candidate) => candidate.method.toUpperCase() === method.toUpperCase() && routePathMatches(candidate.path, path));
   if (route === undefined) return undefined;
   if (route.source === 'contract') return 'contract';
   return 'observed';
@@ -720,6 +729,22 @@ function provenanceForContract(path: string, discovery: DiscoveryResult): NonNul
   const contract = discovery.contracts.find((candidate) => candidate.path === path);
   if (contract === undefined) return undefined;
   return 'contract';
+}
+
+function routePathMatches(discovered: string, planned: string): boolean {
+  const discoveredSegments = normalizeRouteForProof(discovered).split('/').filter(Boolean);
+  const plannedSegments = normalizeRouteForProof(planned).split('/').filter(Boolean);
+  if (discoveredSegments.length !== plannedSegments.length) return false;
+  return discoveredSegments.every((segment, index) => segment === '{}' || plannedSegments[index] === '{}' || segment === plannedSegments[index]);
+}
+
+function normalizeRouteForProof(path: string): string {
+  return path
+    .replace(/\/+$/g, '')
+    .replace(/:([A-Za-z_$][A-Za-z0-9_$-]*)/g, '{}')
+    .replace(/\{[A-Za-z_$][A-Za-z0-9_$-]*\}/g, '{}')
+    .replace(/<([A-Za-z_$][A-Za-z0-9_$-]*)>/g, '{}')
+    || '/';
 }
 
 function normalizePath(value: unknown): string | undefined {

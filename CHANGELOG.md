@@ -2,6 +2,13 @@
 
 All notable changes to `brisk-aitesting` are recorded here.
 
+## 0.1.9
+
+- Fixed AI plan normalization so model output can no longer self-certify targets with `sourceOfTruth: "user"`; user provenance is now reserved for host-supplied targets only.
+- Updated AI planner prompts to require `observed`, `contract`, or `ai` target provenance and explicitly forbid AI-generated `user` provenance.
+- Matched dynamic workflow paths such as `/api/topics/<topicId>/messages` against discovered route patterns such as `/api/topics/:topicId/messages`, while still rejecting wrong routes such as `/api/topics/<topicId>/publish`.
+- Added smoke and benchmark coverage for AI-declared user provenance, invented routes, dynamic route proof, and wrong dynamic route suffix rejection.
+
 ## 0.1.8
 
 - Added a proven-plan execution gate so AI cannot mark routes as user-supplied unless the host explicitly provides those targets.

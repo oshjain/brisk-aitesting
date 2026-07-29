@@ -603,6 +603,19 @@ function aiParserBenchmarkCases(baseUrl) {
     aiCase(baseUrl, 'ai-parser.status-string-becomes-number', 'status strings are normalized', '{ "scenarios": [{ "name": "Status", "type": "api", "target": { "method": "GET", "path": "/api/query" }, "expect": { "status": "200" }, "assertions": ["runs"], "evidenceRequired": ["api"] }] }', (plan) => plan.scenarios[0]?.expect?.status === 200),
     aiCase(baseUrl, 'ai-parser.url-target-normalized-to-path', 'absolute URL targets become paths', `{ "scenarios": [{ "name": "URL", "type": "api", "target": { "method": "GET", "url": "${baseUrl}/api/query?mode=fast" }, "assertions": ["runs"], "evidenceRequired": ["api"] }] }`, (plan) => plan.scenarios[0]?.target?.path === '/api/query'),
     aiCase(baseUrl, 'ai-parser.ui-action-aliases-normalized', 'UI action aliases are normalized to supported actions', '{ "scenarios": [{ "name": "Actions", "type": "ui", "target": { "route": "/" }, "steps": [{ "type": "type", "elementId": "ui_el_001", "text": "hello" }, { "type": "tap", "elementId": "ui_el_002" }], "assertions": ["runs"], "evidenceRequired": ["ui"] }] }', (plan) => plan.scenarios[0]?.uiActions?.[0]?.action === 'fill' && plan.scenarios[0]?.uiActions?.[1]?.action === 'click'),
+    aiCase(baseUrl, 'ai-parser.ai-user-source-known-route-is-not-user', 'AI cannot self-certify a discovered route as user supplied', '{ "scenarios": [{ "name": "Known route user claim", "type": "api", "target": { "method": "GET", "path": "/api/query", "sourceOfTruth": "user" }, "assertions": ["runs"], "evidenceRequired": ["api"] }] }', (plan) => plan.scenarios[0]?.target?.sourceOfTruth !== 'user'),
+    aiCase(baseUrl, 'ai-parser.ai-user-source-unknown-route-becomes-ai', 'AI cannot promote an invented route to user supplied', '{ "scenarios": [{ "name": "Unknown route user claim", "type": "api", "target": { "method": "POST", "path": "/api/not-a-real-route", "sourceOfTruth": "user" }, "request": { "body": { "name": "bad-<unique>" } }, "expect": { "status": 201 }, "assertions": ["runs"], "evidenceRequired": ["api"] }] }', (plan) => plan.scenarios[0]?.target?.sourceOfTruth === 'ai'),
+    {
+      id: 'ai-parser.dynamic-route-placeholder-gets-observed-provenance',
+      area: 'ai',
+      expected: 'AI dynamic route placeholders are matched against discovered route patterns',
+      run: async () => {
+        const context = await plannerContext(baseUrl);
+        context.discovery.apiRoutes = [{ method: 'POST', path: '/api/topics/:topicId/messages', source: 'repo', confidence: 0.9 }];
+        const plan = parseAiPlanForTesting('{ "scenarios": [{ "name": "Dynamic message route", "type": "api", "target": { "method": "POST", "path": "/api/topics/<topicId>/messages" }, "request": { "body": { "text": "hello" } }, "expect": { "status": 201 }, "assertions": ["runs"], "evidenceRequired": ["api"] }] }', context);
+        return { passed: plan.scenarios[0]?.target?.sourceOfTruth === 'observed', observed: JSON.stringify(plan.scenarios[0]?.target) };
+      },
+    },
   ];
 }
 
@@ -616,6 +629,55 @@ function validationBenchmarkCases(baseUrl) {
     validationCase(baseUrl, validator, 'validation.bad-ui-evidence-id-fails', 'UI actions need evidence IDs', (plan) => ({ ...plan, scenarios: [{ ...uiScenario('bad_action'), uiActions: [{ action: 'click', evidenceId: 'button1' }] }] }), /PLAN_CONTRACT_INVALID_SHAPE|INVALID_UI_EVIDENCE_ID/),
     validationCase(baseUrl, validator, 'validation.unchanged-only-api', 'unchanged state checks are API-only', (plan) => ({ ...plan, scenarios: [{ ...uiScenario('bad_unchanged'), expect: { unchanged: [{ target: { path: '/api/state' } }] } }] }), /UNCHANGED_ON_NON_API_SCENARIO/),
     validationCase(baseUrl, validator, 'validation.required-type-is-enforced', 'requiredTypes input is enforced', (plan) => ({ ...plan, scenarios: [apiScenario('only_api')] }), /MISSING_REQUIRED_TYPE/, { requiredTypes: ['message'] }),
+    {
+      id: 'validation.dynamic-route-placeholder-matches-discovery',
+      area: 'validation',
+      expected: 'planned workflow placeholders match discovered dynamic API routes',
+      run: async () => {
+        const config = normalizeConfig(defineConfig({ app: { name: 'dynamic route validation', baseUrl } }));
+        const plan = {
+          ...basePlan(baseUrl),
+          discovery: {
+            ...basePlan(baseUrl).discovery,
+            apiRoutes: [
+              { method: 'POST', path: '/api/topics', source: 'repo', confidence: 0.9 },
+              { method: 'POST', path: '/api/topics/:topicId/messages', source: 'repo', confidence: 0.9 },
+            ],
+          },
+          scenarios: [
+            {
+              ...apiScenario('create_topic_for_dynamic_route'),
+              target: { method: 'POST', path: '/api/topics', sourceOfTruth: 'observed' },
+              request: { body: { name: 'topic-<unique>' } },
+              expect: { status: 201 },
+              capture: [{ name: 'topicId', from: 'response.body', path: 'id' }],
+            },
+            {
+              ...apiScenario('dynamic_route'),
+              target: { method: 'POST', path: '/api/topics/<topicId>/messages', sourceOfTruth: 'observed' },
+              request: { body: { text: 'message-<unique>' } },
+              expect: { status: 201 },
+            },
+          ],
+        };
+        const result = validator.validate({ config, input: { goal: 'planned workflow placeholders match discovered dynamic API routes', scenarios: 1, mode: 'automatic' }, plan });
+        return { passed: result.valid === true, observed: JSON.stringify(result.issues) };
+      },
+    },
+    validationCase(baseUrl, validator, 'validation.dynamic-route-wrong-suffix-fails', 'wrong dynamic route suffix is not accepted as discovered evidence', (plan) => ({
+      ...plan,
+      discovery: {
+        ...plan.discovery,
+        apiRoutes: [{ method: 'POST', path: '/api/topics/:topicId/messages', source: 'repo', confidence: 0.9 }],
+      },
+      scenarios: [{
+        ...apiScenario('wrong_dynamic_route'),
+        target: { method: 'POST', path: '/api/topics/<topicId>/publish', sourceOfTruth: 'observed' },
+        request: { body: { text: 'message-<unique>' } },
+        expect: { status: 201 },
+        capture: [{ name: 'topicId', from: 'response.body', path: 'topicId' }],
+      }],
+    }), /UNPROVEN_API_ROUTE/),
     {
       id: 'validation.public-contract-blocks-extra-step-key',
       area: 'validation',

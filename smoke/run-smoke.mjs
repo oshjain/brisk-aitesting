@@ -809,6 +809,39 @@ try {
   if (normalizedAiPlan.scenarios.length !== 2) aiErrors.push(`expected AI total 2, got ${normalizedAiPlan.scenarios.length}`);
   if (!normalizedAiPlan.scenarios.some((scenario) => scenario.type === 'ui')) aiErrors.push('AI browser alias was not normalized to ui');
   if (!normalizedAiPlan.scenarios.some((scenario) => scenario.type === 'api')) aiErrors.push('AI backend alias was not normalized to api');
+
+  const aiClaimingUserPlan = parseAiPlanForTesting(`{
+  "scenarios": [
+    {
+      "name": "AI tries to self certify discovered route",
+      "type": "api",
+      "objective": "AI output must not be able to mark itself as user supplied.",
+      "target": { "method": "GET", "path": "/api/health", "sourceOfTruth": "user" },
+      "expect": { "status": 200 },
+      "assertions": ["user provenance is stripped"],
+      "evidenceRequired": ["api"]
+    },
+    {
+      "name": "AI tries to self certify invented route",
+      "type": "api",
+      "objective": "Invented AI routes must stay AI derived and fail validation in strict mode.",
+      "target": { "method": "POST", "path": "/api/not-a-real-route", "sourceOfTruth": "user" },
+      "request": { "body": { "name": "bad-<unique>" } },
+      "expect": { "status": 201 },
+      "assertions": ["invented route is not promoted"],
+      "evidenceRequired": ["api"]
+    }
+  ]
+}`, {
+    config,
+    input: { goal: 'AI cannot claim user supplied targets', scenarios: 2, mode: 'automatic' },
+    runId: 'smoke_ai_user_provenance_normalization',
+    discovery: result.discovery,
+  });
+  const discoveredClaim = aiClaimingUserPlan.scenarios.find((scenario) => scenario.name.includes('discovered route'));
+  const inventedClaim = aiClaimingUserPlan.scenarios.find((scenario) => scenario.name.includes('invented route'));
+  if (discoveredClaim?.target?.sourceOfTruth === 'user') aiErrors.push('AI-declared user provenance survived on discovered route');
+  if (inventedClaim?.target?.sourceOfTruth !== 'ai') aiErrors.push(`expected invented AI route to remain ai, got ${inventedClaim?.target?.sourceOfTruth}`);
   if (aiErrors.length > 0) {
     console.error(JSON.stringify({ aiErrors, plan: normalizedAiPlan }, null, 2));
     process.exitCode = 1;
