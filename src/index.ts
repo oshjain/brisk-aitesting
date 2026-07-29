@@ -34,6 +34,13 @@ export {
 } from './plan-contract.js';
 
 export {
+  handoverJsonSchema,
+  resultJsonSchema,
+  validateHandoverJsonContract,
+  validateResultJsonContract,
+} from './result-contract.js';
+
+export {
   loadOpenApiSummary,
   openApiOperationsToDiscoveryRoutes,
   summarizeOpenApiDocument,

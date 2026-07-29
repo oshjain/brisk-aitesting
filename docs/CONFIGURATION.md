@@ -4,9 +4,9 @@
 
 ## Main Config
 
-The config file is usually named `brisk-aitesting.config.ts`.
+The CLI creates `brisk-aitesting.config.mjs` by default. JSON, YAML, and YML config files are also supported for teams that prefer config without executable code.
 
-```ts
+```js
 import { defineConfig } from 'brisk-aitesting';
 
 export default defineConfig({
@@ -34,6 +34,10 @@ export default defineConfig({
     networkPolicy: 'localhost-only',
     allowedHosts: ['localhost', '127.0.0.1', '::1'],
     redactSecrets: true,
+    strictMode: true,
+    allowFallbackTargets: false,
+    allowHeuristicWorkflowCapture: false,
+    uiHealing: 'safe',
   },
 });
 ```
@@ -82,15 +86,46 @@ ai: {
 
 Provider-specific environment variables are compatibility aliases. Product integrations should prefer `BRISK_AITESTING_*`.
 
+The built-in provider path supports:
+
+| Provider value | Meaning |
+|:---------------|:--------|
+| `openai` | OpenAI-compatible chat-completions endpoint using the standard OpenAI URL |
+| `openai-compatible` | Any compatible gateway or self-hosted endpoint |
+| `deepseek` | Built-in endpoint mapping for DeepSeek-compatible chat completions |
+| `minimax` | Built-in endpoint mapping for MiniMax-compatible chat completions |
+
+For any provider not listed here, use the `AiPlannerProvider` interface and pass your provider adapter through SDK configuration. Do not put unimplemented provider names in config.
+
 ## Optional Adapter Commands
 
 Third-party adapters are local and opt-in.
+
+The default package install does not force heavy adapter runtimes into the host application:
+
+```bash
+npm install brisk-aitesting
+```
+
+Install enhanced adapter runtimes only in the app/package that will run them:
+
+```bash
+npm install specmatic
+npm install @pact-foundation/pact
+```
+
+For pnpm monorepos:
+
+```bash
+pnpm add specmatic --filter <your-backend-package>
+pnpm add @pact-foundation/pact --filter <your-backend-package>
+```
 
 | Setting | Meaning |
 |:--------|:--------|
 | `BRISK_AITESTING_SCHEMATHESIS_COMMAND` | Path or command name for Schemathesis. Defaults to `st`. |
 
-Specmatic is loaded through the optional `specmatic` npm runtime and still needs Java available on the machine.
+Specmatic is loaded through the host-installed `specmatic` npm runtime and still needs Java available on the machine. Schemathesis is a Python runtime and should be installed outside npm.
 
 ## Host Config Bridge
 
@@ -119,5 +154,15 @@ Default behavior is local-first:
 
 - network policy: `localhost-only`
 - secret redaction: on
+- strict plan validation: on
+- fallback target execution: off
+- UI healing: safe mode
 - no hosted dashboard required
 - no database required
+
+| Setting | Default | Meaning |
+|:--------|:--------|:--------|
+| `strictMode` | `true` | AI output must be valid JSON and must pass the public plan contract. |
+| `allowFallbackTargets` | `false` | Brisk will not run a scenario against an invented target when discovery could not prove the target. |
+| `allowHeuristicWorkflowCapture` | `false` | Brisk will not guess workflow IDs from API responses unless you explicitly opt in. Prefer explicit captures in the plan. |
+| `uiHealing` | `safe` | Brisk may try low-risk selector recovery. Destructive actions are not healed in safe mode. |

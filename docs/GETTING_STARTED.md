@@ -8,7 +8,19 @@ This guide gets `brisk-aitesting` running in a real project.
 npm install brisk-aitesting
 ```
 
-If you want browser testing, install Playwright in the host project too:
+For pnpm monorepos, install it in the backend package that will run discovery, AI planning, engines, and artifact writing:
+
+```bash
+pnpm add brisk-aitesting --filter <your-backend-package>
+```
+
+Example:
+
+```bash
+pnpm add brisk-aitesting --filter @your-org/api
+```
+
+If your project already installs Playwright and browser binaries, keep using that setup. If it does not, install Playwright in the same backend/runtime package:
 
 ```bash
 npm install -D @playwright/test
@@ -17,12 +29,28 @@ npx playwright install chromium
 
 ## Optional Adapter Runtimes
 
-Brisk ships adapter code for Schemathesis, Specmatic, and Pact. The external tools stay optional.
+Brisk ships adapter code for Schemathesis, Specmatic, and Pact. The external tools stay opt-in so a normal install stays light and reliable.
 
-| Adapter | Install only when you need it |
-| --- | --- |
-| Schemathesis | Python plus Schemathesis |
-| Specmatic | Java plus the optional `specmatic` runtime |
+Default install:
+
+```bash
+npm install brisk-aitesting
+```
+
+Enhanced adapter installs:
+
+| Adapter | Install only when you need it | Command |
+| --- | --- | --- |
+| Schemathesis | Deep OpenAPI fuzzing | Install Python plus Schemathesis on the machine |
+| Specmatic | Specmatic contract execution and mock/service virtualization | `npm install specmatic` plus Java |
+| Pact | Pact message verification | `npm install @pact-foundation/pact` |
+
+For pnpm monorepos, install enhanced adapters in the same backend package that runs `brisk-aitesting`:
+
+```bash
+pnpm add specmatic --filter <your-backend-package>
+pnpm add @pact-foundation/pact --filter <your-backend-package>
+```
 
 Specmatic can test any HTTP/OpenAPI provider; the app under test does not have to be Java. Java is needed because the Specmatic runtime uses a Java executable.
 
@@ -33,11 +61,11 @@ Specmatic can test any HTTP/OpenAPI provider; the app under test does not have t
 npx brisk-aitesting init
 ```
 
-This creates `brisk-aitesting.config.ts`.
+This creates `brisk-aitesting.config.mjs`.
 
 Set the minimum values first:
 
-```ts
+```js
 import { defineConfig } from 'brisk-aitesting';
 
 export default defineConfig({
@@ -65,9 +93,21 @@ export default defineConfig({
     networkPolicy: 'localhost-only',
     allowedHosts: ['localhost', '127.0.0.1', '::1'],
     redactSecrets: true,
+    strictMode: true,
+    allowFallbackTargets: false,
+    allowHeuristicWorkflowCapture: false,
+    uiHealing: 'safe',
   },
 });
 ```
+
+Before the first run, check the local setup:
+
+```bash
+npx brisk-aitesting doctor
+```
+
+`doctor` checks the config, app URL, contracts, auth reachability, browser runtime, AI provider settings, security mode, and optional adapter prerequisites. It is meant to catch boring setup mistakes before they become confusing test failures.
 
 ## Run
 

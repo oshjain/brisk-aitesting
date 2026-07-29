@@ -27,7 +27,7 @@ export class AiPlanner implements Planner {
       system: buildSystemPrompt(),
       user: buildUserPrompt(context),
     });
-    const parsed = parseAiPlan(response.content);
+    const parsed = parseAiPlan(response.content, context.config.security.strictMode !== false);
     return this.buildPlan(parsed, context);
   }
 
@@ -37,7 +37,7 @@ export class AiPlanner implements Planner {
       system: buildRepairSystemPrompt(),
       user: buildRepairUserPrompt(context),
     });
-    const parsed = parseAiPlan(response.content);
+    const parsed = parseAiPlan(response.content, context.config.security.strictMode !== false);
     return this.buildPlan(parsed, context);
   }
 
@@ -55,6 +55,7 @@ export class AiPlanner implements Planner {
     if (plan !== undefined) return plan;
     return this.fallback.plan(context);
   }
+
 }
 
 function buildSystemPrompt(): string {
@@ -65,6 +66,10 @@ function buildSystemPrompt(): string {
     'For UI interactions, output uiActions with action intent and evidenceId only. Do not output CSS selectors or Playwright code.',
     'Each scenario must choose one type: ui, api, contract, schema, replay, or custom.',
     'UI scenarios need target.route. API scenarios need target.method and target.path.',
+    'Each target must include sourceOfTruth: user, observed, or contract. Use ai only when the host explicitly allows AI-derived targets.',
+    'For multi-step API workflows, every later {name} or <name> reference must be produced by an earlier explicit capture with the same name.',
+    'Use built-in placeholders unique, uuid, timestamp, or now for generated values. Example: "resource-<unique>".',
+    'Use cleanup for API scenarios that create durable data.',
     'Prefer discovered routes and APIs. Do not invent targets when discovery provides options.',
   ].join('\n');
 }
@@ -77,6 +82,12 @@ function buildRepairSystemPrompt(): string {
     'Keep valid scenarios when possible. Change only fields needed to make the plan executable.',
     'Each scenario must choose one type: ui, api, contract, schema, replay, or custom.',
     'UI scenarios need target.route beginning with /. API scenarios need target.method and target.path beginning with /.',
+    'Each target must include sourceOfTruth: user, observed, or contract. Never use fallback in repaired AI output.',
+    'Use ai sourceOfTruth only when validation explicitly allows AI-derived targets.',
+    'Successful POST/PUT/PATCH scenarios need a request body.',
+    'For multi-step API workflows, every later {name} or <name> reference must be produced by an earlier explicit capture with the same name.',
+    'Use built-in placeholders unique, uuid, timestamp, or now for generated values. Example: "resource-<unique>".',
+    'Use cleanup for API scenarios that create durable data.',
     'UI actions must use evidenceId values like ui_el_001. Do not invent selectors.',
     'Prefer discovered routes and APIs. Do not invent targets when discovery provides options.',
   ].join('\n');
@@ -109,10 +120,13 @@ function buildUserPrompt(context: PlannerContext): string {
           name: 'Scenario name',
           type: 'ui',
           objective: 'What this proves',
-          target: { route: '/' },
+          target: { route: '/', sourceOfTruth: 'observed' },
           request: {},
           expect: {},
           assertions: ['human readable assertion'],
+          capture: [{ name: 'resourceId', from: 'response.body', path: 'id' }],
+          dependsOn: [],
+          cleanup: [{ type: 'api', target: { method: 'DELETE', path: '/api/resources/<resourceId>' }, expect: { status: { min: 200, max: 204 } } }],
           uiActions: [
             { action: 'fill', evidenceId: 'ui_el_001', value: 'user@example.com' },
             { action: 'click', evidenceId: 'ui_el_003' },
@@ -148,7 +162,7 @@ function buildRepairUserPrompt(context: PlannerRepairContext): string {
           name: 'Scenario name',
           type: 'api',
           objective: 'What this proves',
-          target: { method: 'GET', path: '/api/health' },
+          target: { method: 'GET', path: '/api/health', sourceOfTruth: 'observed' },
           request: {},
           expect: { status: 200 },
           assertions: ['human readable assertion'],
@@ -243,7 +257,11 @@ function scenarioForType(type: EngineType, context: PlannerContext): ScenarioPla
       name: 'Required API coverage',
       type: 'api',
       objective: 'Ensure required API coverage is present in the plan.',
-      target: { method: apiRoute?.method ?? 'GET', path: apiRoute?.path ?? '/api/health' },
+      target: {
+        method: apiRoute?.method ?? 'GET',
+        path: apiRoute?.path ?? '/api/health',
+        sourceOfTruth: apiRoute === undefined ? 'fallback' : provenanceForApiRoute(apiRoute.method, apiRoute.path, context.discovery) ?? 'observed',
+      },
       expect: { status: { min: 200, max: 499 } },
       assertions: ['API responds with a controlled status'],
       evidenceRequired: ['api'],
@@ -255,7 +273,10 @@ function scenarioForType(type: EngineType, context: PlannerContext): ScenarioPla
       name: 'Required UI coverage',
       type: 'ui',
       objective: 'Ensure required UI coverage is present in the plan.',
-      target: { route: context.discovery.uiRoutes[0]?.path ?? '/' },
+      target: {
+        route: context.discovery.uiRoutes[0]?.path ?? '/',
+        sourceOfTruth: context.discovery.uiRoutes[0] === undefined ? 'fallback' : provenanceForUiRoute(context.discovery.uiRoutes[0].path, context.discovery) ?? 'observed',
+      },
       assertions: ['page body is visible'],
       evidenceRequired: ['ui'],
     };
@@ -267,7 +288,7 @@ function scenarioForType(type: EngineType, context: PlannerContext): ScenarioPla
       name: 'Required message coverage',
       type: 'message',
       objective: 'Ensure required message/event contract coverage is present in the plan.',
-      target: { ...(schema !== undefined ? { schema } : {}), channel: 'default' },
+      target: { ...(schema !== undefined ? { schema } : {}), channel: 'default', sourceOfTruth: schema === undefined ? 'fallback' : 'contract' },
       assertions: ['message contract can be inspected'],
       evidenceRequired: ['message', 'schema'],
     };
@@ -277,6 +298,7 @@ function scenarioForType(type: EngineType, context: PlannerContext): ScenarioPla
     name: `Required ${type} coverage`,
     type,
     objective: `Ensure required ${type} coverage is present in the plan.`,
+    ...(type === 'schema' || type === 'contract' ? { target: { sourceOfTruth: 'fallback' as const } } : {}),
     assertions: [`${type} coverage exists`],
     evidenceRequired: type === 'schema' || type === 'contract' ? ['schema'] : ['repo'],
   };
@@ -300,13 +322,13 @@ function summarizeDiscovery(discovery: DiscoveryResult): unknown {
   };
 }
 
-function parseAiPlan(content: string): {
+function parseAiPlan(content: string, strictJson = true): {
   readonly mode?: 'automatic' | EngineType;
   readonly warnings?: unknown;
   readonly scenarios?: unknown;
 } {
-  const json = extractJsonObject(content, isPlanLikeObject);
-  const parsed = unwrapPlanObject(JSON.parse(repairJson(json)) as unknown);
+  const json = extractJsonObject(content, isPlanLikeObject, strictJson);
+  const parsed = unwrapPlanObject(JSON.parse(strictJson ? json : repairJson(json)) as unknown);
   if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error('AI planner returned JSON that is not an object.');
   }
@@ -318,8 +340,8 @@ function parseAiPlan(content: string): {
 }
 
 function parseAiUiActions(content: string): readonly UiActionPlan[] {
-  const json = extractJsonObject(content);
-  const parsed = JSON.parse(repairJson(json)) as unknown;
+  const json = extractJsonObject(content, undefined, true);
+  const parsed = JSON.parse(json) as unknown;
   const source = isRecord(parsed) ? parsed.uiActions ?? parsed.actions ?? parsed.steps : undefined;
   return normalizeUiActions(source) ?? [];
 }
@@ -332,7 +354,7 @@ function unwrapPlanObject(value: unknown): unknown {
 }
 
 export function parseAiPlanForTesting(content: string, context: PlannerContext): TestPlan {
-  const parsed = parseAiPlan(content);
+  const parsed = parseAiPlan(content, context.config.security.strictMode !== false);
   const plan = buildNormalizedPlan(parsed, context);
   if (plan === undefined) throw new Error('AI planner returned no scenarios after normalization.');
   return plan;
@@ -367,13 +389,13 @@ function repairJson(value: string): string {
     .replace(/([{,]\s*)([A-Za-z_$][A-Za-z0-9_$-]*)(\s*:)/g, '$1"$2"$3');
 }
 
-function extractJsonObject(content: string, accepts: (value: unknown) => boolean = () => true): string {
+function extractJsonObject(content: string, accepts: ((value: unknown) => boolean) | undefined = () => true, strictJson = true): string {
   const trimmed = content.trim();
   const candidates = jsonCandidates(trimmed);
   for (const candidate of candidates.sort((left, right) => right.length - left.length)) {
     try {
-      const parsed = JSON.parse(repairJson(candidate)) as unknown;
-      if (accepts(parsed)) return candidate;
+      const parsed = JSON.parse(strictJson ? candidate : repairJson(candidate)) as unknown;
+      if ((accepts ?? (() => true))(parsed)) return candidate;
     } catch {
       // Try the next balanced JSON-looking candidate.
     }
@@ -438,10 +460,13 @@ function normalizeScenario(value: unknown, index: number, context: PlannerContex
   const record = value !== null && typeof value === 'object' && !Array.isArray(value)
     ? value as Record<string, unknown>
     : {};
-  const type = normalizeEngineType(record.type ?? record.category ?? record.testType);
+  const type = normalizeEngineType(record.type ?? record.category ?? record.testType, record.target);
   const target = normalizeTarget(record.target, type, context.discovery);
   const request = normalizeRequest(record.request);
   const expect = normalizeExpect(record.expect ?? record.expected);
+  const capture = normalizeCapture(record.capture ?? record.captures);
+  const dependsOn = normalizeStringArray(record.dependsOn);
+  const cleanup = normalizeCleanup(record.cleanup ?? record.teardown);
   const uiActions = type === 'ui' ? normalizeUiActions(record.uiActions ?? record.actions ?? record.steps) : undefined;
   const metadata = isRecord(record.metadata) ? record.metadata : undefined;
   return {
@@ -453,6 +478,9 @@ function normalizeScenario(value: unknown, index: number, context: PlannerContex
     ...(request !== undefined ? { request } : {}),
     ...(expect !== undefined ? { expect } : {}),
     assertions: normalizeStringArray(record.assertions, ['scenario completes successfully']),
+    ...(dependsOn.length > 0 ? { dependsOn } : {}),
+    ...(capture !== undefined ? { capture } : {}),
+    ...(cleanup !== undefined ? { cleanup } : {}),
     ...(uiActions !== undefined ? { uiActions } : {}),
     evidenceRequired: normalizeEvidenceRequired(record.evidenceRequired, type),
     ...(metadata !== undefined ? { metadata } : {}),
@@ -464,33 +492,60 @@ function normalizeIdentifier(value: unknown, fallback: string): string {
   return `${fallback}_${randomUUID()}`;
 }
 
-function normalizeEngineType(value: unknown): EngineType {
-  if (typeof value !== 'string') return 'custom';
+function normalizeEngineType(value: unknown, target?: unknown): EngineType {
+  const inferred = inferEngineTypeFromTarget(target);
+  if (typeof value !== 'string') return inferred ?? 'custom';
   const normalized = value.trim().toLowerCase();
-  if (['ui', 'api', 'contract', 'schema', 'replay', 'message', 'custom'].includes(normalized)) return normalized as EngineType;
+  if (normalized === 'custom') return inferred ?? 'custom';
+  if (['ui', 'api', 'contract', 'schema', 'replay', 'message'].includes(normalized)) return normalized as EngineType;
   if (['e2e', 'browser', 'frontend'].includes(normalized)) return 'ui';
   if (['integration', 'workflow', 'end-to-end'].includes(normalized)) return 'ui';
   if (['backend', 'http', 'rest'].includes(normalized)) return 'api';
   if (normalized === 'asyncapi' || normalized === 'event' || normalized === 'messaging' || normalized === 'message') return 'message';
   if (normalized === 'openapi') return 'schema';
-  return 'custom';
+  return inferred ?? 'custom';
+}
+
+function inferEngineTypeFromTarget(target: unknown): EngineType | undefined {
+  if (!isRecord(target)) return undefined;
+  const method = typeof target.method === 'string' ? target.method.trim() : '';
+  const pathLike = typeof target.path === 'string'
+    ? target.path
+    : typeof target.route === 'string'
+      ? target.route
+      : typeof target.url === 'string'
+        ? target.url
+        : '';
+  const path = normalizePath(pathLike);
+  if (method.length > 0 || path?.startsWith('/api/') === true || path === '/api') return 'api';
+  if (path !== undefined && path.startsWith('/')) return 'ui';
+  if (typeof target.schema === 'string') return 'schema';
+  return undefined;
 }
 
 function normalizeTarget(value: unknown, type: EngineType, discovery: DiscoveryResult): ScenarioPlan['target'] {
   const record = isRecord(value) ? value : {};
+  const explicitSource = normalizeSourceOfTruth(record.sourceOfTruth ?? record.provenance);
   if (type === 'ui') {
-    const route = normalizePath(record.route ?? record.path ?? record.url) ?? discovery.uiRoutes[0]?.path ?? '/';
-    return { route };
+    const direct = normalizePath(record.route ?? record.path ?? record.url);
+    if (direct !== undefined) return { route: direct, sourceOfTruth: explicitSource ?? provenanceForUiRoute(direct, discovery) ?? 'ai' };
+    const fallback = discovery.uiRoutes[0]?.path ?? '/';
+    return { route: fallback, sourceOfTruth: 'fallback' };
   }
   if (type === 'api') {
     const discovered = discovery.apiRoutes[0];
-    const method = normalizeMethod(record.method) ?? discovered?.method ?? 'GET';
-    const path = normalizePath(record.path ?? record.route ?? record.url) ?? discovered?.path ?? '/';
-    return { method, path };
+    const directPath = normalizePath(record.path ?? record.route ?? record.url);
+    const method = normalizeMethod(record.method);
+    if (directPath !== undefined || method !== undefined) {
+      const path = directPath ?? discovered?.path ?? '/';
+      const finalMethod = method ?? discovered?.method ?? 'GET';
+      return { method: finalMethod, path, sourceOfTruth: explicitSource ?? provenanceForApiRoute(finalMethod, path, discovery) ?? 'ai' };
+    }
+    return { method: discovered?.method ?? 'GET', path: discovered?.path ?? '/', sourceOfTruth: 'fallback' };
   }
   if (type === 'contract' || type === 'schema') {
     const schema = typeof record.schema === 'string' ? record.schema : discovery.contracts.find((contract) => contract.exists)?.path;
-    return schema !== undefined ? { schema } : {};
+    return schema !== undefined ? { schema, sourceOfTruth: explicitSource ?? provenanceForContract(schema, discovery) ?? 'ai' } : {};
   }
   if (type === 'message') {
     const schema = typeof record.schema === 'string' ? record.schema : discovery.contracts.find((contract) => contract.kind === 'asyncapi' && contract.exists)?.path;
@@ -498,6 +553,7 @@ function normalizeTarget(value: unknown, type: EngineType, discovery: DiscoveryR
     return {
       ...(schema !== undefined ? { schema } : {}),
       ...(channel !== undefined ? { channel } : {}),
+      sourceOfTruth: explicitSource ?? (schema !== undefined ? provenanceForContract(schema, discovery) ?? 'ai' : 'ai'),
     };
   }
   return isRecord(value) ? value as ScenarioPlan['target'] : {};
@@ -561,6 +617,41 @@ function normalizeRequest(value: unknown): ScenarioPlan['request'] | undefined {
   };
 }
 
+function normalizeCapture(value: unknown): ScenarioPlan['capture'] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const captures = value
+    .map((entry) => {
+      if (!isRecord(entry)) return undefined;
+      const name = typeof entry.name === 'string' ? entry.name.trim() : typeof entry.as === 'string' ? entry.as.trim() : undefined;
+      const from = entry.from === 'response.header' ? 'response.header' : entry.from === 'response.body' || entry.from === undefined ? 'response.body' : undefined;
+      const path = typeof entry.path === 'string' ? entry.path.trim() : undefined;
+      if (name === undefined || from === undefined || path === undefined || name.length === 0 || path.length === 0) return undefined;
+      return { name, from, path };
+    })
+    .filter((entry): entry is NonNullable<ScenarioPlan['capture']>[number] => entry !== undefined);
+  return captures.length > 0 ? captures : undefined;
+}
+
+function normalizeCleanup(value: unknown): ScenarioPlan['cleanup'] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const cleanup = value
+    .map((entry) => {
+      if (!isRecord(entry)) return undefined;
+      const target = isRecord(entry.target) ? entry.target : {};
+      const method = normalizeMethod(target.method) ?? normalizeMethod(entry.method);
+      const path = normalizePath(target.path ?? entry.path);
+      if ((method !== 'DELETE' && method !== 'POST') || path === undefined) return undefined;
+      return {
+        type: 'api' as const,
+        target: { method, path },
+        ...(normalizeRequest(entry.request) !== undefined ? { request: normalizeRequest(entry.request) } : {}),
+        ...(normalizeExpect(entry.expect) !== undefined ? { expect: normalizeExpect(entry.expect) } : {}),
+      };
+    })
+    .filter((entry): entry is NonNullable<ScenarioPlan['cleanup']>[number] => entry !== undefined);
+  return cleanup.length > 0 ? cleanup : undefined;
+}
+
 function normalizeExpect(value: unknown): ScenarioPlan['expect'] | undefined {
   if (!isRecord(value)) return undefined;
   const status = normalizeStatus(value.status ?? value.statusCode);
@@ -601,6 +692,36 @@ function normalizeMethod(value: unknown): string | undefined {
     REMOVE: 'DELETE',
   };
   return aliases[normalized] ?? normalized;
+}
+
+function normalizeSourceOfTruth(value: unknown): NonNullable<NonNullable<ScenarioPlan['target']>['sourceOfTruth']> | undefined {
+  if (typeof value !== 'string') return undefined;
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'user' || normalized === 'observed' || normalized === 'contract' || normalized === 'ai' || normalized === 'fallback') return normalized;
+  if (normalized === 'repo' || normalized === 'runtime') return 'observed';
+  return undefined;
+}
+
+function provenanceForUiRoute(path: string, discovery: DiscoveryResult): NonNullable<NonNullable<ScenarioPlan['target']>['sourceOfTruth']> | undefined {
+  const route = discovery.uiRoutes.find((candidate) => candidate.path === path);
+  if (route === undefined) return undefined;
+  if (route.source === 'contract') return 'contract';
+  if (route.source === 'config') return 'user';
+  return 'observed';
+}
+
+function provenanceForApiRoute(method: string, path: string, discovery: DiscoveryResult): NonNullable<NonNullable<ScenarioPlan['target']>['sourceOfTruth']> | undefined {
+  const route = discovery.apiRoutes.find((candidate) => candidate.method.toUpperCase() === method.toUpperCase() && candidate.path === path);
+  if (route === undefined) return undefined;
+  if (route.source === 'contract') return 'contract';
+  if (route.source === 'config') return 'user';
+  return 'observed';
+}
+
+function provenanceForContract(path: string, discovery: DiscoveryResult): NonNullable<NonNullable<ScenarioPlan['target']>['sourceOfTruth']> | undefined {
+  const contract = discovery.contracts.find((candidate) => candidate.path === path);
+  if (contract === undefined) return undefined;
+  return 'contract';
 }
 
 function normalizePath(value: unknown): string | undefined {

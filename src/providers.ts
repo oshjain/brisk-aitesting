@@ -176,7 +176,7 @@ export function createAiProviderFromConfig(config: AiProviderConfig): AiPlannerP
   if (['openai', 'openai-compatible', 'deepseek', 'minimax'].includes(config.provider)) {
     return new OpenAiCompatibleProvider(config);
   }
-  throw new Error(`Provider "${config.provider}" is not implemented yet. Use openai-compatible, deepseek, or minimax.`);
+  throw new Error(`Provider "${config.provider}" is not implemented yet. Use openai, openai-compatible, deepseek, or minimax.`);
 }
 
 function resolveApiKey(config: AiProviderConfig): string {

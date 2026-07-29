@@ -22,4 +22,6 @@ jobs:
           AI_ENDPOINT: ${{ secrets.AI_ENDPOINT }}
           AI_MODEL: ${{ vars.AI_MODEL }}
           AI_API_KEY: ${{ secrets.AI_API_KEY }}
-        run: npx brisk-aitesting run --config brisk-aitesting.config.ts --goal "Check the release-critical UI, API, and contract paths" --scenarios 8 --json
+        run: |
+          npx brisk-aitesting doctor --config brisk-aitesting.config.mjs
+          npx brisk-aitesting run --config brisk-aitesting.config.mjs --goal "Check the release-critical UI, API, and contract paths" --scenarios 8 --json

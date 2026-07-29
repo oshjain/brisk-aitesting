@@ -6,7 +6,7 @@ The rule is simple: your app gives Brisk configuration and a goal, Brisk returns
 
 ## Start here
 
-1. `brisk-aitesting.config.ts` shows a full local config.
+1. `brisk-aitesting.config.ts` shows a TypeScript config shape for SDK/host-app embedding.
 2. `host-config-bridge.ts` shows how an existing SaaS config can feed Brisk without duplicating settings.
 3. `sdk-basic.ts` shows the local SDK path.
 4. `cli-basic.md` shows the CLI path.
@@ -28,4 +28,3 @@ The rule is simple: your app gives Brisk configuration and a goal, Brisk returns
 | `custom-engine.ts` | Add a private engine and prove it returns the Brisk result shape. |
 | `custom-ai-provider.ts` | Plug in any AI provider behind the planning interface. |
 | `ci-github-actions.yml` | Run Brisk in GitHub Actions. |
-

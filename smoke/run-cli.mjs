@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -43,6 +43,23 @@ try {
   ]);
 
   const errors = [];
+  const starterDir = join(workDir, 'starter');
+  await mkdir(starterDir, { recursive: true });
+  await mkdir(join(starterDir, 'node_modules'), { recursive: true });
+  await symlink(packageDir, join(starterDir, 'node_modules', 'brisk-aitesting'), 'junction');
+  const starterInit = await runCli(['init', '--base-url', `http://127.0.0.1:${address.port}`, '--app-name', 'CLI starter app'], starterDir);
+  if (starterInit.code !== 0) errors.push(`expected starter init exit 0, got ${starterInit.code}: ${starterInit.stderr}`);
+  const starterDoctor = await runCli(['doctor', '--json'], starterDir);
+  if (starterDoctor.code !== 0) errors.push(`expected starter doctor exit 0, got ${starterDoctor.code}: ${starterDoctor.stderr}`);
+  const starterRun = await runCli(['run', '--goal', 'API health endpoint', '--scenarios', '1', '--mode', 'api', '--json'], starterDir);
+  if (starterRun.code !== 0) errors.push(`expected starter run exit 0, got ${starterRun.code}: ${starterRun.stderr}\n${starterRun.stdout}`);
+  if (starterRun.stdout.trim().length > 0) {
+    const starterParsed = parseStdoutJson(starterRun.stdout);
+    if (starterParsed.schemaVersion !== 'brisk-aitesting.cli-result.v1') errors.push('starter run did not return CLI schema');
+  } else {
+    errors.push(`starter run did not print JSON stdout: ${starterRun.stderr}`);
+  }
+
   if (success.code !== 0) errors.push(`expected success exit 0, got ${success.code}: ${success.stderr}`);
   const parsed = parseStdoutJson(success.stdout);
   if (parsed.schemaVersion !== 'brisk-aitesting.cli-result.v1') errors.push('wrong CLI JSON schema');
@@ -51,6 +68,11 @@ try {
   if (parsed.resultPath !== outputPath) errors.push('CLI JSON did not report custom output path');
   const written = JSON.parse(await readFile(outputPath, 'utf8'));
   if (written.schemaVersion !== 'brisk-aitesting.result.v1') errors.push('CLI output file missing result schema');
+  const inspected = await runCli(['inspect', '--result', outputPath, '--json']);
+  if (inspected.code !== 0) errors.push(`expected inspect exit 0, got ${inspected.code}: ${inspected.stderr}`);
+  const inspectedParsed = parseStdoutJson(inspected.stdout);
+  if (inspectedParsed.schemaVersion !== 'brisk-aitesting.inspect-result.v1') errors.push('wrong inspect JSON schema');
+  if (inspectedParsed.runId !== written.runId) errors.push('inspect output did not report the inspected run id');
 
   const usage = await runCli(['run', '--config', configPath, '--scenarios', '0']);
   if (usage.code !== 2) errors.push(`expected usage exit 2, got ${usage.code}`);
@@ -74,6 +96,7 @@ try {
     console.log(JSON.stringify({
       status: 'passed',
       cliSchema: parsed.schemaVersion,
+      inspectSchema: inspectedParsed.schemaVersion,
       cleanSchema: cleanParsed.schemaVersion,
       exitCode: success.code,
       usageExitCode: usage.code,
@@ -104,7 +127,7 @@ export default defineConfig({
             name: 'CLI smoke health API',
             type: 'api',
             objective: 'Health endpoint responds through the CLI.',
-            target: { method: 'GET', path: '/api/health' },
+            target: { method: 'GET', path: '/api/health', sourceOfTruth: 'observed' },
             expect: { status: 200, json: { ok: true } },
             assertions: ['status is 200', 'json.ok is true'],
             evidenceRequired: ['api']
@@ -135,10 +158,10 @@ export default defineConfig({
 `;
 }
 
-function runCli(args) {
+function runCli(args, cwd = packageDir) {
   return new Promise((resolve) => {
     const child = spawn(process.execPath, [join(packageDir, 'dist', 'cli.js'), ...args], {
-      cwd: packageDir,
+      cwd,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     let stdout = '';

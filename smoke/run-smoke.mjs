@@ -96,7 +96,7 @@ try {
             name: 'Smoke app homepage renders',
             type: 'ui',
             objective: 'Real browser can load homepage.',
-            target: { route: '/' },
+            target: { route: '/', sourceOfTruth: 'observed' },
             assertions: ['body is visible', 'body is not blank'],
             evidenceRequired: ['ui'],
           },
@@ -105,7 +105,7 @@ try {
             name: 'Smoke app login page renders',
             type: 'ui',
             objective: 'Real browser can load login route.',
-            target: { route: '/login' },
+            target: { route: '/login', sourceOfTruth: 'observed' },
             assertions: ['body is visible', 'body is not blank'],
             uiActions: [
               { action: 'fill', evidenceId: 'ui_el_003', value: 'user@example.com', description: 'Fill grounded email input' },
@@ -119,7 +119,7 @@ try {
             name: 'Health API returns ok',
             type: 'api',
             objective: 'API engine checks status and JSON shape.',
-            target: { method: 'GET', path: '/api/health' },
+            target: { method: 'GET', path: '/api/health', sourceOfTruth: 'contract' },
             expect: { status: 200, json: { ok: true, service: 'smoke-api' } },
             assertions: ['status is 200', 'json.ok is true'],
             evidenceRequired: ['api'],
@@ -129,7 +129,7 @@ try {
             name: 'Secure API rejects anonymous access',
             type: 'api',
             objective: 'API engine checks auth boundary.',
-            target: { method: 'GET', path: '/api/secure' },
+            target: { method: 'GET', path: '/api/secure', sourceOfTruth: 'contract' },
             expect: { status: 401, json: { 'error.code': 'UNAUTHORIZED' } },
             assertions: ['status is 401', 'error.code is UNAUTHORIZED'],
             evidenceRequired: ['api', 'auth'],
@@ -139,7 +139,7 @@ try {
             name: 'YAML OpenAPI contract exposes operations',
             type: 'contract',
             objective: 'Contract engine summarizes YAML OpenAPI operations for host consumption.',
-            target: { schema: join(here, 'openapi.yaml') },
+            target: { schema: join(here, 'openapi.yaml'), sourceOfTruth: 'contract' },
             assertions: ['contract parses', 'operations are discovered'],
             evidenceRequired: ['schema', 'api'],
           },
@@ -148,7 +148,7 @@ try {
             name: 'JSON OpenAPI contract exposes equivalent operations',
             type: 'contract',
             objective: 'JSON and YAML OpenAPI inputs produce equivalent operation summaries.',
-            target: { schema: join(here, 'openapi.json') },
+            target: { schema: join(here, 'openapi.json'), sourceOfTruth: 'contract' },
             assertions: ['contract parses', 'operations are discovered'],
             evidenceRequired: ['schema', 'api'],
           },
@@ -334,7 +334,7 @@ try {
         scenarios: [
           {
             ...context.invalidPlan.scenarios[0],
-            target: { method: 'GET', path: '/api/health' },
+            target: { method: 'GET', path: '/api/health', sourceOfTruth: 'contract' },
             expect: { status: 200, json: { ok: true } },
           },
         ],
@@ -383,7 +383,7 @@ try {
             name: 'Missing UI evidence is rejected',
             type: 'ui',
             objective: 'A grounded action with a missing evidence id must fail without selector guessing.',
-            target: { route: '/login' },
+            target: { route: '/login', sourceOfTruth: 'observed' },
             assertions: ['missing evidence is rejected'],
             uiActions: [{ action: 'click', evidenceId: 'ui_el_999' }],
             evidenceRequired: ['ui'],
@@ -424,7 +424,7 @@ try {
             name: 'UI healing replaces stale evidence',
             type: 'ui',
             objective: 'A stale evidence id with clear intent should be healed from fresh page evidence.',
-            target: { route: '/login' },
+            target: { route: '/login', sourceOfTruth: 'observed' },
             assertions: ['stale evidence is healed with evidence'],
             uiActions: [{ action: 'click', evidenceId: 'ui_el_999', description: 'Sign in' }],
             evidenceRequired: ['ui'],
@@ -472,7 +472,7 @@ try {
             name: 'Feedback loop enriches login actions',
             type: 'ui',
             objective: 'Route grounding evidence should drive action selection.',
-            target: { route: '/login' },
+            target: { route: '/login', sourceOfTruth: 'observed' },
             assertions: ['feedback loop chooses grounded actions'],
             evidenceRequired: ['ui'],
           },
@@ -557,7 +557,95 @@ try {
     process.exitCode = 1;
   }
 
-  const normalizedAiPlan = parseAiPlanForTesting(`Here is the plan:
+  const aiTargetPlanner = {
+    name: 'ai-target-smoke-planner',
+    async plan(context) {
+      return {
+        schemaVersion: 'brisk-aitesting.plan.v1',
+        runId: context.runId,
+        goal: context.input.goal,
+        mode: 'automatic',
+        discovery: context.discovery,
+        createdAt: new Date().toISOString(),
+        warnings: [],
+        scenarios: [
+          {
+            id: 'ai_invented_route',
+            name: 'AI invented route is blocked',
+            type: 'api',
+            objective: 'AI-only executable targets must not reach an engine in strict mode.',
+            target: { method: 'POST', path: '/api/invented-resource', sourceOfTruth: 'ai' },
+            request: { body: { name: 'invented-<unique>' } },
+            expect: { status: 201 },
+            assertions: ['AI-only target is rejected'],
+            evidenceRequired: ['api'],
+          },
+        ],
+      };
+    },
+  };
+  const aiTargetTester = createBriskAiTesting(config, { planner: aiTargetPlanner });
+  let aiTargetBlocked = false;
+  try {
+    await aiTargetTester.run({
+      goal: 'Reject AI-only executable targets',
+      scenarios: 1,
+      mode: 'automatic',
+    });
+  } catch (error) {
+    aiTargetBlocked = error instanceof Error && error.message.includes('AI-derived targets');
+  }
+  if (!aiTargetBlocked) {
+    console.error('AI target smoke did not block an AI-derived executable target.');
+    process.exitCode = 1;
+  }
+
+  const unboundWorkflowPlanner = {
+    name: 'unbound-workflow-smoke-planner',
+    async plan(context) {
+      return {
+        schemaVersion: 'brisk-aitesting.plan.v1',
+        runId: context.runId,
+        goal: context.input.goal,
+        mode: 'automatic',
+        discovery: context.discovery,
+        createdAt: new Date().toISOString(),
+        warnings: [],
+        scenarios: [
+          {
+            id: 'unbound_workflow_body',
+            name: 'Unbound body variable is blocked',
+            type: 'api',
+            objective: 'Request bodies must not contain workflow variables that were never captured.',
+            target: { method: 'POST', path: '/api/messages', sourceOfTruth: 'contract' },
+            request: { body: { text: 'child-of-{missingParentId}' } },
+            expect: { status: 201 },
+            assertions: ['unbound body variable is rejected'],
+            evidenceRequired: ['api'],
+          },
+        ],
+      };
+    },
+  };
+  const unboundWorkflowTester = createBriskAiTesting(config, { planner: unboundWorkflowPlanner });
+  let unboundWorkflowBlocked = false;
+  try {
+    await unboundWorkflowTester.run({
+      goal: 'Reject unbound workflow variables',
+      scenarios: 1,
+      mode: 'automatic',
+    });
+  } catch (error) {
+    unboundWorkflowBlocked = error instanceof Error && error.message.includes('Workflow variable "missingParentId"');
+  }
+  if (!unboundWorkflowBlocked) {
+    console.error('Unbound workflow smoke did not reject a request body variable before execution.');
+    process.exitCode = 1;
+  }
+
+  let malformedJsonRejected = false;
+  try {
+    parseAiPlanForTesting(`Here is the plan:
 {
   "mode": "automatic",
   "warnings": ["normalized by smoke"],
@@ -569,6 +657,28 @@ try {
       "target": { "route": "/" },
       "assertions": ["body is visible"],
       "evidenceRequired": ["ui"],
+    }
+  ]
+}`, {
+      config,
+      input: { goal: 'Malformed AI JSON should be rejected', scenarios: 1, mode: 'automatic' },
+      runId: 'smoke_ai_strict_json',
+      discovery: result.discovery,
+    });
+  } catch {
+    malformedJsonRejected = true;
+  }
+  const normalizedAiPlan = parseAiPlanForTesting(`{
+  "mode": "automatic",
+  "warnings": ["normalized by smoke"],
+  "scenarios": [
+    {
+      "name": "AI planned homepage",
+      "type": "browser",
+      "objective": "Homepage loads from AI plan",
+      "target": { "route": "/" },
+      "assertions": ["body is visible"],
+      "evidenceRequired": ["ui"]
     },
     {
       "name": "AI planned health API",
@@ -577,7 +687,7 @@ try {
       "target": { "method": "GET", "path": "/api/health" },
       "expect": { "status": 200, "json": { "ok": true } },
       "assertions": ["status is 200"],
-      "evidenceRequired": ["api"],
+      "evidenceRequired": ["api"]
     }
   ]
 }`, {
@@ -587,6 +697,7 @@ try {
     discovery: result.discovery,
   });
   const aiErrors = [];
+  if (!malformedJsonRejected) aiErrors.push('strict AI parser accepted malformed JSON');
   if (normalizedAiPlan.scenarios.length !== 2) aiErrors.push(`expected AI total 2, got ${normalizedAiPlan.scenarios.length}`);
   if (!normalizedAiPlan.scenarios.some((scenario) => scenario.type === 'ui')) aiErrors.push('AI browser alias was not normalized to ui');
   if (!normalizedAiPlan.scenarios.some((scenario) => scenario.type === 'api')) aiErrors.push('AI backend alias was not normalized to api');

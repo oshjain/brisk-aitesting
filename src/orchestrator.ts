@@ -13,6 +13,8 @@ import type {
   BriskAiTestingRunInput,
   Discoverer,
   Engine,
+  EngineRunState,
+  ApiCleanupStep,
   Planner,
   PlanValidator,
   ScenarioResult,
@@ -81,6 +83,7 @@ export class BriskAiTesting {
 
     const tests: ScenarioResult[] = [];
     const artifacts = [];
+    const runState: EngineRunState = { variables: {}, captures: {}, cleanup: [] };
     const enriched = await this.enrichUiActionsFromGrounding({ input, runId, discovery, plan });
     plan = enriched.plan;
     artifacts.push(...enriched.artifacts);
@@ -105,11 +108,15 @@ export class BriskAiTesting {
         continue;
       }
 
-      const output = await engine.run({ config: this.config, runId, plan, scenario });
+      const output = await engine.run({ config: this.config, runId, plan, scenario, runState });
       if (output.artifacts !== undefined) artifacts.push(...output.artifacts);
       tests.push(output.result);
       this.emit({ type: 'scenario.completed', runId, result: output.result });
     }
+
+    const cleanupOutput = await this.runCleanup({ runId, plan, runState });
+    tests.push(...cleanupOutput.results);
+    artifacts.push(...cleanupOutput.artifacts);
 
     const resultWithoutFile = buildResult({
       config: this.config,
@@ -133,6 +140,34 @@ export class BriskAiTesting {
 
   private emit(event: BriskAiTestingEvent): void {
     for (const listener of this.listeners) listener(event);
+  }
+
+  private async runCleanup(params: {
+    readonly runId: string;
+    readonly plan: TestPlan;
+    readonly runState: EngineRunState;
+  }): Promise<{ readonly results: readonly ScenarioResult[]; readonly artifacts: readonly ArtifactRef[] }> {
+    if (params.runState.cleanup.length === 0) return { results: [], artifacts: [] };
+    const apiEngine = this.engines.find((engine) => engine.type === 'api');
+    if (apiEngine === undefined) return { results: [], artifacts: [] };
+    const results: ScenarioResult[] = [];
+    const artifacts: ArtifactRef[] = [];
+    const cleanupSteps = [...params.runState.cleanup].reverse();
+    for (const [index, cleanup] of cleanupSteps.entries()) {
+      const scenario = cleanupScenario(cleanup, index);
+      this.emit({ type: 'scenario.started', runId: params.runId, scenario });
+      const output = await apiEngine.run({
+        config: this.config,
+        runId: params.runId,
+        plan: params.plan,
+        scenario,
+        runState: params.runState,
+      });
+      if (output.artifacts !== undefined) artifacts.push(...output.artifacts);
+      results.push(output.result);
+      this.emit({ type: 'scenario.completed', runId: params.runId, result: output.result });
+    }
+    return { results, artifacts };
   }
 
   private async validateAndRepairPlan(params: {
@@ -218,6 +253,24 @@ export class BriskAiTesting {
     this.emit({ type: 'plan.enriched', runId: params.runId, plan });
     return { plan, artifacts };
   }
+}
+
+function cleanupScenario(cleanup: ApiCleanupStep, index: number): TestPlan['scenarios'][number] {
+  return {
+    id: `cleanup_${index + 1}`,
+    name: `Cleanup ${cleanup.target.method} ${cleanup.target.path}`,
+    type: 'api',
+    objective: 'Remove data created by earlier test scenarios.',
+    target: {
+      method: cleanup.target.method,
+      path: cleanup.target.path,
+      sourceOfTruth: 'user',
+    },
+    ...(cleanup.request !== undefined ? { request: cleanup.request } : {}),
+    ...(cleanup.expect !== undefined ? { expect: cleanup.expect } : { expect: { status: { min: 200, max: 404 } } }),
+    assertions: ['cleanup request completes with an accepted status'],
+    evidenceRequired: ['api'],
+  };
 }
 
 function normalizeRepairAttempts(value: number | undefined): number {

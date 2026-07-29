@@ -58,6 +58,7 @@ export const planJsonSchema = {
             route: { type: 'string' },
             schema: { type: 'string' },
             channel: { type: 'string' },
+            sourceOfTruth: { enum: ['user', 'observed', 'contract', 'ai', 'fallback'] },
           },
         },
         request: {
@@ -113,6 +114,18 @@ export const planJsonSchema = {
           minItems: 1,
           items: { type: 'string', minLength: 1 },
         },
+        dependsOn: {
+          type: 'array',
+          items: { type: 'string', minLength: 1 },
+        },
+        capture: {
+          type: 'array',
+          items: { $ref: '#/$defs/workflowCapture' },
+        },
+        cleanup: {
+          type: 'array',
+          items: { $ref: '#/$defs/apiCleanupStep' },
+        },
         uiActions: {
           type: 'array',
           items: { $ref: '#/$defs/uiAction' },
@@ -125,6 +138,74 @@ export const planJsonSchema = {
         metadata: {
           type: 'object',
           additionalProperties: true,
+        },
+      },
+    },
+    workflowCapture: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['name', 'from', 'path'],
+      properties: {
+        name: { type: 'string', minLength: 1, pattern: '^[A-Za-z_$][A-Za-z0-9_$-]*$' },
+        from: { enum: ['response.body', 'response.header'] },
+        path: { type: 'string', minLength: 1 },
+      },
+    },
+    apiCleanupStep: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['type', 'target'],
+      properties: {
+        type: { const: 'api' },
+        target: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['method', 'path'],
+          properties: {
+            method: { enum: ['DELETE', 'POST'] },
+            path: { type: 'string', pattern: '^/' },
+          },
+        },
+        request: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            headers: {
+              type: 'object',
+              additionalProperties: { type: 'string' },
+            },
+            query: {
+              type: 'object',
+              additionalProperties: {
+                anyOf: [{ type: 'string' }, { type: 'number' }, { type: 'boolean' }],
+              },
+            },
+            body: {},
+          },
+        },
+        expect: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            status: {
+              anyOf: [
+                { type: 'integer', minimum: 100, maximum: 599 },
+                {
+                  type: 'array',
+                  minItems: 1,
+                  items: { type: 'integer', minimum: 100, maximum: 599 },
+                },
+                {
+                  type: 'object',
+                  additionalProperties: false,
+                  properties: {
+                    min: { type: 'integer', minimum: 100, maximum: 599 },
+                    max: { type: 'integer', minimum: 100, maximum: 599 },
+                  },
+                },
+              ],
+            },
+          },
         },
       },
     },

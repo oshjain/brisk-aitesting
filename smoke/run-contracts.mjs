@@ -37,6 +37,7 @@ const expectedRuntimeExports = [
   'createSchemaExample',
   'defineConfig',
   'defineConfigFromHost',
+  'handoverJsonSchema',
   'loadConfig',
   'loadEnvFiles',
   'loadOpenApiSummary',
@@ -45,12 +46,15 @@ const expectedRuntimeExports = [
   'normalizeConfig',
   'parseAiPlanForTesting',
   'planJsonSchema',
+  'resultJsonSchema',
   'runEnginePluginConformance',
   'runExtensionConformance',
   'scenarioReplayRequests',
   'summarizeOpenApiDocument',
   'validateJsonSchema',
+  'validateHandoverJsonContract',
   'validatePlanJsonContract',
+  'validateResultJsonContract',
 ];
 
 const expectedTypeExports = [
@@ -99,7 +103,9 @@ const expectedSchemas = [
   'brisk-aitesting.result.v1',
   'brisk-aitesting.handover.v1',
   'brisk-aitesting.cli-result.v1',
+  'brisk-aitesting.inspect-result.v1',
   'brisk-aitesting.clean-result.v1',
+  'brisk-aitesting.doctor-result.v1',
   'brisk-aitesting.benchmark.v1',
   'brisk-aitesting.pack-check.v1',
   'brisk-aitesting.release-readiness.v1',

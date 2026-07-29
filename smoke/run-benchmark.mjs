@@ -225,9 +225,13 @@ try {
     expected: 'AI parser selects the real plan instead of an earlier irrelevant object',
     run: async () => {
       const context = await plannerContext(baseUrl);
-      const plan = parseAiPlanForTesting('Ignore this object { route: "/" }\nActual plan:\n{ scenarios: [{ name: "Health", type: "backend", target: { method: "GET", path: "/api/wrong-schema" }, assertions: ["runs"], evidenceRequired: ["api"] }] }', context);
-      const passed = plan.scenarios.length === 1 && plan.scenarios[0]?.target?.path === '/api/wrong-schema';
-      return { passed, observed: JSON.stringify(plan.scenarios.map((scenario) => scenario.target)) };
+      let rejected = false;
+      try {
+        parseAiPlanForTesting('Ignore this object { route: "/" }\nActual plan:\n{ scenarios: [{ name: "Health", type: "backend", target: { method: "GET", path: "/api/wrong-schema" }, assertions: ["runs"], evidenceRequired: ["api"] }] }', context);
+      } catch {
+        rejected = true;
+      }
+      return { passed: rejected, observed: rejected ? 'rejected non-JSON AI output' : 'accepted non-JSON AI output' };
     },
   });
 
@@ -244,7 +248,7 @@ try {
         name: 'Wrong schema fails',
         type: 'api',
         objective: 'Response schema mismatch should fail.',
-        target: { method: 'GET', path: '/api/wrong-schema' },
+        target: { method: 'GET', path: '/api/wrong-schema', sourceOfTruth: 'contract' },
         expect: { status: 200 },
         assertions: ['response body matches schema'],
         evidenceRequired: ['api', 'schema'],
@@ -265,7 +269,7 @@ try {
         name: 'Undocumented status fails',
         type: 'api',
         objective: 'Undocumented status should fail.',
-        target: { method: 'GET', path: '/api/undocumented-status' },
+        target: { method: 'GET', path: '/api/undocumented-status', sourceOfTruth: 'contract' },
         assertions: ['status is documented'],
         evidenceRequired: ['api', 'schema'],
       });
@@ -287,7 +291,7 @@ try {
         name: 'Blocked network policy',
         type: 'api',
         objective: 'Network policy should skip disallowed host.',
-        target: { method: 'GET', path: '/api/health' },
+        target: { method: 'GET', path: '/api/health', sourceOfTruth: 'user' },
         assertions: ['network policy blocks request'],
         evidenceRequired: ['api'],
       }, { allowedHosts: ['127.0.0.1'] });
@@ -571,8 +575,8 @@ function openApiBenchmarkCases(baseUrl, contractPath) {
 function aiParserBenchmarkCases(baseUrl) {
   return [
     aiCase(baseUrl, 'ai-parser.extracts-fenced-json', 'fenced JSON is extracted', '```json\n{ "scenarios": [{ "name": "Fenced", "type": "api", "target": { "method": "GET", "path": "/api/query" }, "assertions": ["runs"], "evidenceRequired": ["api"] }] }\n```', (plan) => plan.scenarios[0]?.name === 'Fenced'),
-    aiCase(baseUrl, 'ai-parser.repairs-unquoted-keys', 'simple unquoted keys are repaired', '{ scenarios: [{ name: "Unquoted", type: "backend", target: { method: "GET", path: "/api/query" }, assertions: ["runs"], evidenceRequired: ["api"] }] }', (plan) => plan.scenarios[0]?.type === 'api'),
-    aiCase(baseUrl, 'ai-parser.repairs-trailing-commas', 'trailing commas are repaired', '{ "scenarios": [{ "name": "Comma", "type": "api", "target": { "method": "GET", "path": "/api/query", }, "assertions": ["runs"], "evidenceRequired": ["api"], }, ], }', (plan) => plan.scenarios[0]?.target?.path === '/api/query'),
+    aiRejectCase(baseUrl, 'ai-parser.rejects-unquoted-keys', 'JSON-ish output with unquoted keys is rejected', '{ scenarios: [{ name: "Unquoted", type: "backend", target: { method: "GET", path: "/api/query" }, assertions: ["runs"], evidenceRequired: ["api"] }] }'),
+    aiRejectCase(baseUrl, 'ai-parser.rejects-trailing-commas', 'JSON-ish output with trailing commas is rejected', '{ "scenarios": [{ "name": "Comma", "type": "api", "target": { "method": "GET", "path": "/api/query", }, "assertions": ["runs"], "evidenceRequired": ["api"], }, ], }'),
     aiCase(baseUrl, 'ai-parser.unwraps-plan-object', 'plan wrapper objects are unwrapped', '{ "plan": { "scenarios": [{ "name": "Wrapped", "type": "api", "target": { "method": "GET", "path": "/api/query" }, "assertions": ["runs"], "evidenceRequired": ["api"] }] } }', (plan) => plan.scenarios[0]?.name === 'Wrapped'),
     aiCase(baseUrl, 'ai-parser.backend-alias-becomes-api', 'backend alias routes to API', '{ "scenarios": [{ "name": "Backend", "type": "backend", "target": { "method": "GET", "path": "/api/query" }, "assertions": ["runs"], "evidenceRequired": ["api"] }] }', (plan) => plan.scenarios[0]?.type === 'api'),
     aiCase(baseUrl, 'ai-parser.e2e-alias-becomes-ui', 'e2e alias routes to UI', '{ "scenarios": [{ "name": "Browser", "type": "e2e", "target": { "route": "/" }, "assertions": ["runs"], "evidenceRequired": ["ui"] }] }', (plan) => plan.scenarios[0]?.type === 'ui'),
@@ -608,12 +612,12 @@ function validationBenchmarkCases(baseUrl) {
 
 function apiRuntimeBenchmarkCases(baseUrl, contractPath) {
   return [
-    apiRunCase(baseUrl, contractPath, 'api.query-expectation-passes', 'query params are sent and asserted', { ...apiScenario('api_query'), target: { method: 'GET', path: '/api/query' }, request: { query: { mode: 'fast' } }, expect: { status: 200, json: { mode: 'fast' } } }, (result) => result.status === 'passed'),
-    apiRunCase(baseUrl, contractPath, 'api.post-body-is-serialized', 'JSON bodies are serialized and echoed', { ...apiScenario('api_echo'), target: { method: 'POST', path: '/api/echo' }, request: { body: { name: 'Brisk' } }, expect: { status: 201, json: { 'received.name': 'Brisk' } } }, (result) => result.status === 'passed'),
-    apiRunCase(baseUrl, contractPath, 'api.contains-text-assertion-passes', 'text response contains checks work', { ...apiScenario('api_text'), target: { method: 'GET', path: '/api/text' }, expect: { status: 200, contains: 'hello brisk' } }, (result) => result.status === 'passed'),
-    apiRunCase(baseUrl, contractPath, 'api.rejected-action-state-unchanged-passes', 'before/after snapshots prove rejected actions do not mutate state', { ...apiScenario('api_rejected_state'), target: { method: 'POST', path: '/api/rejected-action' }, expect: { status: 409, json: { 'error.code': 'LOCKED' }, unchanged: [{ target: { method: 'GET', path: '/api/state' }, json: { count: 3 } }] } }, (result) => result.status === 'passed'),
-    apiRunCase(baseUrl, contractPath, 'api.expected-status-array-passes', 'status arrays are accepted', { ...apiScenario('api_status_array'), target: { method: 'GET', path: '/api/query' }, expect: { status: [200, 204] } }, (result) => result.status === 'passed'),
-    apiRunCase(baseUrl, contractPath, 'api.expected-status-range-passes', 'status ranges are accepted', { ...apiScenario('api_status_range'), target: { method: 'GET', path: '/api/query' }, expect: { status: { min: 200, max: 299 } } }, (result) => result.status === 'passed'),
+    apiRunCase(baseUrl, contractPath, 'api.query-expectation-passes', 'query params are sent and asserted', { ...apiScenario('api_query'), target: { method: 'GET', path: '/api/query', sourceOfTruth: 'contract' }, request: { query: { mode: 'fast' } }, expect: { status: 200, json: { mode: 'fast' } } }, (result) => result.status === 'passed'),
+    apiRunCase(baseUrl, contractPath, 'api.post-body-is-serialized', 'JSON bodies are serialized and echoed', { ...apiScenario('api_echo'), target: { method: 'POST', path: '/api/echo', sourceOfTruth: 'contract' }, request: { body: { name: 'Brisk' } }, expect: { status: 201, json: { 'received.name': 'Brisk' } } }, (result) => result.status === 'passed'),
+    apiRunCase(baseUrl, contractPath, 'api.contains-text-assertion-passes', 'text response contains checks work', { ...apiScenario('api_text'), target: { method: 'GET', path: '/api/text', sourceOfTruth: 'contract' }, expect: { status: 200, contains: 'hello brisk' } }, (result) => result.status === 'passed'),
+    apiRunCase(baseUrl, contractPath, 'api.rejected-action-state-unchanged-passes', 'before/after snapshots prove rejected actions do not mutate state', { ...apiScenario('api_rejected_state'), target: { method: 'POST', path: '/api/rejected-action', sourceOfTruth: 'contract' }, expect: { status: 409, json: { 'error.code': 'LOCKED' }, unchanged: [{ target: { method: 'GET', path: '/api/state' }, json: { count: 3 } }] } }, (result) => result.status === 'passed'),
+    apiRunCase(baseUrl, contractPath, 'api.expected-status-array-passes', 'status arrays are accepted', { ...apiScenario('api_status_array'), target: { method: 'GET', path: '/api/query', sourceOfTruth: 'contract' }, expect: { status: [200, 204] } }, (result) => result.status === 'passed'),
+    apiRunCase(baseUrl, contractPath, 'api.expected-status-range-passes', 'status ranges are accepted', { ...apiScenario('api_status_range'), target: { method: 'GET', path: '/api/query', sourceOfTruth: 'contract' }, expect: { status: { min: 200, max: 299 } } }, (result) => result.status === 'passed'),
     apiRunCase(baseUrl, undefined, 'replay.native-http-replay-passes', 'built-in replay reruns declared HTTP interactions', { id: 'replay_query', name: 'Replay query', type: 'replay', objective: 'Replay query request.', assertions: ['replay works'], evidenceRequired: ['api'], metadata: { replay: { requests: [{ method: 'GET', path: '/api/query?mode=fast', expectStatus: 200 }] } } }, (result) => result.status === 'passed' && result.artifacts.some((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.replay-evidence.v1')),
     apiRunCase(baseUrl, undefined, 'replay.empty-requests-skips', 'replay scenarios without requests skip cleanly', { id: 'replay_empty', name: 'Empty replay', type: 'replay', objective: 'Empty replay should skip.', assertions: ['skip'], evidenceRequired: ['api'], metadata: { replay: { requests: [] } } }, (result) => result.status === 'skipped'),
   ];
@@ -647,7 +651,30 @@ function cliBenchmarkCases(baseUrl) {
       expected: 'CLI --json success emits the stable CLI result schema',
       run: async () => {
         const configPath = join(workDir, 'cli-json-success.config.mjs');
-        await writeFile(configPath, `export default { app: { name: 'CLI benchmark', baseUrl: ${JSON.stringify(baseUrl)} }, discovery: { includeUi: false, includeApi: true, includeRepo: false, includeContracts: false } };\n`, 'utf8');
+        await writeFile(configPath, `export default {
+  app: { name: 'CLI benchmark', baseUrl: ${JSON.stringify(baseUrl)} },
+  discovery: { includeUi: false, includeApi: true, includeRepo: false, includeContracts: false },
+  aiProvider: {
+    name: 'benchmark-provider',
+    async complete() {
+      return {
+        content: JSON.stringify({
+          mode: 'automatic',
+          scenarios: [{
+            id: 'cli_json_query',
+            name: 'CLI JSON query check',
+            type: 'api',
+            objective: 'Query endpoint responds through CLI JSON mode.',
+            target: { method: 'GET', path: '/api/query', sourceOfTruth: 'user' },
+            expect: { status: 200 },
+            assertions: ['status is 200'],
+            evidenceRequired: ['api']
+          }]
+        })
+      };
+    }
+  }
+};\n`, 'utf8');
         const cli = await runCli(['run', '--config', configPath, '--goal', 'health check', '--scenarios', '1', '--json']);
         const parsed = parseJsonFromOutput(cli.stdout);
         return { passed: cli.code === 0 && parsed?.schemaVersion === 'brisk-aitesting.cli-result.v1', observed: JSON.stringify({ code: cli.code, parsed }) };
@@ -666,6 +693,24 @@ function aiCase(baseUrl, id, expected, content, predicate) {
       const plan = parseAiPlanForTesting(content, context);
       const passed = predicate(plan);
       return { passed, observed: JSON.stringify(plan.scenarios) };
+    },
+  };
+}
+
+function aiRejectCase(baseUrl, id, expected, content) {
+  return {
+    id,
+    area: 'ai',
+    expected,
+    run: async () => {
+      const context = await plannerContext(baseUrl);
+      let rejected = false;
+      try {
+        parseAiPlanForTesting(content, context);
+      } catch {
+        rejected = true;
+      }
+      return { passed: rejected, observed: rejected ? 'rejected non-JSON AI output' : 'accepted non-JSON AI output' };
     },
   };
 }
@@ -772,7 +817,7 @@ function apiScenario(id) {
     name: id.replace(/[_-]/g, ' '),
     type: 'api',
     objective: `Run ${id}.`,
-    target: { method: 'GET', path: '/api/query' },
+    target: { method: 'GET', path: '/api/query', sourceOfTruth: 'observed' },
     expect: { status: 200 },
     assertions: ['response is valid'],
     evidenceRequired: ['api'],
@@ -785,7 +830,7 @@ function uiScenario(id) {
     name: id.replace(/[_-]/g, ' '),
     type: 'ui',
     objective: `Run ${id}.`,
-    target: { route: '/' },
+    target: { route: '/', sourceOfTruth: 'observed' },
     assertions: ['page is usable'],
     uiActions: [{ action: 'click', evidenceId: 'ui_el_001' }],
     evidenceRequired: ['ui'],
@@ -798,7 +843,7 @@ function messageScenario(id) {
     name: id.replace(/[_-]/g, ' '),
     type: 'message',
     objective: `Run ${id}.`,
-    target: { schema: 'asyncapi.json', channel: 'orders.created' },
+    target: { schema: 'asyncapi.json', channel: 'orders.created', sourceOfTruth: 'user' },
     assertions: ['message contract is valid'],
     evidenceRequired: ['message'],
   };

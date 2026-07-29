@@ -257,6 +257,7 @@ async function checkEngine(params: {
       runId: params.runId,
       plan: params.plan,
       scenario: params.validScenario,
+      runState: { variables: {}, captures: {}, cleanup: [] },
     }), params.config.runtime.timeoutMs);
     record('run returns output object', isRecord(output));
   } catch (error) {

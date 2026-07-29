@@ -179,7 +179,7 @@ function ecommerceScenarios(openApiPath) {
     api('commerce_products', 'products can be listed', 'GET', '/api/products', undefined, { status: 200, json: { total: 2 } }),
     api('commerce_add_item', 'available item can be added to cart', 'POST', '/api/carts/cart_main/items', { body: { productId: 'prod_keyboard', quantity: 2 } }, { status: 201, json: { totalItems: 2, total: 258 } }),
     api('commerce_out_of_stock', 'out of stock product is rejected and cart stays unchanged', 'POST', '/api/carts/cart_main/items', { body: { productId: 'prod_monitor', quantity: 1 } }, { status: 409, json: { 'error.code': 'OUT_OF_STOCK' }, unchanged: [{ name: 'cart_main', target: { method: 'GET', path: '/api/carts/cart_main' }, json: { totalItems: 2, total: 258 } }] }),
-    api('commerce_checkout', 'cart can be checked out', 'POST', '/api/carts/cart_main/checkout', undefined, { status: 201, json: { 'order.status': 'confirmed', 'order.total': 258 } }),
+    api('commerce_checkout', 'cart can be checked out', 'POST', '/api/carts/cart_main/checkout', { body: {} }, { status: 201, json: { 'order.status': 'confirmed', 'order.total': 258 } }),
     contract('commerce_contract', 'E-commerce OpenAPI parses', openApiPath),
     schema('commerce_schema_fuzz', 'E-commerce schema rejects malformed requests', openApiPath),
   ];
@@ -201,19 +201,19 @@ function eventMessagingScenarios(openApiPath, asyncApiPath) {
 }
 
 function ui(id, name, route) {
-  return { id, name, type: 'ui', objective: name, target: { route }, assertions: ['body is visible'], evidenceRequired: ['ui'] };
+  return { id, name, type: 'ui', objective: name, target: { route, sourceOfTruth: 'user' }, assertions: ['body is visible'], evidenceRequired: ['ui'] };
 }
 
 function api(id, name, method, path, request, expect) {
-  return { id, name, type: 'api', objective: name, target: { method, path }, ...(request !== undefined ? { request } : {}), expect, assertions: [`${method} ${path} behaves as expected`], evidenceRequired: ['api'] };
+  return { id, name, type: 'api', objective: name, target: { method, path, sourceOfTruth: 'contract' }, ...(request !== undefined ? { request } : {}), expect, assertions: [`${method} ${path} behaves as expected`], evidenceRequired: ['api'] };
 }
 
 function contract(id, name, schema) {
-  return { id, name, type: 'contract', objective: name, target: { schema }, assertions: ['contract parses'], evidenceRequired: ['schema'] };
+  return { id, name, type: 'contract', objective: name, target: { schema, sourceOfTruth: 'contract' }, assertions: ['contract parses'], evidenceRequired: ['schema'] };
 }
 
 function schema(id, name, schemaPath) {
-  return { id, name, type: 'schema', objective: name, target: { schema: schemaPath }, assertions: ['malformed requests are rejected'], evidenceRequired: ['schema', 'api'] };
+  return { id, name, type: 'schema', objective: name, target: { schema: schemaPath, sourceOfTruth: 'contract' }, assertions: ['malformed requests are rejected'], evidenceRequired: ['schema', 'api'] };
 }
 
 function replay(id, name, requests) {
@@ -226,7 +226,7 @@ function liveMessage(id, name, schemaPath) {
     name,
     type: 'message',
     objective: name,
-    target: { schema: schemaPath, channel: 'orders.created' },
+    target: { schema: schemaPath, channel: 'orders.created', sourceOfTruth: 'contract' },
     assertions: ['message is published and delivered'],
     evidenceRequired: ['message', 'api'],
     metadata: {
@@ -255,7 +255,7 @@ function messageContract(id, name, schemaPath, channel) {
     name,
     type: 'message',
     objective: name,
-    target: { schema: schemaPath, channel },
+    target: { schema: schemaPath, channel, sourceOfTruth: 'contract' },
     assertions: ['message contract exposes expected channel and payload'],
     evidenceRequired: ['message', 'schema'],
   };

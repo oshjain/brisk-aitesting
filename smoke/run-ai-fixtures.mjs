@@ -70,16 +70,12 @@ try {
     {
       name: 'markdown fenced json with trailing commas',
       content: '```json\n{ "mode": "automatic", "warnings": ["ok",], "scenarios": [{ "name": "Home", "type": "browser", "target": { "route": "/" }, "assertions": ["visible"], "evidenceRequired": ["ui"], },] }\n```',
-      assert(plan) {
-        assertHasType(plan, 'ui');
-      },
+      expectParseError: 'not valid JSON',
     },
     {
       name: 'json-ish object with unquoted keys',
       content: '{ mode: "automatic", scenarios: [{ name: "Home", type: "browser", target: { route: "/" }, assertions: ["visible"], evidenceRequired: ["ui"] }] }',
-      assert(plan) {
-        assertHasType(plan, 'ui');
-      },
+      expectParseError: 'Expected property name',
     },
     {
       name: 'top-level testPlan wrapper and tests alias',
@@ -152,6 +148,37 @@ try {
       assert(plan) {
         const ui = assertHasType(plan, 'ui');
         if (ui.target?.route !== '/dashboard') throw new Error(`expected /dashboard, got ${ui.target?.route}`);
+      },
+    },
+    {
+      name: 'custom type is corrected from target evidence',
+      content: JSON.stringify({
+        mode: 'automatic',
+        scenarios: [
+          {
+            name: 'Health endpoint responds',
+            type: 'custom',
+            objective: 'health endpoint responds',
+            target: { method: 'GET', path: '/api/health', sourceOfTruth: 'observed' },
+            expect: { status: 200 },
+            assertions: ['health endpoint is reachable'],
+            evidenceRequired: ['api'],
+          },
+          {
+            name: 'Home page loads',
+            type: 'custom',
+            objective: 'home route loads',
+            target: { route: '/', sourceOfTruth: 'observed' },
+            assertions: ['page body is visible'],
+            evidenceRequired: ['ui'],
+          },
+        ],
+      }),
+      assert(plan) {
+        const api = plan.scenarios.find((scenario) => scenario.target?.path === '/api/health');
+        const ui = plan.scenarios.find((scenario) => scenario.target?.route === '/');
+        if (api?.type !== 'api') throw new Error(`expected custom API target to normalize to api, got ${api?.type}`);
+        if (ui?.type !== 'ui') throw new Error(`expected custom UI target to normalize to ui, got ${ui?.type}`);
       },
     },
     {
@@ -283,6 +310,45 @@ try {
     errors.push(`malformed validator gate: expected required contract issues, got ${JSON.stringify(malformedValidation)}`);
   }
 
+  const missingMutationBodyValidation = validator.validate({
+    config,
+    input: context.input,
+    plan: {
+      ...validPlanSkeleton(context),
+      scenarios: [
+        {
+          ...validApiScenario(),
+          id: 'missing_mutation_body',
+          name: 'Create widget with no body',
+          target: { method: 'POST', path: '/api/widgets' },
+          request: { headers: { authorization: 'Bearer token' } },
+          expect: { status: 201 },
+        },
+      ],
+    },
+  });
+  if (missingMutationBodyValidation.valid || !missingMutationBodyValidation.issues.some((issue) => issue.code === 'REQUIRED_MUTATION_BODY')) {
+    errors.push(`missing mutation body validator gate: expected REQUIRED_MUTATION_BODY, got ${JSON.stringify(missingMutationBodyValidation)}`);
+  }
+
+  const lowValueNameValidation = validator.validate({
+    config,
+    input: context.input,
+    plan: {
+      ...validPlanSkeleton(context),
+      scenarios: [
+        {
+          ...validApiScenario(),
+          id: 'low_value_name',
+          name: 'ai-e2e-11111111-1111-1111-1111-111111111111',
+        },
+      ],
+    },
+  });
+  if (lowValueNameValidation.valid || !lowValueNameValidation.issues.some((issue) => issue.code === 'LOW_VALUE_NAME')) {
+    errors.push(`low-value name validator gate: expected LOW_VALUE_NAME, got ${JSON.stringify(lowValueNameValidation)}`);
+  }
+
   const duplicateRepairProvider = {
     name: 'duplicate-repair-provider',
     calls: 0,
@@ -298,7 +364,7 @@ try {
                 name: 'Duplicate UI',
                 type: 'ui',
                 objective: 'load page',
-                target: { route: '/' },
+                target: { route: '/', sourceOfTruth: 'observed' },
                 assertions: ['visible'],
                 evidenceRequired: ['ui'],
               },
@@ -307,7 +373,7 @@ try {
                 name: 'Duplicate API',
                 type: 'api',
                 objective: 'health responds',
-                target: { method: 'GET', path: '/api/health' },
+                target: { method: 'GET', path: '/api/health', sourceOfTruth: 'observed' },
                 expect: { status: 200 },
                 assertions: ['ok'],
                 evidenceRequired: ['api'],
@@ -326,7 +392,7 @@ try {
               name: 'Fixed UI',
               type: 'ui',
               objective: 'load page',
-              target: { route: '/' },
+              target: { route: '/', sourceOfTruth: 'observed' },
               assertions: ['visible'],
               evidenceRequired: ['ui'],
             },
@@ -335,7 +401,7 @@ try {
               name: 'Fixed API',
               type: 'api',
               objective: 'health responds',
-              target: { method: 'GET', path: '/api/health' },
+              target: { method: 'GET', path: '/api/health', sourceOfTruth: 'observed' },
               expect: { status: 200 },
               assertions: ['ok'],
               evidenceRequired: ['api'],
@@ -405,7 +471,7 @@ function validApiScenario() {
     name: 'Valid API',
     type: 'api',
     objective: 'health responds',
-    target: { method: 'GET', path: '/api/health' },
+    target: { method: 'GET', path: '/api/health', sourceOfTruth: 'observed' },
     expect: { status: 200 },
     assertions: ['status is ok'],
     evidenceRequired: ['api'],

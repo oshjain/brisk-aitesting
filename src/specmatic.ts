@@ -229,7 +229,7 @@ function defaultSpecmaticCommandArgs(): readonly string[] {
     const packageJsonPath = require.resolve('specmatic/package.json');
     return [join(dirname(packageJsonPath), 'dist', 'bin', 'index.js')];
   } catch {
-    return ['-e', 'process.stderr.write("Specmatic package is not installed. Install optional dependency specmatic.\\n"); process.exit(127);'];
+    return ['-e', 'process.stderr.write("Specmatic is not installed in this host project. To use SpecmaticContractEngine, install specmatic in the same package that runs brisk-aitesting and make sure Java is available.\\n"); process.exit(127);'];
   }
 }
 

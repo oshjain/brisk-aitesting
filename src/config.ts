@@ -1,5 +1,7 @@
 import { pathToFileURL } from 'node:url';
-import { resolve } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { extname, resolve } from 'node:path';
+import { parse as parseYaml } from 'yaml';
 import type { BriskAiTestingConfig } from './types.js';
 import { createAiProviderFromConfig } from './providers.js';
 
@@ -32,14 +34,31 @@ export function mergeConfig(base: UserConfig, override: Partial<UserConfig>): Us
   };
 }
 
-export async function loadConfig(configPath = 'brisk-aitesting.config.ts'): Promise<BriskAiTestingConfig> {
+export async function loadConfig(configPath = 'brisk-aitesting.config.mjs'): Promise<BriskAiTestingConfig> {
   const absolute = resolve(process.cwd(), configPath);
+  const extension = extname(absolute).toLowerCase();
+  if (extension === '.json' || extension === '.yaml' || extension === '.yml') {
+    const raw = await readFile(absolute, 'utf8');
+    const parsed = extension === '.json' ? JSON.parse(raw) as unknown : parseYaml(raw) as unknown;
+    return normalizeConfig(assertUserConfig(parsed, absolute));
+  }
   const imported = await import(pathToFileURL(absolute).href) as { default?: UserConfig; config?: UserConfig };
   const config = imported.default ?? imported.config;
   if (config === undefined) {
     throw new Error(`No default config export found in ${absolute}`);
   }
   return normalizeConfig(config);
+}
+
+function assertUserConfig(value: unknown, path: string): UserConfig {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(`Config ${path} must be an object.`);
+  }
+  const config = value as Partial<UserConfig>;
+  if (config.app === undefined) {
+    throw new Error(`Config ${path} must include app.name and app.baseUrl.`);
+  }
+  return config as UserConfig;
 }
 
 export function normalizeConfig(input: UserConfig): BriskAiTestingConfig {
@@ -78,6 +97,11 @@ export function normalizeConfig(input: UserConfig): BriskAiTestingConfig {
       networkPolicy: input.security?.networkPolicy ?? 'localhost-only',
       allowedHosts: input.security?.allowedHosts ?? ['localhost', '127.0.0.1', '::1'],
       redactSecrets: input.security?.redactSecrets ?? true,
+      strictMode: input.security?.strictMode ?? true,
+      allowFallbackTargets: input.security?.allowFallbackTargets ?? false,
+      allowAiTargets: input.security?.allowAiTargets ?? false,
+      allowHeuristicWorkflowCapture: input.security?.allowHeuristicWorkflowCapture ?? false,
+      uiHealing: input.security?.uiHealing ?? 'safe',
     },
     ...(input.engines !== undefined ? { engines: input.engines } : {}),
     ...(input.discoverer !== undefined ? { discoverer: input.discoverer } : {}),

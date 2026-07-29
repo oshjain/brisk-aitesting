@@ -1,6 +1,6 @@
 {
   "name": "brisk-aitesting",
-  "version": "0.1.2",
+  "version": "0.1.7",
   "description": "Locally embeddable software testing engine using AI planning and precise execution.",
   "type": "module",
   "license": "MIT",
@@ -52,6 +52,7 @@
     "smoke:real-ai": "node smoke/run-real-ai-smoke.mjs",
     "smoke:ci": "npm run smoke:contracts && npm run smoke:engine-conformance && npm run smoke:plugin-conformance && npm run smoke:extension-conformance && npm run smoke:adapter-readiness && npm run smoke:reference-serious-saas && npm run smoke:reference-proof-apps && npm run smoke:pact && npm run smoke:golden-fixtures && npm run smoke:cli && npm run smoke:ai-fixtures && npm run smoke && npm run pack:check",
     "smoke:all": "npm run smoke:ci && npm run smoke:real-ai",
+    "try:local": "npm run build && npm run smoke:cli && npm run smoke:reference-serious-saas",
     "benchmark": "npm run build && node smoke/run-benchmark.mjs",
     "pack:check": "npm run build && node smoke/run-pack-check.mjs",
     "release:check": "npm run typecheck && npm run build && npm run smoke:ci && npm run benchmark && node smoke/run-release-readiness.mjs",
@@ -72,17 +73,15 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.62.0",
+    "@pact-foundation/pact": "^17.0.1",
     "@tailwindcss/cli": "^4.3.3",
     "@types/node": "^22.0.0",
+    "specmatic": "^2.51.0",
     "tailwindcss": "^4.3.3"
   },
   "dependencies": {
     "ajv": "^8.20.0",
     "typescript": "^5.8.0",
     "yaml": "^2.9.0"
-  },
-  "optionalDependencies": {
-    "@pact-foundation/pact": "^17.0.1",
-    "specmatic": "^2.51.0"
   }
 }

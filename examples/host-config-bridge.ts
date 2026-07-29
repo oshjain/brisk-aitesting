@@ -7,10 +7,6 @@ const supportedProviders: readonly SupportedProvider[] = [
   'openai-compatible',
   'deepseek',
   'minimax',
-  'azure-openai',
-  'anthropic',
-  'local',
-  'custom',
 ];
 
 type HostSaaSConfig = {

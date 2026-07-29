@@ -7,10 +7,6 @@ const supportedProviders: readonly SupportedProvider[] = [
   'openai-compatible',
   'deepseek',
   'minimax',
-  'azure-openai',
-  'anthropic',
-  'local',
-  'custom',
 ];
 
 const aiCaCertPath = optionalEnv('BRISK_AITESTING_AI_CA_CERT_PATH');
@@ -56,6 +52,10 @@ export default defineConfig({
     networkPolicy: 'localhost-only',
     allowedHosts: ['localhost', '127.0.0.1', '::1'],
     redactSecrets: true,
+    strictMode: true,
+    allowFallbackTargets: false,
+    allowHeuristicWorkflowCapture: false,
+    uiHealing: 'safe',
   },
 });
 

@@ -54,9 +54,12 @@ export function authHeaders(auth: EngineContext['config']['auth']): HeaderRecord
   return {};
 }
 
-export function apiUrl(context: EngineContext): URL {
-  const url = new URL(context.scenario.target?.path ?? '/', context.config.app.baseUrl);
-  const query = context.scenario.request?.query;
+export function apiUrl(
+  context: EngineContext,
+  path: string = context.scenario.target?.path ?? '/',
+  query: NonNullable<ScenarioPlan['request']>['query'] | undefined = context.scenario.request?.query,
+): URL {
+  const url = new URL(path, context.config.app.baseUrl);
   if (query !== undefined) {
     for (const [key, value] of Object.entries(query)) {
       url.searchParams.set(key, String(value));
@@ -220,12 +223,21 @@ export function redactHeaders(headers: Record<string, string>, shouldRedact: boo
 
 export function redactValue(value: unknown, shouldRedact: boolean): unknown {
   if (!shouldRedact || value === null || value === undefined) return value;
+  if (typeof value === 'string') return redactSecretString(value);
   if (typeof value !== 'object') return value;
   if (Array.isArray(value)) return value.map((entry) => redactValue(entry, shouldRedact));
   return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([key, entry]) => [
     key,
     /token|secret|password|authorization/i.test(key) ? '[redacted]' : redactValue(entry, shouldRedact),
   ]));
+}
+
+function redactSecretString(value: string): string {
+  return value
+    .replace(/\bBearer\s+[A-Za-z0-9._~+/=-]{12,}\b/gi, 'Bearer [redacted]')
+    .replace(/\b(sk|pk|rk|npm)_[A-Za-z0-9]{12,}\b/g, '[redacted]')
+    .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g, '[redacted-email]')
+    .replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[redacted-ssn]');
 }
 
 export function isHostAllowed(url: URL, allowedHosts: readonly string[], policy: EngineContext['config']['security']['networkPolicy']): boolean {

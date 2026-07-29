@@ -158,7 +158,7 @@ Brisk is designed differently: local, embeddable, evidence-first, and built arou
 |:------------------|:-----------------------|
 | Local by default | Use it inside your own product, CLI, or CI without forcing a hosted dashboard |
 | AI with control | AI proposes structured plans; Brisk validates before execution |
-| Multi-engine core | UI, API, OpenAPI contracts, schema fuzzing, replay, Playwright, Schemathesis, Specmatic, and Pact can share one pipeline |
+| Multi-engine architecture | UI, API, OpenAPI contracts, schema fuzzing, replay, Playwright, Schemathesis, Specmatic, and Pact can share one pipeline. Heavy third-party adapters are opt-in installs. |
 | Evidence handover | Results come back as versioned JSON your product can store, render, or send to CI |
 | Extensible by design | Custom engines and adapters fit the same result contract |
 
@@ -668,16 +668,35 @@ flowchart TD
   <tr>
     <td width="33%" valign="top" align="center">
 
-### 🌟 Current: npm Install
+### 🌟 npm Install
 
 ```bash
 npm install brisk-aitesting
+```
+
+For pnpm monorepos, install it in the backend package that will run discovery, AI planning, engines, and artifact writing:
+
+```bash
+pnpm add brisk-aitesting --filter <your-backend-package>
+```
+
+Example:
+
+```bash
+pnpm add brisk-aitesting --filter @your-org/api
 ```
 
 Then create a config:
 
 ```bash
 npx brisk-aitesting init
+```
+
+If your project already installs Playwright and browser binaries, keep using your existing setup. If it does not, add Playwright to the same backend/runtime package:
+
+```bash
+npm install -D @playwright/test
+npx playwright install chromium
 ```
 
     </td>
@@ -714,26 +733,72 @@ npm install github:oshjain/brisk-aitesting
   </tr>
 </table>
 
+### Core Install vs Enhanced Adapters
+
+The default package is intentionally lightweight:
+
+```bash
+npm install brisk-aitesting
+```
+
+That installs the core testing layer:
+
+| Included by default | What it means |
+|:--------------------|:--------------|
+| AI planning contract | AI creates structured JSON plans, not executable code. |
+| Plan validation and repair | Bad plans are blocked or repaired before engines run. |
+| Repo and route discovery | Brisk inspects supported local app structure and routes. |
+| UI engine | Browser checks through Playwright when the host project has Playwright available. |
+| API engine | HTTP checks, status checks, JSON checks, headers, and evidence. |
+| OpenAPI parsing | JSON/YAML OpenAPI reading, operation summaries, and schema-backed checks. |
+| Built-in schema fuzzing | Lightweight malformed-request checks from OpenAPI schemas. |
+| Replay engine | Reruns declared HTTP interactions. |
+| Message contract inspection | Reads AsyncAPI-style message contracts and records evidence. |
+| Handover result | One stable result JSON for dashboards, databases, CI, and internal tools. |
+
+Enhanced third-party adapters are real, but they are not forced into every install because they are heavy and may need extra runtimes:
+
+| Enhanced adapter | Install when you need it | Why it is separate |
+|:-----------------|:-------------------------|:-------------------|
+| Specmatic contract execution and mock/service virtualization | `npm install specmatic` plus Java | Specmatic is a large runtime and Java is required by the tool. |
+| Pact message verification | `npm install @pact-foundation/pact` | Pact is only needed for teams using Pact contracts. |
+| Schemathesis deep OpenAPI fuzzing | Python plus Schemathesis installed on the machine | Schemathesis is a Python runtime, not a normal npm dependency. |
+
+For pnpm monorepos, install enhanced adapters in the same backend package that runs `brisk-aitesting`:
+
+```bash
+pnpm add specmatic --filter <your-backend-package>
+pnpm add @pact-foundation/pact --filter <your-backend-package>
+```
+
+Example:
+
+```bash
+pnpm add specmatic --filter @your-org/api
+```
+
+If an enhanced adapter is used without its runtime, Brisk returns a setup error instead of pretending the adapter ran.
+
 ## ⚡ Quick Start
 
 ### Optional Adapter Runtimes
 
-The npm package ships the adapter code. Heavy third-party runtimes stay optional so normal users do not inherit tools they do not need.
+The npm package ships adapter code. Heavy third-party runtimes are installed only by teams that actually use those adapters.
 
 | Adapter | What ships with Brisk | What users install only if needed |
 |:--------|:----------------------|:----------------------------------|
-| Specmatic | `SpecmaticContractEngine`, smoke script, workflow, evidence contract | Java plus the optional `specmatic` runtime |
+| Specmatic | `SpecmaticContractEngine`, workflow, evidence contract | `specmatic` in the host runtime package plus Java |
+| Pact | `PactMessageEngine`, workflow, evidence contract | `@pact-foundation/pact` in the host runtime package |
+| Schemathesis | `SchemathesisOpenApiFuzzEngine`, workflow, evidence contract | Python plus Schemathesis on the machine |
 
 Specmatic can test any HTTP/OpenAPI provider. The app under test does not have to be Java. Java is needed because the Specmatic runtime itself is Java-based.
-
-```
 
 <details open>
 <summary><strong>1️⃣ Create your config</strong></summary>
 
-Create `brisk-aitesting.config.ts`:
+Create `brisk-aitesting.config.mjs`:
 
-```ts
+```js
 import { defineConfig } from 'brisk-aitesting';
 
 export default defineConfig({
@@ -768,6 +833,10 @@ export default defineConfig({
     networkPolicy: 'localhost-only',
     allowedHosts: ['localhost', '127.0.0.1', '::1'],
     redactSecrets: true,
+    strictMode: true,
+    allowFallbackTargets: false,
+    allowHeuristicWorkflowCapture: false,
+    uiHealing: 'safe',
   },
 });
 
@@ -1132,7 +1201,9 @@ This may be the most valuable part of the product for enterprise teams. The resu
 | `brisk-aitesting.result.v1` | 📦 Result |
 | `brisk-aitesting.handover.v1` | 🤝 Handover |
 | `brisk-aitesting.cli-result.v1` | ⌨️ CLI Result |
+| `brisk-aitesting.inspect-result.v1` | Inspect Result |
 | `brisk-aitesting.clean-result.v1` | Cleanup Result |
+| `brisk-aitesting.doctor-result.v1` | Doctor Result |
 | `brisk-aitesting.benchmark.v1` | 📊 Benchmark |
 | `brisk-aitesting.pack-check.v1` | 📦 Pack Check |
 | `brisk-aitesting.release-readiness.v1` | Release Readiness |

@@ -79,7 +79,7 @@ try {
     name: 'Pact verifies order created event',
     type: 'message',
     objective: 'Run real Pact message provider verification against a local pact file.',
-    target: { schema: config.contracts.asyncApiPath, channel: 'orders.created' },
+    target: { schema: config.contracts.asyncApiPath, channel: 'orders.created', sourceOfTruth: 'contract' },
     assertions: ['Pact message provider verification passes'],
     evidenceRequired: ['message', 'schema'],
     metadata: {
@@ -98,7 +98,7 @@ try {
     name: 'unrelated API scenario',
     type: 'api',
     objective: 'Pact must reject unrelated API scenarios.',
-    target: { method: 'GET', path: '/api/health' },
+    target: { method: 'GET', path: '/api/health', sourceOfTruth: 'contract' },
     assertions: ['api runs'],
     evidenceRequired: ['api'],
   };

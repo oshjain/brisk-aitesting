@@ -29,7 +29,7 @@ export type AuthConfig =
     };
 
 export interface AiProviderConfig {
-  readonly provider: 'openai' | 'openai-compatible' | 'deepseek' | 'minimax' | 'azure-openai' | 'anthropic' | 'local' | 'custom';
+  readonly provider: 'openai' | 'openai-compatible' | 'deepseek' | 'minimax';
   readonly model: string;
   readonly apiKey?: string;
   readonly apiKeyEnv?: string;
@@ -65,6 +65,11 @@ export interface SecurityConfig {
   readonly networkPolicy: 'localhost-only' | 'allowlist' | 'open';
   readonly allowedHosts: readonly string[];
   readonly redactSecrets: boolean;
+  readonly strictMode?: boolean;
+  readonly allowFallbackTargets?: boolean;
+  readonly allowAiTargets?: boolean;
+  readonly allowHeuristicWorkflowCapture?: boolean;
+  readonly uiHealing?: 'off' | 'safe' | 'aggressive';
 }
 
 export interface BriskAiTestingConfig {
@@ -102,6 +107,7 @@ export interface ScenarioPlan {
     readonly route?: string;
     readonly schema?: string;
     readonly channel?: string;
+    readonly sourceOfTruth?: 'user' | 'observed' | 'contract' | 'ai' | 'fallback';
   };
   readonly request?: {
     readonly headers?: Record<string, string>;
@@ -118,9 +124,37 @@ export interface ScenarioPlan {
     readonly unchanged?: readonly ApiStateSnapshotExpectation[];
   };
   readonly assertions: readonly string[];
+  readonly dependsOn?: readonly string[];
+  readonly capture?: readonly WorkflowCapture[];
+  readonly cleanup?: readonly ApiCleanupStep[];
   readonly uiActions?: readonly UiActionPlan[];
   readonly evidenceRequired: readonly ('repo' | 'ui' | 'api' | 'schema' | 'auth' | 'message')[];
   readonly metadata?: Record<string, unknown>;
+}
+
+export interface WorkflowCapture {
+  readonly name: string;
+  readonly from: 'response.body' | 'response.header';
+  readonly path: string;
+}
+
+export interface ApiCleanupStep {
+  readonly type: 'api';
+  readonly target: {
+    readonly method: 'DELETE' | 'POST';
+    readonly path: string;
+  };
+  readonly request?: {
+    readonly headers?: Record<string, string>;
+    readonly query?: Record<string, string | number | boolean>;
+    readonly body?: unknown;
+  };
+  readonly expect?: {
+    readonly status?: number | readonly number[] | {
+      readonly min?: number;
+      readonly max?: number;
+    };
+  };
 }
 
 export interface ApiStateSnapshotExpectation {
@@ -486,6 +520,17 @@ export interface EngineContext {
   readonly runId: string;
   readonly plan: TestPlan;
   readonly scenario: ScenarioPlan;
+  readonly runState?: EngineRunState;
+}
+
+export interface EngineRunState {
+  readonly variables: Record<string, string>;
+  readonly captures: Record<string, {
+    readonly scenarioId: string;
+    readonly source: 'explicit' | 'heuristic';
+    readonly path: string;
+  }>;
+  readonly cleanup: ApiCleanupStep[];
 }
 
 export interface EngineRunResult {

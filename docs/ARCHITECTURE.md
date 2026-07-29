@@ -58,6 +58,7 @@ Host apps should not have to care about the moving parts. Developers should stil
 
 8. CLI Boundary
    `brisk-aitesting run --json` returns `brisk-aitesting.cli-result.v1`.
+   `brisk-aitesting inspect --json` returns `brisk-aitesting.inspect-result.v1`.
    `brisk-aitesting clean --json` returns `brisk-aitesting.clean-result.v1`.
    Exit codes are stable: 0 passed, 1 completed non-passed, 2 setup/usage error.
 
@@ -108,7 +109,9 @@ Stable schema names currently used by the package:
 | `brisk-aitesting.result.v1` | handover | Full run result |
 | `brisk-aitesting.handover.v1` | handover | Host consumption contract |
 | `brisk-aitesting.cli-result.v1` | CLI | Machine-readable CLI run summary |
+| `brisk-aitesting.inspect-result.v1` | CLI | Machine-readable explanation of a saved run result |
 | `brisk-aitesting.clean-result.v1` | CLI | Machine-readable artifact cleanup summary |
+| `brisk-aitesting.doctor-result.v1` | CLI | Machine-readable local setup diagnosis |
 | `brisk-aitesting.benchmark.v1` | benchmark | Report for bad inputs, contract drift, schema mismatch, network policy, and CLI failure checks |
 | `brisk-aitesting.pack-check.v1` | release | npm package tarball verification report |
 | `brisk-aitesting.release-readiness.v1` | release | Release script, changelog, and workflow readiness report |
