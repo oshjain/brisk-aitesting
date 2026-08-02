@@ -374,6 +374,97 @@ tailwind.config = {
   .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
   .reveal.visible { opacity: 1; transform: translateY(0); }
 
+  /* ── Mobile carousels (horizontal scroll-snap) ── */
+  .punch-carousel, .pipe-carousel, .pillar-carousel, .stat-carousel, .step-carousel, .uat-carousel {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: visible;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 1rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    gap: 0.75rem;
+    padding: 0.25rem 0.25rem 0.5rem;
+    margin: 0 -0.25rem;
+    scroll-behavior: smooth;
+  }
+  .punch-carousel::-webkit-scrollbar, .pipe-carousel::-webkit-scrollbar,
+  .pillar-carousel::-webkit-scrollbar, .stat-carousel::-webkit-scrollbar,
+  .step-carousel::-webkit-scrollbar, .uat-carousel::-webkit-scrollbar { display: none; }
+  .punch-carousel > *, .pipe-carousel > *, .pillar-carousel > *,
+  .stat-carousel > *, .step-carousel > *, .uat-carousel > * {
+    flex: 0 0 calc(100% - 1.5rem);
+    scroll-snap-align: center;
+    min-width: 0;
+  }
+  @media (min-width: 768px) {
+    .punch-carousel, .pipe-carousel, .pillar-carousel, .stat-carousel,
+    .step-carousel, .uat-carousel {
+      display: block;
+      overflow: visible;
+      margin: 0;
+      padding: 0;
+    }
+    .punch-carousel > *, .pipe-carousel > *, .pillar-carousel > *,
+    .stat-carousel > *, .step-carousel > *, .uat-carousel > * {
+      flex: none;
+    }
+  }
+  /* dot indicators */
+  .carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.375rem;
+    margin-top: 0.5rem;
+  }
+  .carousel-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(74, 20, 140, 0.25);
+    transition: all 0.3s ease;
+  }
+  .carousel-dot.active {
+    background: #4A148C;
+    width: 18px;
+    border-radius: 3px;
+  }
+  @media (min-width: 768px) { .carousel-dots { display: none; } }
+
+  /* ── Scroll-reveal animations ── */
+  .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal-stagger > * { opacity: 0; transform: translateY(18px); transition: opacity 0.5s ease, transform 0.5s ease; }
+  .reveal-stagger.visible > * { opacity: 1; transform: translateY(0); }
+  .reveal-stagger.visible > *:nth-child(1) { transition-delay: 0.04s; }
+  .reveal-stagger.visible > *:nth-child(2) { transition-delay: 0.10s; }
+  .reveal-stagger.visible > *:nth-child(3) { transition-delay: 0.16s; }
+  .reveal-stagger.visible > *:nth-child(4) { transition-delay: 0.22s; }
+  .reveal-stagger.visible > *:nth-child(5) { transition-delay: 0.28s; }
+  .reveal-stagger.visible > *:nth-child(6) { transition-delay: 0.34s; }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal, .reveal-stagger > * { opacity: 1; transform: none; transition: none; }
+  }
+
+  /* ── Sticky bottom CTA on mobile ── */
+  .sticky-cta {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 40;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid #E0E0E0;
+    padding: 0.625rem 0.75rem calc(0.625rem + env(safe-area-inset-bottom));
+    display: flex;
+    gap: 0.5rem;
+    transform: translateY(110%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 45;
+  }
+  .sticky-cta.visible { transform: translateY(0); }
+  @media (min-width: 1024px) { .sticky-cta { display: none; } }
+
   /* ── Benchmark modal ── */
   .benchmark-modal { position: fixed; inset: 0; z-index: 100; display: none; }
   .benchmark-modal.active { display: block; }
@@ -553,22 +644,24 @@ tailwind.config = {
           <div class="logo-glow mb-5 float-decoration">
             <img src="assets/logo_transparent.png" alt="Brisk logo" class="logo-img" width="220" height="220">
           </div>
-          <p class="text-xl sm:text-2xl lg:text-3xl font-extrabold brand-gradient-purple tracking-tight mb-2">
+          <p class="text-xl sm:text-2xl lg:text-3xl font-extrabold brand-gradient-purple tracking-tight mb-3">
             brisk-aitesting
           </p>
-          <p class="text-base sm:text-lg lg:text-xl font-extrabold text-brisk-gray-950 mb-2 leading-snug">
-            <span class="brand-gradient-fire">Fast, Efficient &amp; No-nonsense</span> — build faster, ship even faster!
-          </p>
-          <p class="text-lg sm:text-xl lg:text-2xl font-bold brand-gradient-fire mb-2 leading-tight">
-            The control layer between AI and your production code.
-          </p>
-          <p class="text-base sm:text-lg lg:text-xl font-bold text-brisk-gray-800 mb-3 leading-tight">
-            The world's most unique <span class="brand-gradient-purple">AI driven software testing</span> control plane —
-          </p>
-          <div class="flex items-center justify-center gap-3 mb-2">
-            <span class="h-px w-12 bg-gradient-to-r from-transparent to-brisk-purple-300"></span>
-            <span class="material-symbols-outlined text-brisk-yellow-600 text-base">bolt</span>
-            <span class="h-px w-12 bg-gradient-to-l from-transparent to-brisk-purple-300"></span>
+          <div class="punch-carousel w-full md:!block" data-punch-carousel>
+            <p class="text-base sm:text-lg lg:text-xl font-extrabold text-brisk-gray-950 md:mb-2 leading-snug">
+              <span class="brand-gradient-fire">Fast, Efficient &amp; No-nonsense</span> — build faster, ship even faster!
+            </p>
+            <p class="text-lg sm:text-xl lg:text-2xl font-bold brand-gradient-fire md:mb-2 leading-tight">
+              The control layer between AI and your production code.
+            </p>
+            <p class="text-base sm:text-lg lg:text-xl font-bold text-brisk-gray-800 md:mb-3 leading-tight">
+              The world's most unique <span class="brand-gradient-purple">AI driven software testing</span> control plane —
+            </p>
+          </div>
+          <div class="carousel-dots md:!hidden" data-punch-dots>
+            <span class="carousel-dot active"></span>
+            <span class="carousel-dot"></span>
+            <span class="carousel-dot"></span>
           </div>
         </div>
 
@@ -625,7 +718,7 @@ tailwind.config = {
 
         <!-- Pipeline visual -->
         <div class="relative" aria-label="Brisk testing pipeline: Human goal, Discovery, Checked plan, Engines, Evidence">
-          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-2">
+          <div class="pipe-carousel sm:!flex sm:flex-row sm:items-stretch sm:items-center sm:gap-3 sm:gap-2" data-pipe-carousel>
             <div class="pipeline-node flex-1 bg-white border-2 border-brisk-gray-300 rounded-2xl p-4 sm:p-5 text-center shadow-sm">
               <div class="w-12 h-12 mx-auto mb-2 rounded-xl bg-brisk-yellow-100 flex items-center justify-center">
                 <span class="material-symbols-outlined text-brisk-yellow-800 icon-fill">chat</span>
@@ -808,7 +901,7 @@ tailwind.config = {
         </div>
 
         <!-- Three pillars -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-14">
+        <div class="pillar-carousel md:!grid md:grid-cols-3 md:gap-6 mb-14 reveal-stagger" data-pillar-carousel>
           <div class="stat-card bg-gradient-to-br from-brisk-purple-900 to-brisk-purple-950 text-white rounded-2xl p-7 hover-lift">
             <div class="w-14 h-14 mb-4 rounded-xl bg-brisk-yellow-600 flex items-center justify-center">
               <span class="material-symbols-outlined text-brisk-gray-950 text-3xl icon-fill">smart_toy</span>
@@ -830,6 +923,11 @@ tailwind.config = {
             <h3 class="text-xl font-extrabold mb-2">You own the data.<br>You own the gate.</h3>
             <p class="text-sm text-brisk-gray-600 leading-relaxed">Local-first, embeddable SDK. Your database, your dashboard, your CI. No hosted platform. No vendor lock-in. Your rules, your scale, your future.</p>
           </div>
+        </div>
+        <div class="carousel-dots md:!hidden" data-pillar-dots>
+          <span class="carousel-dot active"></span>
+          <span class="carousel-dot"></span>
+          <span class="carousel-dot"></span>
         </div>
 
         <!-- Why Now Infographic -->
@@ -1862,7 +1960,7 @@ tailwind.config = {
         </div>
 
         <!-- Hero stat cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+        <div class="stat-carousel md:!grid md:grid-cols-2 lg:!grid lg:grid-cols-4 md:gap-4 mb-10 reveal-stagger" data-stat-carousel>
           <div class="stat-card bg-gradient-to-br from-green-50 to-white border-2 border-green-200 rounded-2xl p-5 text-center">
             <div class="w-12 h-12 mx-auto mb-2 rounded-xl bg-green-100 flex items-center justify-center">
               <span class="material-symbols-outlined text-green-700 text-2xl icon-fill">check_circle</span>
@@ -1895,6 +1993,12 @@ tailwind.config = {
             <p class="text-sm font-bold text-brisk-gray-950 mt-1">Engines verified</p>
             <p class="text-xs text-brisk-gray-600">UI · API · Schema · Replay · Message · Contract</p>
           </div>
+        </div>
+        <div class="carousel-dots md:!hidden" data-stat-dots>
+          <span class="carousel-dot active"></span>
+          <span class="carousel-dot"></span>
+          <span class="carousel-dot"></span>
+          <span class="carousel-dot"></span>
         </div>
 
         <!-- Open full benchmark report -->
@@ -2981,6 +3085,18 @@ function requiredEnv(name) {
   </main>
 </div><!-- close .page-layout -->
 
+<!-- Sticky bottom CTA — mobile only -->
+<div id="sticky-cta" class="sticky-cta lg:!hidden">
+  <a href="#get-started" class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-3 text-sm font-bold bg-brisk-purple-900 text-white rounded-xl hover:bg-brisk-purple-950 transition-colors">
+    <span class="material-symbols-outlined text-base">rocket_launch</span>
+    Get started
+  </a>
+  <a href="https://github.com/oshjain/brisk-aitesting" class="inline-flex items-center justify-center gap-1.5 px-3 py-3 text-sm font-bold bg-white border-2 border-brisk-purple-900 text-brisk-purple-900 rounded-xl hover:bg-brisk-purple-50 transition-colors" aria-label="Star on GitHub">
+    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.73.5.66 5.58.66 11.85c0 5.02 3.25 9.27 7.76 10.77.57.1.78-.25.78-.55v-1.94c-3.16.69-3.83-1.52-3.83-1.52-.52-1.31-1.27-1.66-1.27-1.66-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.68 1.25 3.34.95.1-.74.4-1.25.72-1.54-2.52-.29-5.18-1.26-5.18-5.62 0-1.24.44-2.26 1.17-3.06-.12-.29-.51-1.45.11-3.02 0 0 .96-.31 3.15 1.17a10.95 10.95 0 0 1 5.74 0c2.18-1.48 3.14-1.17 3.14-1.17.62 1.57.23 2.73.11 3.02.73.8 1.17 1.82 1.17 3.06 0 4.37-2.67 5.33-5.21 5.61.41.36.78 1.06.78 2.14v3.17c0 .31.21.66.79.55 4.5-1.5 7.75-5.75 7.75-10.77C23.34 5.58 18.27.5 12 .5Z"/></svg>
+    <span class="hidden xs:inline">Star</span>
+  </a>
+</div>
+
 <!-- ============== FOOTER ============== -->
 <footer class="bg-brisk-gray-950 text-white py-12 sm:py-16" role="contentinfo">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -3454,6 +3570,74 @@ setupTabs('.comparison-tab', 'aria-controls', '.comparison-panel');
     });
   }, { threshold: 0.4 });
   counters.forEach(c => observer.observe(c));
+})();
+
+// ── Carousel dot indicators (mobile) ──
+(function(){
+  if (window.matchMedia('(min-width: 768px)').matches) return;
+  const pairs = [
+    ['[data-punch-carousel]', '[data-punch-dots]'],
+    ['[data-pipe-carousel]', null],
+    ['[data-stat-carousel]', '[data-stat-dots]'],
+    ['[data-pillar-carousel]', '[data-pillar-dots]'],
+  ];
+  pairs.forEach(([carouselSel, dotsSel]) => {
+    const carousel = document.querySelector(carouselSel);
+    if (!carousel) return;
+    const items = Array.from(carousel.children).filter(c => !c.matches('[data-punch-dots], [data-stat-dots], [data-pillar-dots], .carousel-dots'));
+    if (items.length < 2) return;
+    const updateActive = () => {
+      const scrollLeft = carousel.scrollLeft;
+      const slideWidth = items[0].offsetWidth + 12;
+      const active = Math.round(scrollLeft / slideWidth);
+      const safeIndex = Math.max(0, Math.min(items.length - 1, active));
+      if (dotsSel) {
+        const dots = document.querySelectorAll(dotsSel + ' .carousel-dot');
+        dots.forEach((d, i) => d.classList.toggle('active', i === safeIndex));
+      }
+    };
+    carousel.addEventListener('scroll', () => requestAnimationFrame(updateActive), { passive: true });
+  });
+})();
+
+// ── Scroll-reveal animations ──
+(function(){
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  // Auto-tag all section headers and card grids for reveal
+  document.querySelectorAll('section h2, section > div > .grid, .reveal-stagger').forEach(el => {
+    el.classList.add('reveal');
+  });
+  document.querySelectorAll('section h2, section > div > .grid, .reveal-stagger').forEach((el, i) => {
+    el.style.transitionDelay = `${Math.min(i * 0.05, 0.3)}s`;
+  });
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -10% 0px' });
+  document.querySelectorAll('.reveal, .reveal-stagger').forEach(el => io.observe(el));
+})();
+
+// ── Sticky bottom CTA show/hide ──
+(function(){
+  const stickyCta = document.getElementById('sticky-cta');
+  const hero = document.getElementById('home');
+  if (!stickyCta || !hero) return;
+  if (window.matchMedia('(min-width: 1024px)').matches) return;
+  let lastVisible = false;
+  const update = () => {
+    const heroBottom = hero.getBoundingClientRect().bottom;
+    const shouldShow = heroBottom < -100;
+    if (shouldShow !== lastVisible) {
+      stickyCta.classList.toggle('visible', shouldShow);
+      lastVisible = shouldShow;
+    }
+  };
+  window.addEventListener('scroll', update, { passive: true });
+  update();
 })();
 
 // ── Benchmark Report Modal ──
