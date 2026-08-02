@@ -809,6 +809,13 @@ tailwind.config = {
               <p class="text-xs text-brisk-gray-600 mt-1">Versioned handover</p>
             </div>
           </div>
+          <div class="carousel-dots md:!hidden" data-pipe-dots>
+            <span class="carousel-dot active"></span>
+            <span class="carousel-dot"></span>
+            <span class="carousel-dot"></span>
+            <span class="carousel-dot"></span>
+            <span class="carousel-dot"></span>
+          </div>
         </div>
       </div>
     </section>
@@ -3762,7 +3769,15 @@ setupTabs('.comparison-tab', 'aria-controls', '.comparison-panel');
       const newScroll = targetLeft - (carousel.clientWidth - target.offsetWidth) / 2;
       carousel.scrollBy({ left: newScroll - current, behavior: 'smooth' });
     };
-    const start = () => { stop(); timer = setInterval(advance, interval); };
+    const start = () => {
+      stop();
+      // First advance happens within ~400ms of becoming visible
+      timer = setTimeout(() => {
+        advance();
+        // After first advance, continue every interval
+        timer = setInterval(advance, interval);
+      }, 400);
+    };
     const stop = () => { if (timer) clearInterval(timer); };
 
     carousel.addEventListener('touchstart', () => { paused = true; stop(); }, { passive: true });
