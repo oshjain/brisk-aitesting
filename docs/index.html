@@ -394,7 +394,7 @@ tailwind.config = {
   .step-carousel::-webkit-scrollbar, .uat-carousel::-webkit-scrollbar { display: none; }
   .punch-carousel > *, .pipe-carousel > *, .pillar-carousel > *,
   .stat-carousel > *, .step-carousel > *, .uat-carousel > * {
-    flex: 0 0 calc(100% - 1.5rem);
+    flex: 0 0 calc(100% - 1.5rem) !important;
     scroll-snap-align: center;
     min-width: 0;
   }
@@ -411,7 +411,32 @@ tailwind.config = {
       flex: none;
     }
   }
-  /* dot indicators */
+  /* dot indicators + progress */
+  .carousel-progress {
+    height: 3px;
+    background: rgba(74, 20, 140, 0.15);
+    border-radius: 2px;
+    margin: 0.5rem auto 0;
+    max-width: 200px;
+    overflow: hidden;
+    position: relative;
+  }
+  .carousel-progress::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 0;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #4A148C, #7C43BD);
+    border-radius: 2px;
+  }
+  .carousel-progress.active::after {
+    animation: carousel-progress 3.5s linear forwards;
+  }
+  @keyframes carousel-progress {
+    from { width: 0; }
+    to { width: 100%; }
+  }
   .carousel-dots {
     display: flex;
     justify-content: center;
@@ -423,6 +448,7 @@ tailwind.config = {
     border-radius: 50%;
     background: rgba(74, 20, 140, 0.25);
     transition: all 0.3s ease;
+    cursor: pointer;
   }
   .carousel-dot.active {
     background: #4A148C;
@@ -430,6 +456,16 @@ tailwind.config = {
     border-radius: 3px;
   }
   @media (min-width: 768px) { .carousel-dots { display: none; } }
+
+  /* UAT tab content (mobile) */
+  @media (max-width: 1023px) {
+    .uat-card { display: none; }
+    .uat-card.uat-active { display: block; animation: uat-fade 0.3s ease; }
+  }
+  @keyframes uat-fade {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
   /* ── Scroll-reveal animations ── */
   .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s ease, transform 0.7s ease; }
@@ -505,20 +541,13 @@ tailwind.config = {
     .material-symbols-outlined.text-7xl { font-size: 1.75rem !important; }
     .material-symbols-outlined.text-4xl { font-size: 1.5rem !important; }
     .material-symbols-outlined.text-3xl { font-size: 1.5rem !important; }
-    /* pipeline cards: bigger touch targets + bigger text */
+    /* pipeline cards: bigger touch targets, Tailwind default text */
     .pipeline-node { padding: 1.25rem !important; }
     .pipeline-node > div { width: 56px !important; height: 56px !important; margin-bottom: 0.75rem !important; }
     .pipeline-node > div .material-symbols-outlined { font-size: 28px !important; }
-    .pipeline-node p.text-sm { font-size: 0.95rem !important; font-weight: 700 !important; }
-    .pipeline-node p.text-xs { font-size: 0.875rem !important; }
-    /* capability / handover cards: text-xs becomes readable */
-    .cap-panel .text-xs { font-size: 0.875rem !important; }
-    /* status section cards: text-xs becomes readable */
-    #status-built .text-xs, #status-not-built .text-xs { font-size: 0.875rem !important; }
-    /* benchmark hero stat cards: bigger numbers */
-    .stat-card p:first-of-type { font-size: 1.75rem !important; }
-    .stat-card p.text-sm { font-size: 0.875rem !important; }
-    .stat-card p.text-xs { font-size: 0.8125rem !important; }
+    /* capability / handover cards: let Tailwind defaults work */
+    /* status section cards: let Tailwind defaults work */
+    /* benchmark hero stat cards: let Tailwind defaults work */
     /* 10-stage pipeline step icons: 40px wrapper */
     .step-icon { width: 40px !important; height: 40px !important; }
     .step-icon .material-symbols-outlined { font-size: 22px !important; }
@@ -995,7 +1024,7 @@ tailwind.config = {
                 <span class="text-2xl font-extrabold text-red-700 counter">3–6 weeks</span>
               </div>
             </div>
-            <div class="bg-green-50/60 border-2 border-green-200 rounded-2xl p-6">
+            <div class="uat-card bg-green-50/60 border-2 border-green-200 rounded-2xl p-6" data-uat-card="brisk">
               <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 rounded-xl bg-green-600 flex items-center justify-center">
                   <span class="material-symbols-outlined text-white icon-fill">check</span>
@@ -1076,8 +1105,14 @@ tailwind.config = {
         </div>
 
         <!-- UAT before / after -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-          <div class="bg-red-50/60 border-2 border-red-200 rounded-2xl p-6">
+        <div class="mb-10">
+          <!-- Mobile-only tab toggle -->
+          <div class="flex rounded-lg bg-brisk-gray-100 p-1 mb-4 lg:hidden" role="tablist" aria-label="UAT before/after">
+            <button type="button" class="uat-tab flex-1 py-2.5 px-3 text-sm font-semibold rounded-md bg-white text-brisk-gray-950 shadow-sm transition-colors" role="tab" aria-selected="true" data-uat-tab="old">Without Brisk</button>
+            <button type="button" class="uat-tab flex-1 py-2.5 px-3 text-sm font-semibold rounded-md text-brisk-gray-600 transition-colors" role="tab" aria-selected="false" data-uat-tab="brisk">With Brisk</button>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="uat-card uat-active bg-red-50/60 border-2 border-red-200 rounded-2xl p-6" data-uat-card="old">
             <div class="flex items-center gap-3 mb-4">
               <div class="w-12 h-12 rounded-xl bg-red-500 flex items-center justify-center">
                 <span class="material-symbols-outlined text-white text-2xl icon-fill">group</span>
@@ -3619,6 +3654,84 @@ setupTabs('.comparison-tab', 'aria-controls', '.comparison-panel');
     });
   }, { threshold: 0.1, rootMargin: '0px 0px -10% 0px' });
   document.querySelectorAll('.reveal, .reveal-stagger').forEach(el => io.observe(el));
+})();
+
+// ── Carousel auto-advance (mobile) ──
+(function(){
+  if (window.matchMedia('(min-width: 768px)').matches) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const carousels = document.querySelectorAll('[data-punch-carousel], [data-pipe-carousel], [data-pillar-carousel], [data-stat-carousel]');
+  carousels.forEach((carousel) => {
+    const items = Array.from(carousel.children).filter(c =>
+      !c.classList.contains('carousel-dots') &&
+      !c.classList.contains('carousel-progress') &&
+      c.tagName !== 'SPAN'
+    );
+    if (items.length < 2) return;
+    let index = 0;
+    let timer = null;
+    let paused = false;
+    const interval = 3500;
+
+    const advance = () => {
+      if (paused) return;
+      index = (index + 1) % items.length;
+      const target = items[index];
+      // Compute offset relative to current scroll
+      const current = carousel.scrollLeft;
+      const targetLeft = target.offsetLeft - carousel.offsetLeft;
+      const newScroll = targetLeft - (carousel.clientWidth - target.offsetWidth) / 2;
+      carousel.scrollBy({ left: newScroll - current, behavior: 'smooth' });
+    };
+    const start = () => { stop(); timer = setInterval(advance, interval); };
+    const stop = () => { if (timer) clearInterval(timer); };
+
+    carousel.addEventListener('touchstart', () => { paused = true; stop(); }, { passive: true });
+    carousel.addEventListener('scroll', () => {
+      paused = true; stop();
+      clearTimeout(carousel._resumeTimer);
+      carousel._resumeTimer = setTimeout(() => { paused = false; start(); }, 6000);
+    }, { passive: true });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stop();
+      else if (!paused) start();
+    });
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) { if (!paused) start(); }
+        else { stop(); }
+      });
+    }, { threshold: 0.3 });
+    io.observe(carousel);
+
+    start();
+  });
+})();
+
+// ── UAT tab switching (mobile) ──
+(function(){
+  if (window.matchMedia('(min-width: 1024px)').matches) return;
+  const tabs = document.querySelectorAll('.uat-tab');
+  const cards = document.querySelectorAll('.uat-card');
+  if (!tabs.length || !cards.length) return;
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-uat-tab');
+      tabs.forEach(t => {
+        const active = t.getAttribute('data-uat-tab') === target;
+        t.classList.toggle('bg-white', active);
+        t.classList.toggle('text-brisk-gray-950', active);
+        t.classList.toggle('shadow-sm', active);
+        t.classList.toggle('text-brisk-gray-600', !active);
+        t.setAttribute('aria-selected', active);
+      });
+      cards.forEach(c => {
+        c.classList.toggle('uat-active', c.getAttribute('data-uat-card') === target);
+      });
+    });
+  });
 })();
 
 // ── Sticky bottom CTA show/hide ──
