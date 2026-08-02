@@ -562,7 +562,7 @@ tailwind.config = {
 <a href="#main-content" class="skip-link">Skip to main content</a>
 
 <!-- ============== HEADER (mobile only) ============== -->
-<header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-brisk-gray-300 lg:hidden" role="banner">
+<header id="mobile-header" class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-brisk-gray-300 lg:hidden sticky-header" role="banner">
   <div class="px-4 sm:px-6">
     <div class="flex items-center justify-between h-16">
       <a href="#home" class="flex items-center gap-2 shrink-0" aria-label="brisk-aitesting home">
@@ -601,10 +601,10 @@ tailwind.config = {
   </div>
   <nav class="p-4 flex flex-col gap-1 drawer-nav" aria-label="Mobile navigation">
     <a href="#home" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">home</span>Home</a>
+    <a href="#market" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">trending_up</span>Market Potential</a>
     <a href="#problem" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">priority_high</span>The Problem</a>
     <a href="#why-brisk" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">lightbulb</span>Why Brisk</a>
     <a href="#uat" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">group</span>End of UAT</a>
-    <a href="#market" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">trending_up</span>Market Potential</a>
     <a href="#compare" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">compare</span>Product Comparison</a>
     <a href="#how-it-works" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">account_tree</span>How It Works</a>
     <a href="#capabilities" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">bolt</span>Capabilities</a>
@@ -635,10 +635,10 @@ tailwind.config = {
     </div>
     <nav class="sidebar-nav" aria-label="Main navigation">
       <a href="#home" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">home</span><span class="sidebar-label">Home</span></a>
+      <a href="#market" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">trending_up</span><span class="sidebar-label">Market Potential</span></a>
       <a href="#problem" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">priority_high</span><span class="sidebar-label">The Problem</span></a>
       <a href="#why-brisk" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">lightbulb</span><span class="sidebar-label">Why Brisk</span></a>
       <a href="#uat" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">group</span><span class="sidebar-label">End of UAT</span></a>
-      <a href="#market" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">trending_up</span><span class="sidebar-label">Market Potential</span></a>
       <a href="#compare" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">compare</span><span class="sidebar-label">Product Comparison</span></a>
       <a href="#how-it-works" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">account_tree</span><span class="sidebar-label">How It Works</span></a>
       <a href="#capabilities" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">bolt</span><span class="sidebar-label">Capabilities</span></a>
@@ -791,6 +791,135 @@ tailwind.config = {
         </div>
       </div>
     </section>
+
+<section id="market" class="py-16 sm:py-20 bg-gradient-to-b from-white via-brisk-purple-50/40 to-white" aria-labelledby="market-heading">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-10">
+          <span class="pill bg-brisk-yellow-100 text-brisk-yellow-900 border-brisk-yellow-200 mb-4">
+            <span class="material-symbols-outlined text-sm icon-fill">trending_up</span>Market Potential
+          </span>
+          <h2 id="market-heading" class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-brisk-gray-950 leading-tight mb-3">
+            A <span class="brand-gradient">$54B</span> market that is <span class="text-brisk-purple-900">doubling</span>.
+          </h2>
+          <p class="text-lg text-brisk-gray-600 max-w-3xl mx-auto">
+            Software testing and automation are two of the fastest-growing slices of enterprise spend. Brisk sits at the intersection — local, embeddable, AI-native.
+          </p>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          <div class="stat-card bg-white border-2 border-brisk-purple-100 rounded-2xl p-5 text-center">
+            <p class="text-3xl sm:text-4xl font-extrabold text-brisk-purple-900 counter">$54.4B</p>
+            <p class="text-sm text-brisk-gray-700 mt-1 font-semibold">Software testing market</p>
+            <p class="text-xs text-brisk-gray-500 mt-1">2026 baseline</p>
+          </div>
+          <div class="stat-card bg-gradient-to-br from-brisk-purple-900 to-brisk-purple-950 rounded-2xl p-5 text-center text-white">
+            <p class="text-3xl sm:text-4xl font-extrabold text-brisk-yellow-400 counter">$99.9B</p>
+            <p class="text-sm text-white/80 mt-1 font-semibold">Projected</p>
+            <p class="text-xs text-white/60 mt-1">by 2031</p>
+          </div>
+          <div class="stat-card bg-white border-2 border-brisk-yellow-200 rounded-2xl p-5 text-center">
+            <p class="text-3xl sm:text-4xl font-extrabold text-brisk-yellow-900 counter">$20.6B</p>
+            <p class="text-sm text-brisk-gray-700 mt-1 font-semibold">Automation testing market</p>
+            <p class="text-xs text-brisk-gray-500 mt-1">2025 baseline</p>
+          </div>
+          <div class="stat-card bg-gradient-to-br from-brisk-yellow-600 to-brisk-yellow-800 rounded-2xl p-5 text-center text-brisk-gray-950">
+            <p class="text-3xl sm:text-4xl font-extrabold text-brisk-gray-950 counter">$84.2B</p>
+            <p class="text-sm text-brisk-gray-900 mt-1 font-semibold">Projected</p>
+            <p class="text-xs text-brisk-gray-900/70 mt-1">by 2034</p>
+          </div>
+        </div>
+        <p class="text-xs text-brisk-gray-500 text-center mb-10">Sources: <a href="https://www.mordorintelligence.com/industry-reports/software-testing-market" class="underline hover:text-brisk-purple-900">Mordor Intelligence</a> &middot; <a href="https://www.fortunebusinessinsights.com/automation-testing-market-107180" class="underline hover:text-brisk-purple-900">Fortune Business Insights</a>. Projections are sourced forecasts, not present-day revenue.</p>
+
+        <!-- Growth bar charts (CSS only) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+          <div class="bg-white border border-brisk-gray-300 rounded-2xl p-6">
+            <div class="flex items-center gap-2 mb-4">
+              <span class="material-symbols-outlined text-brisk-purple-900 icon-fill">monitoring</span>
+              <h3 class="text-lg font-extrabold text-brisk-gray-950">Software testing market growth</h3>
+            </div>
+            <div class="space-y-3">
+              <div>
+                <div class="flex items-center justify-between text-sm mb-1"><span class="font-semibold text-brisk-gray-700">2026</span><span class="font-extrabold text-brisk-purple-900">$54.4B</span></div>
+                <div class="h-3 bg-brisk-purple-50 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-brisk-purple-800 to-brisk-purple-500 rounded-full" style="width: 54%;"></div></div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between text-sm mb-1"><span class="font-semibold text-brisk-gray-700">2028</span><span class="font-extrabold text-brisk-purple-900">$66.2B</span></div>
+                <div class="h-3 bg-brisk-purple-50 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-brisk-purple-800 to-brisk-purple-500 rounded-full" style="width: 66%;"></div></div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between text-sm mb-1"><span class="font-semibold text-brisk-gray-700">2031</span><span class="font-extrabold text-brisk-purple-900">$99.9B</span></div>
+                <div class="h-3 bg-brisk-purple-50 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-brisk-purple-800 to-brisk-yellow-600 rounded-full" style="width: 100%;"></div></div>
+              </div>
+            </div>
+            <p class="text-xs text-brisk-gray-500 mt-3">+83% growth in 5 years. CAGR ≈ 12.5%.</p>
+          </div>
+          <div class="bg-white border border-brisk-gray-300 rounded-2xl p-6">
+            <div class="flex items-center gap-2 mb-4">
+              <span class="material-symbols-outlined text-brisk-yellow-800 icon-fill">memory</span>
+              <h3 class="text-lg font-extrabold text-brisk-gray-950">Automation testing market growth</h3>
+            </div>
+            <div class="space-y-3">
+              <div>
+                <div class="flex items-center justify-between text-sm mb-1"><span class="font-semibold text-brisk-gray-700">2025</span><span class="font-extrabold text-brisk-yellow-900">$20.6B</span></div>
+                <div class="h-3 bg-brisk-yellow-50 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-brisk-yellow-700 to-brisk-yellow-500 rounded-full" style="width: 25%;"></div></div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between text-sm mb-1"><span class="font-semibold text-brisk-gray-700">2030</span><span class="font-extrabold text-brisk-yellow-900">$45.3B</span></div>
+                <div class="h-3 bg-brisk-yellow-50 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-brisk-yellow-700 to-brisk-yellow-500 rounded-full" style="width: 54%;"></div></div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between text-sm mb-1"><span class="font-semibold text-brisk-gray-700">2034</span><span class="font-extrabold text-brisk-yellow-900">$84.2B</span></div>
+                <div class="h-3 bg-brisk-yellow-50 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-brisk-yellow-700 to-brisk-purple-700 rounded-full" style="width: 100%;"></div></div>
+              </div>
+            </div>
+            <p class="text-xs text-brisk-gray-500 mt-3">+309% growth in 9 years. CAGR ≈ 17% — the AI-led testing wave.</p>
+          </div>
+        </div>
+
+        <!-- Brisk opportunity callout -->
+        <div class="bg-gradient-to-br from-brisk-purple-900 via-brisk-purple-950 to-black text-white rounded-2xl p-6 sm:p-10 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+          <div class="md:col-span-2">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="material-symbols-outlined text-brisk-yellow-400 icon-fill">flag</span>
+              <p class="text-xs font-bold uppercase tracking-widest text-brisk-yellow-400">Where Brisk plays</p>
+            </div>
+            <h3 class="text-2xl sm:text-3xl font-extrabold mb-3">The control layer for AI-led verification.</h3>
+            <p class="text-white/80 leading-relaxed">Existing platforms sell hosted dashboards. Brisk embeds into your product, runs on your machine, returns evidence to your storage. Every team building a serious SaaS needs this — and only Brisk ships it open source.</p>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
+              <span class="material-symbols-outlined text-brisk-yellow-400 icon-fill">public</span>
+              <p class="text-2xl font-extrabold mt-1">$130B+</p>
+              <p class="text-xs text-white/70">Combined TAM by 2034</p>
+            </div>
+            <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
+              <span class="material-symbols-outlined text-brisk-yellow-400 icon-fill">groups</span>
+              <p class="text-2xl font-extrabold mt-1">3,000+</p>
+              <p class="text-xs text-white/70">Active competitor customers</p>
+            </div>
+            <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
+              <span class="material-symbols-outlined text-brisk-yellow-400 icon-fill">code</span>
+              <p class="text-2xl font-extrabold mt-1">OSS</p>
+              <p class="text-xs text-white/70">Open source from day one</p>
+            </div>
+            <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
+              <span class="material-symbols-outlined text-brisk-yellow-400 icon-fill">lan</span>
+              <p class="text-2xl font-extrabold mt-1">Embed</p>
+              <p class="text-xs text-white/70">SDK, not hosted SaaS</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section transition -->
+    <div class="section-trans py-10 text-center">
+      <p class="text-white/90 text-lg font-medium max-w-2xl mx-auto px-4 flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined text-brisk-yellow-400 icon-fill">arrow_forward</span>
+        That's the opportunity. Now meet the competition.
+      </p>
+    </div>
 
     <!-- ================================================== -->
     <!-- THE PROBLEM  (new, screams the pain)               -->
@@ -1239,147 +1368,10 @@ tailwind.config = {
       </div>
     </section>
 
-    <!-- Section transition -->
-    <div class="section-trans py-10 text-center">
-      <p class="text-white/90 text-lg font-medium max-w-2xl mx-auto px-4 flex items-center justify-center gap-2">
-        <span class="material-symbols-outlined text-brisk-yellow-400 icon-fill">arrow_forward</span>
-        UAT is solved. Now look at the opportunity in numbers.
-      </p>
-    </div>
-
     <!-- ================================================== -->
     <!-- MARKET POTENTIAL                                  -->
     <!-- ================================================== -->
-    <section id="market" class="py-16 sm:py-20 bg-gradient-to-b from-white via-brisk-purple-50/40 to-white" aria-labelledby="market-heading">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-10">
-          <span class="pill bg-brisk-yellow-100 text-brisk-yellow-900 border-brisk-yellow-200 mb-4">
-            <span class="material-symbols-outlined text-sm icon-fill">trending_up</span>Market Potential
-          </span>
-          <h2 id="market-heading" class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-brisk-gray-950 leading-tight mb-3">
-            A <span class="brand-gradient">$54B</span> market that is <span class="text-brisk-purple-900">doubling</span>.
-          </h2>
-          <p class="text-lg text-brisk-gray-600 max-w-3xl mx-auto">
-            Software testing and automation are two of the fastest-growing slices of enterprise spend. Brisk sits at the intersection — local, embeddable, AI-native.
-          </p>
-        </div>
-
-        <!-- Stat cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-          <div class="stat-card bg-white border-2 border-brisk-purple-100 rounded-2xl p-5 text-center">
-            <p class="text-3xl sm:text-4xl font-extrabold text-brisk-purple-900 counter">$54.4B</p>
-            <p class="text-sm text-brisk-gray-700 mt-1 font-semibold">Software testing market</p>
-            <p class="text-xs text-brisk-gray-500 mt-1">2026 baseline</p>
-          </div>
-          <div class="stat-card bg-gradient-to-br from-brisk-purple-900 to-brisk-purple-950 rounded-2xl p-5 text-center text-white">
-            <p class="text-3xl sm:text-4xl font-extrabold text-brisk-yellow-400 counter">$99.9B</p>
-            <p class="text-sm text-white/80 mt-1 font-semibold">Projected</p>
-            <p class="text-xs text-white/60 mt-1">by 2031</p>
-          </div>
-          <div class="stat-card bg-white border-2 border-brisk-yellow-200 rounded-2xl p-5 text-center">
-            <p class="text-3xl sm:text-4xl font-extrabold text-brisk-yellow-900 counter">$20.6B</p>
-            <p class="text-sm text-brisk-gray-700 mt-1 font-semibold">Automation testing market</p>
-            <p class="text-xs text-brisk-gray-500 mt-1">2025 baseline</p>
-          </div>
-          <div class="stat-card bg-gradient-to-br from-brisk-yellow-600 to-brisk-yellow-800 rounded-2xl p-5 text-center text-brisk-gray-950">
-            <p class="text-3xl sm:text-4xl font-extrabold text-brisk-gray-950 counter">$84.2B</p>
-            <p class="text-sm text-brisk-gray-900 mt-1 font-semibold">Projected</p>
-            <p class="text-xs text-brisk-gray-900/70 mt-1">by 2034</p>
-          </div>
-        </div>
-        <p class="text-xs text-brisk-gray-500 text-center mb-10">Sources: <a href="https://www.mordorintelligence.com/industry-reports/software-testing-market" class="underline hover:text-brisk-purple-900">Mordor Intelligence</a> &middot; <a href="https://www.fortunebusinessinsights.com/automation-testing-market-107180" class="underline hover:text-brisk-purple-900">Fortune Business Insights</a>. Projections are sourced forecasts, not present-day revenue.</p>
-
-        <!-- Growth bar charts (CSS only) -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-          <div class="bg-white border border-brisk-gray-300 rounded-2xl p-6">
-            <div class="flex items-center gap-2 mb-4">
-              <span class="material-symbols-outlined text-brisk-purple-900 icon-fill">monitoring</span>
-              <h3 class="text-lg font-extrabold text-brisk-gray-950">Software testing market growth</h3>
-            </div>
-            <div class="space-y-3">
-              <div>
-                <div class="flex items-center justify-between text-sm mb-1"><span class="font-semibold text-brisk-gray-700">2026</span><span class="font-extrabold text-brisk-purple-900">$54.4B</span></div>
-                <div class="h-3 bg-brisk-purple-50 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-brisk-purple-800 to-brisk-purple-500 rounded-full" style="width: 54%;"></div></div>
-              </div>
-              <div>
-                <div class="flex items-center justify-between text-sm mb-1"><span class="font-semibold text-brisk-gray-700">2028</span><span class="font-extrabold text-brisk-purple-900">$66.2B</span></div>
-                <div class="h-3 bg-brisk-purple-50 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-brisk-purple-800 to-brisk-purple-500 rounded-full" style="width: 66%;"></div></div>
-              </div>
-              <div>
-                <div class="flex items-center justify-between text-sm mb-1"><span class="font-semibold text-brisk-gray-700">2031</span><span class="font-extrabold text-brisk-purple-900">$99.9B</span></div>
-                <div class="h-3 bg-brisk-purple-50 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-brisk-purple-800 to-brisk-yellow-600 rounded-full" style="width: 100%;"></div></div>
-              </div>
-            </div>
-            <p class="text-xs text-brisk-gray-500 mt-3">+83% growth in 5 years. CAGR ≈ 12.5%.</p>
-          </div>
-          <div class="bg-white border border-brisk-gray-300 rounded-2xl p-6">
-            <div class="flex items-center gap-2 mb-4">
-              <span class="material-symbols-outlined text-brisk-yellow-800 icon-fill">memory</span>
-              <h3 class="text-lg font-extrabold text-brisk-gray-950">Automation testing market growth</h3>
-            </div>
-            <div class="space-y-3">
-              <div>
-                <div class="flex items-center justify-between text-sm mb-1"><span class="font-semibold text-brisk-gray-700">2025</span><span class="font-extrabold text-brisk-yellow-900">$20.6B</span></div>
-                <div class="h-3 bg-brisk-yellow-50 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-brisk-yellow-700 to-brisk-yellow-500 rounded-full" style="width: 25%;"></div></div>
-              </div>
-              <div>
-                <div class="flex items-center justify-between text-sm mb-1"><span class="font-semibold text-brisk-gray-700">2030</span><span class="font-extrabold text-brisk-yellow-900">$45.3B</span></div>
-                <div class="h-3 bg-brisk-yellow-50 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-brisk-yellow-700 to-brisk-yellow-500 rounded-full" style="width: 54%;"></div></div>
-              </div>
-              <div>
-                <div class="flex items-center justify-between text-sm mb-1"><span class="font-semibold text-brisk-gray-700">2034</span><span class="font-extrabold text-brisk-yellow-900">$84.2B</span></div>
-                <div class="h-3 bg-brisk-yellow-50 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-brisk-yellow-700 to-brisk-purple-700 rounded-full" style="width: 100%;"></div></div>
-              </div>
-            </div>
-            <p class="text-xs text-brisk-gray-500 mt-3">+309% growth in 9 years. CAGR ≈ 17% — the AI-led testing wave.</p>
-          </div>
-        </div>
-
-        <!-- Brisk opportunity callout -->
-        <div class="bg-gradient-to-br from-brisk-purple-900 via-brisk-purple-950 to-black text-white rounded-2xl p-6 sm:p-10 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-          <div class="md:col-span-2">
-            <div class="flex items-center gap-2 mb-2">
-              <span class="material-symbols-outlined text-brisk-yellow-400 icon-fill">flag</span>
-              <p class="text-xs font-bold uppercase tracking-widest text-brisk-yellow-400">Where Brisk plays</p>
-            </div>
-            <h3 class="text-2xl sm:text-3xl font-extrabold mb-3">The control layer for AI-led verification.</h3>
-            <p class="text-white/80 leading-relaxed">Existing platforms sell hosted dashboards. Brisk embeds into your product, runs on your machine, returns evidence to your storage. Every team building a serious SaaS needs this — and only Brisk ships it open source.</p>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
-              <span class="material-symbols-outlined text-brisk-yellow-400 icon-fill">public</span>
-              <p class="text-2xl font-extrabold mt-1">$130B+</p>
-              <p class="text-xs text-white/70">Combined TAM by 2034</p>
-            </div>
-            <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
-              <span class="material-symbols-outlined text-brisk-yellow-400 icon-fill">groups</span>
-              <p class="text-2xl font-extrabold mt-1">3,000+</p>
-              <p class="text-xs text-white/70">Active competitor customers</p>
-            </div>
-            <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
-              <span class="material-symbols-outlined text-brisk-yellow-400 icon-fill">code</span>
-              <p class="text-2xl font-extrabold mt-1">OSS</p>
-              <p class="text-xs text-white/70">Open source from day one</p>
-            </div>
-            <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
-              <span class="material-symbols-outlined text-brisk-yellow-400 icon-fill">lan</span>
-              <p class="text-2xl font-extrabold mt-1">Embed</p>
-              <p class="text-xs text-white/70">SDK, not hosted SaaS</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Section transition -->
-    <div class="section-trans py-10 text-center">
-      <p class="text-white/90 text-lg font-medium max-w-2xl mx-auto px-4 flex items-center justify-center gap-2">
-        <span class="material-symbols-outlined text-brisk-yellow-400 icon-fill">arrow_forward</span>
-        That's the opportunity. Now meet the competition.
-      </p>
-    </div>
-
-    <!-- ================================================== -->
+        <!-- ================================================== -->
     <!-- PRODUCT COMPARISON                                -->
     <!-- ================================================== -->
     <section id="compare" class="py-16 sm:py-20 bg-white" aria-labelledby="compare-heading">
@@ -3732,6 +3724,56 @@ setupTabs('.comparison-tab', 'aria-controls', '.comparison-panel');
       });
     });
   });
+})();
+
+// ── Mobile header: hide on scroll-down, show on scroll-up ──
+(function(){
+  const header = document.getElementById('mobile-header');
+  if (!header) return;
+  if (window.matchMedia('(min-width: 1024px)').matches) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let lastY = 0;
+  let ticking = false;
+  const update = () => {
+    const y = window.scrollY;
+    if (y < 80) {
+      header.classList.remove('header-hidden');
+    } else if (y > lastY + 4) {
+      header.classList.add('header-hidden');
+    } else if (y < lastY - 4) {
+      header.classList.remove('header-hidden');
+    }
+    lastY = y;
+    ticking = false;
+  };
+  window.addEventListener('scroll', () => {
+    if (!ticking) { requestAnimationFrame(update); ticking = true; }
+  }, { passive: true });
+})();
+
+// ── Mobile header: hide on scroll-down, show on scroll-up ──
+(function(){
+  const header = document.getElementById('mobile-header');
+  if (!header) return;
+  if (window.matchMedia('(min-width: 1024px)').matches) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let lastY = 0;
+  let ticking = false;
+  const update = () => {
+    const y = window.scrollY;
+    if (y < 80) {
+      header.classList.remove('header-hidden');
+    } else if (y > lastY + 4) {
+      header.classList.add('header-hidden');
+    } else if (y < lastY - 4) {
+      header.classList.remove('header-hidden');
+    }
+    lastY = y;
+    ticking = false;
+  };
+  window.addEventListener('scroll', () => {
+    if (!ticking) { requestAnimationFrame(update); ticking = true; }
+  }, { passive: true });
 })();
 
 // ── Sticky bottom CTA show/hide ──
