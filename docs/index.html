@@ -134,7 +134,8 @@ tailwind.config = {
       transition-duration: 0.01ms !important;
     }
   }
-  body { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  body { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+  *, *::before, *::after { -webkit-tap-highlight-color: transparent; }
 
   .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -395,28 +396,30 @@ tailwind.config = {
 
   /* ── Mobile-native typography + spacing ── */
   @media (max-width: 640px) {
-    body { font-size: 15px; line-height: 1.5; }
-    h1 { font-size: 1.5rem !important; line-height: 1.2 !important; letter-spacing: -0.01em !important; }
-    h2 { font-size: 1.25rem !important; line-height: 1.25 !important; letter-spacing: -0.01em !important; }
-    h3 { font-size: 1rem !important; line-height: 1.4 !important; }
+    body { font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    h1 { font-size: 1.75rem !important; line-height: 1.2 !important; letter-spacing: -0.015em !important; font-weight: 800 !important; }
+    h2 { font-size: 1.5rem !important; line-height: 1.25 !important; letter-spacing: -0.01em !important; font-weight: 800 !important; }
+    h3 { font-size: 1.125rem !important; line-height: 1.4 !important; font-weight: 700 !important; }
     p { margin-bottom: 0.75rem; }
-    .text-lg { font-size: 0.9375rem !important; line-height: 1.55 !important; }
-    .text-xl { font-size: 0.9375rem !important; line-height: 1.5 !important; }
-    .text-base { font-size: 0.9375rem !important; line-height: 1.55 !important; }
-    .text-sm { font-size: 0.8125rem !important; line-height: 1.5 !important; }
-    .text-xs { font-size: 0.75rem !important; line-height: 1.45 !important; }
+    .text-lg { font-size: 1.0625rem !important; line-height: 1.55 !important; }
+    .text-xl { font-size: 1.125rem !important; line-height: 1.5 !important; }
+    .text-base { font-size: 1rem !important; line-height: 1.55 !important; }
+    .text-sm { font-size: 0.9375rem !important; line-height: 1.5 !important; }
+    .text-xs { font-size: 0.8125rem !important; line-height: 1.5 !important; }
+    /* tighter section padding but not crammed */
     section { padding-top: 2.5rem !important; padding-bottom: 2.5rem !important; }
     .py-16 { padding-top: 2.5rem !important; padding-bottom: 2.5rem !important; }
     .py-20 { padding-top: 2.75rem !important; padding-bottom: 2.75rem !important; }
     .py-12 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
     .py-10 { padding-top: 1.5rem !important; padding-bottom: 1.5rem !important; }
     .py-8 { padding-top: 1.25rem !important; padding-bottom: 1.25rem !important; }
-    .py-6 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+    /* tighter card padding */
     .p-8 { padding: 1.25rem !important; }
     .p-7 { padding: 1.125rem !important; }
     .p-6 { padding: 1rem !important; }
     .p-5 { padding: 0.875rem !important; }
     .p-4 { padding: 0.75rem !important; }
+    /* tighter vertical rhythm */
     .mb-12 { margin-bottom: 1.5rem !important; }
     .mb-10 { margin-bottom: 1.25rem !important; }
     .mb-8 { margin-bottom: 1rem !important; }
@@ -424,19 +427,25 @@ tailwind.config = {
     .gap-8 { gap: 0.75rem !important; }
     .gap-6 { gap: 0.625rem !important; }
     .gap-5 { gap: 0.5rem !important; }
-    .gap-4 { gap: 0.5rem !important; }
+    /* hero specifics */
     .hero-pad { padding-top: 0.25rem !important; padding-bottom: 0.5rem !important; }
     .hero-name { display: none !important; }
     .hero-punch-3 { display: none !important; }
-    .hero-punch-2 { font-size: 0.875rem !important; line-height: 1.4 !important; margin-bottom: 0.5rem !important; }
-    .hero-punch-1 { font-size: 0.8125rem !important; line-height: 1.4 !important; margin-bottom: 0.5rem !important; }
+    .hero-punch-2 { font-size: 1.25rem !important; line-height: 1.35 !important; margin-bottom: 0.625rem !important; font-weight: 800 !important; }
+    .hero-punch-1 { font-size: 1rem !important; line-height: 1.5 !important; margin-bottom: 0.625rem !important; font-weight: 800 !important; }
     .hero-cta-row { flex-direction: column !important; width: 100% !important; }
-    .hero-cta-row a { width: 100% !important; justify-content: center !important; padding-top: 0.625rem !important; padding-bottom: 0.625rem !important; font-size: 0.875rem !important; }
-    .step-icon { width: 36px !important; height: 36px !important; }
-    .step-icon .material-symbols-outlined { font-size: 20px !important; }
-    .stat-card { padding: 0.875rem !important; }
-    .stat-card p:first-of-type { font-size: 1.75rem !important; }
-    .pill { padding: 0.25rem 0.625rem !important; font-size: 0.6875rem !important; }
+    .hero-cta-row a { width: 100% !important; justify-content: center !important; padding-top: 0.875rem !important; padding-bottom: 0.875rem !important; font-size: 1rem !important; min-height: 48px !important; }
+    /* step icons in 10-stage pipeline */
+    .step-icon { width: 40px !important; height: 40px !important; }
+    .step-icon .material-symbols-outlined { font-size: 22px !important; }
+    /* stat card numbers */
+    .stat-card p:first-of-type { font-size: 1.875rem !important; }
+    /* Material icons in pills stay readable */
+    .pill { font-size: 0.8125rem !important; padding: 0.375rem 0.75rem !important; }
+    /* Reasonable icon sizes on mobile */
+    .text-3xl, .material-symbols-outlined.text-3xl { font-size: 1.5rem !important; }
+    .text-4xl, .material-symbols-outlined.text-4xl { font-size: 1.75rem !important; }
+    .text-2xl, .material-symbols-outlined.text-2xl { font-size: 1.25rem !important; }
   }
 </style>
 </head>
