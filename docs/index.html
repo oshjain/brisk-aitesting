@@ -196,6 +196,13 @@ tailwind.config = {
   .sidebar-link .sidebar-icon { font-size: 22px; flex-shrink: 0; }
   .sidebar-link .sidebar-label { opacity: 1; transition: opacity 0.15s ease; }
   .desktop-sidebar.collapsed .sidebar-label { opacity: 0; width: 0; overflow: hidden; }
+  /* ── Nav group labels ── */
+  .nav-group {
+    display: block; padding: 12px 12px 4px; font-size: 10px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.1em; color: #9E9E9E;
+    white-space: nowrap; overflow: hidden; line-height: 1.3;
+  }
+  .desktop-sidebar.collapsed .nav-group { opacity: 0; height: 0; padding: 0; margin: 0; overflow: hidden; }
   .sidebar-collapse-btn {
     display: flex; align-items: center; justify-content: center;
     padding: 12px; border-top: 1px solid var(--brisk-gray-300);
@@ -634,21 +641,29 @@ tailwind.config = {
     </button>
   </div>
   <nav class="p-4 flex flex-col gap-1 drawer-nav" aria-label="Mobile navigation">
-    <a href="#home" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">home</span>Home</a>
-    <a href="#market" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">trending_up</span>Market Potential</a>
-    <a href="#outcomes" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">insights</span>Business Outcomes</a>
-    <a href="#problem" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">priority_high</span>The Problem it solves</a>
-    <a href="#why-brisk" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">lightbulb</span>Why Brisk</a>
-    <a href="#uat" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">group</span>End of UAT</a>
-    <a href="#compare" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">compare</span>Product Comparison</a>
-    <a href="#how-it-works" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">account_tree</span>How It Works</a>
-    <a href="#capabilities" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">bolt</span>Capabilities</a>
-    <a href="#benchmarks" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">lab_profile</span>Internal Benchmarks</a>
-    <a href="#ai-control" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">shield</span>AI Control</a>
-    <a href="#evidence" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">description</span>Evidence &amp; Integration</a>
-    <a href="#status" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">info</span>Product Status</a>
-    <a href="#get-started" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">rocket_launch</span>Get Started</a>
-    <a href="#roadmap" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">map</span>Roadmap</a>
+    <p class="nav-group">Start</p>
+    <a href="#home" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">home</span>The Big Idea</a>
+    <p class="nav-group">The Opportunity</p>
+    <a href="#market" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">trending_up</span>Market &amp; Money</a>
+    <a href="#outcomes" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">insights</span>The Quantified Payoff</a>
+    <p class="nav-group">The Problem</p>
+    <a href="#problem" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">priority_high</span>Why Releases Stall</a>
+    <p class="nav-group">The Answer</p>
+    <a href="#why-brisk" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">lightbulb</span>Why Brisk Wins</a>
+    <a href="#two-workflows" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">compare_arrows</span>Two Workflows, One Difference</a>
+    <a href="#why-now" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">schedule</span>Why Now</a>
+    <a href="#uat" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">group</span>Kill the UAT Bottleneck</a>
+    <a href="#compare" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">compare</span>Brisk vs The Rest</a>
+    <a href="#how-it-works" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">account_tree</span>From Idea to Evidence</a>
+    <a href="#capabilities" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">bolt</span>Built-In Engines</a>
+    <p class="nav-group">The Proof</p>
+    <a href="#benchmarks" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">lab_profile</span>Proof, Not Promises</a>
+    <a href="#ai-control" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">shield</span>AI You Can Trust</a>
+    <a href="#evidence" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">description</span>Proof in Every Run</a>
+    <p class="nav-group">Now &amp; Next</p>
+    <a href="#status" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">info</span>Where It Stands</a>
+    <a href="#get-started" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">rocket_launch</span>Install &amp; Run</a>
+    <a href="#roadmap" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">map</span>What's Next</a>
   </nav>
   <div class="p-4 border-t border-brisk-gray-300 drawer-footer">
     <a href="https://github.com/oshjain/brisk-aitesting" class="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-semibold border-2 border-brisk-gray-300 rounded-lg hover:border-brisk-purple-400 transition-colors">
@@ -669,21 +684,29 @@ tailwind.config = {
       <span class="sidebar-logo-text">brisk-aitesting</span>
     </div>
     <nav class="sidebar-nav" aria-label="Main navigation">
-      <a href="#home" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">home</span><span class="sidebar-label">Home</span></a>
-      <a href="#market" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">trending_up</span><span class="sidebar-label">Market Potential</span></a>
-      <a href="#outcomes" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">insights</span><span class="sidebar-label">Business Outcomes</span></a>
-      <a href="#problem" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">priority_high</span><span class="sidebar-label">The Problem it solves</span></a>
-      <a href="#why-brisk" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">lightbulb</span><span class="sidebar-label">Why Brisk</span></a>
-      <a href="#uat" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">group</span><span class="sidebar-label">End of UAT</span></a>
-      <a href="#compare" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">compare</span><span class="sidebar-label">Product Comparison</span></a>
-      <a href="#how-it-works" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">account_tree</span><span class="sidebar-label">How It Works</span></a>
-      <a href="#capabilities" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">bolt</span><span class="sidebar-label">Capabilities</span></a>
-      <a href="#benchmarks" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">lab_profile</span><span class="sidebar-label">Internal Benchmarks</span></a>
-      <a href="#ai-control" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">shield</span><span class="sidebar-label">AI Control</span></a>
-      <a href="#evidence" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">description</span><span class="sidebar-label">Evidence &amp; Integration</span></a>
-      <a href="#status" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">info</span><span class="sidebar-label">Product Status</span></a>
-      <a href="#get-started" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">rocket_launch</span><span class="sidebar-label">Get Started</span></a>
-      <a href="#roadmap" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">map</span><span class="sidebar-label">Roadmap</span></a>
+      <p class="nav-group">Start</p>
+      <a href="#home" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">home</span><span class="sidebar-label">The Big Idea</span></a>
+      <p class="nav-group">The Opportunity</p>
+      <a href="#market" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">trending_up</span><span class="sidebar-label">Market &amp; Money</span></a>
+      <a href="#outcomes" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">insights</span><span class="sidebar-label">The Quantified Payoff</span></a>
+      <p class="nav-group">The Problem</p>
+      <a href="#problem" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">priority_high</span><span class="sidebar-label">Why Releases Stall</span></a>
+      <p class="nav-group">The Answer</p>
+      <a href="#why-brisk" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">lightbulb</span><span class="sidebar-label">Why Brisk Wins</span></a>
+      <a href="#two-workflows" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">compare_arrows</span><span class="sidebar-label">Two Workflows, One Difference</span></a>
+      <a href="#why-now" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">schedule</span><span class="sidebar-label">Why Now</span></a>
+      <a href="#uat" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">group</span><span class="sidebar-label">Kill the UAT Bottleneck</span></a>
+      <a href="#compare" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">compare</span><span class="sidebar-label">Brisk vs The Rest</span></a>
+      <a href="#how-it-works" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">account_tree</span><span class="sidebar-label">From Idea to Evidence</span></a>
+      <a href="#capabilities" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">bolt</span><span class="sidebar-label">Built-In Engines</span></a>
+      <p class="nav-group">The Proof</p>
+      <a href="#benchmarks" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">lab_profile</span><span class="sidebar-label">Proof, Not Promises</span></a>
+      <a href="#ai-control" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">shield</span><span class="sidebar-label">AI You Can Trust</span></a>
+      <a href="#evidence" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">description</span><span class="sidebar-label">Proof in Every Run</span></a>
+      <p class="nav-group">Now &amp; Next</p>
+      <a href="#status" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">info</span><span class="sidebar-label">Where It Stands</span></a>
+      <a href="#get-started" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">rocket_launch</span><span class="sidebar-label">Install &amp; Run</span></a>
+      <a href="#roadmap" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">map</span><span class="sidebar-label">What's Next</span></a>
     </nav>
     <button class="sidebar-collapse-btn" id="sidebar-toggle" type="button" aria-label="Toggle sidebar">
       <span class="material-symbols-outlined">chevron_left</span>
@@ -1410,7 +1433,7 @@ tailwind.config = {
         <div class="bg-gradient-to-br from-brisk-purple-50 via-white to-brisk-yellow-50 rounded-2xl p-6 sm:p-10 border border-brisk-purple-100">
           <div class="flex items-center gap-3 mb-6">
             <span class="material-symbols-outlined text-brisk-purple-900 text-3xl icon-fill">bolt</span>
-            <h3 class="text-2xl font-extrabold text-brisk-gray-950">Why now</h3>
+            <h3 id="why-now" class="text-2xl font-extrabold text-brisk-gray-950">Why now</h3>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="bg-white rounded-xl p-5 border border-brisk-purple-100">
@@ -1445,7 +1468,7 @@ tailwind.config = {
 
         <!-- Workflow comparator -->
         <div class="mt-14">
-          <h3 class="text-2xl font-extrabold text-brisk-gray-950 mb-2 text-center">Two workflows, one difference</h3>
+          <h3 id="two-workflows" class="text-2xl font-extrabold text-brisk-gray-950 mb-2 text-center">Two workflows, one difference</h3>
           <p class="text-brisk-gray-600 text-center mb-8 max-w-2xl mx-auto">Same release cycle. Different cost, different risk, different outcome.</p>
           <div class="comparison-desktop grid grid-cols-2 gap-6">
             <div class="bg-red-50/60 border-2 border-red-200 rounded-2xl p-6">
@@ -3456,11 +3479,11 @@ function requiredEnv(name) {
       <div>
         <h4 class="text-sm font-extrabold mb-3 text-white">Product</h4>
         <ul class="space-y-2 text-sm text-brisk-gray-300">
-          <li><a href="#home" class="hover:text-brisk-yellow-400 transition-colors">Home</a></li>
-          <li><a href="#how-it-works" class="hover:text-brisk-yellow-400 transition-colors">How it works</a></li>
-          <li><a href="#capabilities" class="hover:text-brisk-yellow-400 transition-colors">Capabilities</a></li>
-          <li><a href="#benchmarks" class="hover:text-brisk-yellow-400 transition-colors">Internal benchmarks</a></li>
-          <li><a href="#roadmap" class="hover:text-brisk-yellow-400 transition-colors">Roadmap</a></li>
+          <li><a href="#home" class="hover:text-brisk-yellow-400 transition-colors">The Big Idea</a></li>
+          <li><a href="#how-it-works" class="hover:text-brisk-yellow-400 transition-colors">From Idea to Evidence</a></li>
+          <li><a href="#capabilities" class="hover:text-brisk-yellow-400 transition-colors">Built-In Engines</a></li>
+          <li><a href="#benchmarks" class="hover:text-brisk-yellow-400 transition-colors">Proof, Not Promises</a></li>
+          <li><a href="#roadmap" class="hover:text-brisk-yellow-400 transition-colors">What's Next</a></li>
         </ul>
       </div>
       <div>
