@@ -198,11 +198,22 @@ tailwind.config = {
   .desktop-sidebar.collapsed .sidebar-label { opacity: 0; width: 0; overflow: hidden; }
   /* ── Nav group labels ── */
   .nav-group {
-    display: block; padding: 12px 12px 4px; font-size: 10px; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 0.1em; color: #9E9E9E;
+    display: block; padding: 14px 12px 5px; font-size: 11px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.12em; color: #7C43BD;
     white-space: nowrap; overflow: hidden; line-height: 1.3;
   }
   .desktop-sidebar.collapsed .nav-group { opacity: 0; height: 0; padding: 0; margin: 0; overflow: hidden; }
+  /* Group headers must be unmistakable in the mobile drawer (no "headless" links) */
+  .mobile-drawer .nav-group {
+    display: flex; align-items: center; gap: 0.6rem;
+    color: #4A148C; font-size: 11px; letter-spacing: 0.12em;
+    padding: 16px 12px 6px; margin-top: 4px;
+  }
+  .mobile-drawer .nav-group::after {
+    content: ""; flex: 1; height: 1px;
+    background: linear-gradient(90deg, #E1BEE7 0%, transparent 100%);
+  }
+  .mobile-drawer .nav-group:first-child { padding-top: 6px; margin-top: 0; }
   .sidebar-collapse-btn {
     display: flex; align-items: center; justify-content: center;
     padding: 12px; border-top: 1px solid var(--brisk-gray-300);
