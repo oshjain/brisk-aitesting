@@ -623,7 +623,7 @@ tailwind.config = {
   <nav class="p-4 flex flex-col gap-1 drawer-nav" aria-label="Mobile navigation">
     <a href="#home" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">home</span>Home</a>
     <a href="#market" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">trending_up</span>Market Potential</a>
-    <a href="#problem" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">priority_high</span>The Problem</a>
+    <a href="#problem" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">priority_high</span>The Problem it solves</a>
     <a href="#why-brisk" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">lightbulb</span>Why Brisk</a>
     <a href="#uat" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">group</span>End of UAT</a>
     <a href="#compare" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">compare</span>Product Comparison</a>
@@ -657,7 +657,7 @@ tailwind.config = {
     <nav class="sidebar-nav" aria-label="Main navigation">
       <a href="#home" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">home</span><span class="sidebar-label">Home</span></a>
       <a href="#market" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">trending_up</span><span class="sidebar-label">Market Potential</span></a>
-      <a href="#problem" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">priority_high</span><span class="sidebar-label">The Problem</span></a>
+      <a href="#problem" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">priority_high</span><span class="sidebar-label">The Problem it solves</span></a>
       <a href="#why-brisk" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">lightbulb</span><span class="sidebar-label">Why Brisk</span></a>
       <a href="#uat" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">group</span><span class="sidebar-label">End of UAT</span></a>
       <a href="#compare" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">compare</span><span class="sidebar-label">Product Comparison</span></a>
@@ -3828,7 +3828,7 @@ setupTabs('.comparison-tab', 'aria-controls', '.comparison-panel');
   });
 })();
 
-// ── Mobile header: hide on scroll-down, show on scroll-up ──
+// ── Mobile header: hide on scroll-down, immediately visible on scroll-up ──
 (function(){
   const header = document.getElementById('mobile-header');
   if (!header) return;
@@ -3836,24 +3836,36 @@ setupTabs('.comparison-tab', 'aria-controls', '.comparison-panel');
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   let lastY = 0;
   let ticking = false;
+  let userScrolledUp = false;
   const update = () => {
     const y = window.scrollY;
-    if (y < 80) {
+    if (y < 100) {
+      // Near top: always visible
       header.classList.remove('header-hidden');
-    } else if (y > lastY + 4) {
-      header.classList.add('header-hidden');
-    } else if (y < lastY - 4) {
+      userScrolledUp = false;
+    } else if (y < lastY) {
+      // Scrolling UP (any amount): immediately visible and stay visible
       header.classList.remove('header-hidden');
+      userScrolledUp = true;
+    } else if (y > lastY + 2) {
+      // Scrolling DOWN: hide (unless user has scrolled up to access menu)
+      if (!userScrolledUp) {
+        header.classList.add('header-hidden');
+      }
     }
     lastY = y;
     ticking = false;
   };
+  // Reset userScrolledUp when scrolling stops or after a timeout
+  let scrollStopTimer = null;
   window.addEventListener('scroll', () => {
     if (!ticking) { requestAnimationFrame(update); ticking = true; }
+    if (scrollStopTimer) clearTimeout(scrollStopTimer);
+    scrollStopTimer = setTimeout(() => { userScrolledUp = false; }, 5000);
   }, { passive: true });
 })();
 
-// ── Mobile header: hide on scroll-down, show on scroll-up ──
+// ── Mobile header: hide on scroll-down, immediately visible on scroll-up ──
 (function(){
   const header = document.getElementById('mobile-header');
   if (!header) return;
@@ -3861,20 +3873,32 @@ setupTabs('.comparison-tab', 'aria-controls', '.comparison-panel');
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   let lastY = 0;
   let ticking = false;
+  let userScrolledUp = false;
   const update = () => {
     const y = window.scrollY;
-    if (y < 80) {
+    if (y < 100) {
+      // Near top: always visible
       header.classList.remove('header-hidden');
-    } else if (y > lastY + 4) {
-      header.classList.add('header-hidden');
-    } else if (y < lastY - 4) {
+      userScrolledUp = false;
+    } else if (y < lastY) {
+      // Scrolling UP (any amount): immediately visible and stay visible
       header.classList.remove('header-hidden');
+      userScrolledUp = true;
+    } else if (y > lastY + 2) {
+      // Scrolling DOWN: hide (unless user has scrolled up to access menu)
+      if (!userScrolledUp) {
+        header.classList.add('header-hidden');
+      }
     }
     lastY = y;
     ticking = false;
   };
+  // Reset userScrolledUp when scrolling stops or after a timeout
+  let scrollStopTimer = null;
   window.addEventListener('scroll', () => {
     if (!ticking) { requestAnimationFrame(update); ticking = true; }
+    if (scrollStopTimer) clearTimeout(scrollStopTimer);
+    scrollStopTimer = setTimeout(() => { userScrolledUp = false; }, 5000);
   }, { passive: true });
 })();
 
