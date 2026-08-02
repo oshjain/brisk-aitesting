@@ -623,6 +623,7 @@ tailwind.config = {
   <nav class="p-4 flex flex-col gap-1 drawer-nav" aria-label="Mobile navigation">
     <a href="#home" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">home</span>Home</a>
     <a href="#market" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">trending_up</span>Market Potential</a>
+    <a href="#outcomes" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">insights</span>Business Outcomes</a>
     <a href="#problem" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">priority_high</span>The Problem it solves</a>
     <a href="#why-brisk" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">lightbulb</span>Why Brisk</a>
     <a href="#uat" class="mobile-nav-link px-3 py-3 text-sm font-semibold text-brisk-gray-800 hover:text-brisk-purple-900 rounded-md hover:bg-brisk-purple-50 transition-colors flex items-center gap-3"><span class="material-symbols-outlined text-xl text-brisk-purple-600">group</span>End of UAT</a>
@@ -657,6 +658,7 @@ tailwind.config = {
     <nav class="sidebar-nav" aria-label="Main navigation">
       <a href="#home" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">home</span><span class="sidebar-label">Home</span></a>
       <a href="#market" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">trending_up</span><span class="sidebar-label">Market Potential</span></a>
+      <a href="#outcomes" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">insights</span><span class="sidebar-label">Business Outcomes</span></a>
       <a href="#problem" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">priority_high</span><span class="sidebar-label">The Problem it solves</span></a>
       <a href="#why-brisk" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">lightbulb</span><span class="sidebar-label">Why Brisk</span></a>
       <a href="#uat" class="sidebar-link"><span class="material-symbols-outlined sidebar-icon">group</span><span class="sidebar-label">End of UAT</span></a>
@@ -1011,7 +1013,216 @@ tailwind.config = {
     <div class="section-trans py-10 text-center">
       <p class="text-white/90 text-lg font-medium max-w-2xl mx-auto px-4 flex items-center justify-center gap-2">
         <span class="material-symbols-outlined text-brisk-yellow-400 icon-fill">arrow_forward</span>
-        That's the opportunity. Now meet the competition.
+        That's the opportunity. Now see the outcomes.
+      </p>
+    </div>
+
+
+    <!-- ================================================== -->
+    <!-- BUSINESS OUTCOMES — for Enterprises, SMEs, Individuals -->
+    <!-- ================================================== -->
+    <section id="outcomes" class="py-16 sm:py-20 bg-gradient-to-br from-brisk-yellow-50 via-white to-brisk-purple-50" aria-labelledby="outcomes-heading">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <span class="pill bg-brisk-yellow-100 text-brisk-yellow-900 border-brisk-yellow-200 mb-4">
+            <span class="material-symbols-outlined text-sm icon-fill">insights</span>Business Outcomes
+          </span>
+          <h2 id="outcomes-heading" class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-brisk-gray-950 leading-tight mb-3 max-w-4xl mx-auto">
+            Quantified benefits, <span class="text-brisk-purple-800">by audience</span>.
+          </h2>
+          <p class="text-lg text-brisk-gray-600 max-w-3xl mx-auto">
+            What changes for the people actually using Brisk — measured in hours, dollars, and release velocity.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+          <!-- ENTERPRISE -->
+          <div class="bg-white border-2 border-brisk-purple-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-shadow">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-12 h-12 rounded-xl bg-brisk-purple-100 flex items-center justify-center">
+                <span class="material-symbols-outlined text-brisk-purple-900 icon-fill">domain</span>
+              </div>
+              <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-brisk-purple-600">Enterprise</p>
+                <h3 class="text-lg font-extrabold text-brisk-gray-950">$5M+ ARR · Regulated</h3>
+              </div>
+            </div>
+            <p class="text-sm text-brisk-gray-600 mb-4">B2B SaaS, healthcare, finance, government</p>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-purple-600 text-base mt-0.5 icon-fill shrink-0">trending_up</span>
+                <div>
+                  <p class="text-2xl font-extrabold text-brisk-gray-950">4×</p>
+                  <p class="text-xs text-brisk-gray-600">more releases per quarter (monthly → weekly)</p>
+                </div>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-purple-600 text-base mt-0.5 icon-fill shrink-0">bolt</span>
+                <div>
+                  <p class="text-2xl font-extrabold text-brisk-gray-950">10×</p>
+                  <p class="text-xs text-brisk-gray-600">faster per-release (3-6 weeks → days)</p>
+                </div>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-purple-600 text-base mt-0.5 icon-fill shrink-0">checklist</span>
+                <div>
+                  <p class="text-2xl font-extrabold text-brisk-gray-950">95%+</p>
+                  <p class="text-xs text-brisk-gray-600">business-rule coverage (vs ~60% manual)</p>
+                </div>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-purple-600 text-base mt-0.5 icon-fill shrink-0">verified</span>
+                <div>
+                  <p class="text-2xl font-extrabold text-brisk-gray-950">-50%</p>
+                  <p class="text-xs text-brisk-gray-600">bug escape rate in production</p>
+                </div>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-purple-600 text-base mt-0.5 icon-fill shrink-0">shield</span>
+                <div>
+                  <p class="text-lg font-extrabold text-brisk-gray-950">SOC2 / HIPAA / GDPR</p>
+                  <p class="text-xs text-brisk-gray-600">local-first = data never leaves your infra</p>
+                </div>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-purple-600 text-base mt-0.5 icon-fill shrink-0">payments</span>
+                <div>
+                  <p class="text-2xl font-extrabold text-brisk-gray-950">$200k-$1M/yr</p>
+                  <p class="text-xs text-brisk-gray-600">saved per $10M ARR (QA headcount avoided)</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- SME -->
+          <div class="bg-white border-2 border-brisk-yellow-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-shadow">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-12 h-12 rounded-xl bg-brisk-yellow-100 flex items-center justify-center">
+                <span class="material-symbols-outlined text-brisk-yellow-900 icon-fill">trending_up</span>
+              </div>
+              <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-brisk-yellow-700">SME</p>
+                <h3 class="text-lg font-extrabold text-brisk-gray-950">&lt;$5M ARR · Startups</h3>
+              </div>
+            </div>
+            <p class="text-sm text-brisk-gray-600 mb-4">Early-stage B2B SaaS, growth-mode teams</p>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-yellow-700 text-base mt-0.5 icon-fill shrink-0">savings</span>
+                <div>
+                  <p class="text-2xl font-extrabold text-brisk-gray-950">$0</p>
+                  <p class="text-xs text-brisk-gray-600">test infrastructure cost (vs $20-50k/yr for TestRail, mabl)</p>
+                </div>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-yellow-700 text-base mt-0.5 icon-fill shrink-0">schedule</span>
+                <div>
+                  <p class="text-2xl font-extrabold text-brisk-gray-950">1 hour</p>
+                  <p class="text-xs text-brisk-gray-600">to first automated test (vs 2 weeks)</p>
+                </div>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-yellow-700 text-base mt-0.5 icon-fill shrink-0">rocket_launch</span>
+                <div>
+                  <p class="text-2xl font-extrabold text-brisk-gray-950">4-8 / mo</p>
+                  <p class="text-xs text-brisk-gray-600">releases per month (vs 1-2 without)</p>
+                </div>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-yellow-700 text-base mt-0.5 icon-fill shrink-0">speed</span>
+                <div>
+                  <p class="text-2xl font-extrabold text-brisk-gray-950">+30-50%</p>
+                  <p class="text-xs text-brisk-gray-600">faster time-to-market for new features</p>
+                </div>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-yellow-700 text-base mt-0.5 icon-fill shrink-0">build</span>
+                <div>
+                  <p class="text-2xl font-extrabold text-brisk-gray-950">-50%</p>
+                  <p class="text-xs text-brisk-gray-600">bug fix time (caught earlier, fixed faster)</p>
+                </div>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-yellow-700 text-base mt-0.5 icon-fill shrink-0">person_off</span>
+                <div>
+                  <p class="text-2xl font-extrabold text-brisk-gray-950">$60-120k/yr</p>
+                  <p class="text-xs text-brisk-gray-600">QA engineer hire avoided (0.5-1 FTE)</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- INDIVIDUAL -->
+          <div class="bg-white border-2 border-brisk-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-shadow">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-12 h-12 rounded-xl bg-brisk-gray-100 flex items-center justify-center">
+                <span class="material-symbols-outlined text-brisk-gray-700 icon-fill">person</span>
+              </div>
+              <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-brisk-gray-500">Individual</p>
+                <h3 class="text-lg font-extrabold text-brisk-gray-950">Developer · Freelancer</h3>
+              </div>
+            </div>
+            <p class="text-sm text-brisk-gray-600 mb-4">Solo devs, contractors, open-source maintainers</p>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-gray-600 text-base mt-0.5 icon-fill shrink-0">timer</span>
+                <div>
+                  <p class="text-2xl font-extrabold text-brisk-gray-950">8× faster</p>
+                  <p class="text-xs text-brisk-gray-600">test plan creation (30 min vs 4 hours)</p>
+                </div>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-gray-600 text-base mt-0.5 icon-fill shrink-0">code</span>
+                <div>
+                  <p class="text-2xl font-extrabold text-brisk-gray-950">-70%</p>
+                  <p class="text-xs text-brisk-gray-600">test code to write manually</p>
+                </div>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-gray-600 text-base mt-0.5 icon-fill shrink-0">build_circle</span>
+                <div>
+                  <p class="text-2xl font-extrabold text-brisk-gray-950">-75%</p>
+                  <p class="text-xs text-brisk-gray-600">test maintenance time after changes</p>
+                </div>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-gray-600 text-base mt-0.5 icon-fill shrink-0">rocket</span>
+                <div>
+                  <p class="text-2xl font-extrabold text-brisk-gray-950">2-3× more</p>
+                  <p class="text-xs text-brisk-gray-600">features shipped per quarter</p>
+                </div>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-gray-600 text-base mt-0.5 icon-fill shrink-0">psychology</span>
+                <div>
+                  <p class="text-2xl font-extrabold text-brisk-gray-950">3× confidence</p>
+                  <p class="text-xs text-brisk-gray-600">in refactoring without breaking things</p>
+                </div>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-brisk-gray-600 text-base mt-0.5 icon-fill shrink-0">auto_awesome</span>
+                <div>
+                  <p class="text-lg font-extrabold text-brisk-gray-950">"I can ship on Friday"</p>
+                  <p class="text-xs text-brisk-gray-600">peace of mind on every deploy</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <p class="text-center text-xs text-brisk-gray-500 mt-8 max-w-2xl mx-auto">
+          Estimates based on Brisk's published benchmarks (57 cases, 14 suites, 6 engines, 5 reference apps), industry comparables (TestRail State of QA 2024, Stack Overflow 2024, Mordor Intelligence), and the UAT cycle time reduction demonstrated in the case study above. Exact numbers vary by team size, product complexity, and current testing maturity.
+        </p>
+      </div>
+    </section>
+
+    <!-- Section transition -->
+    <div class="section-trans py-10 text-center">
+      <p class="text-white/90 text-lg font-medium max-w-2xl mx-auto px-4 flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined text-brisk-yellow-400 icon-fill">arrow_forward</span>
+        These outcomes are real — but the current way to get them is broken. Here's the problem.
       </p>
     </div>
 
