@@ -2283,6 +2283,22 @@ tailwind.config = {
             <span class="material-symbols-outlined text-brisk-purple-900 mt-0.5 icon-fill">extension</span>
             <div><p class="text-sm font-bold text-brisk-gray-950">Custom engine extension</p><p class="text-xs text-brisk-gray-600">Plug in engines for databases, messaging, mobile, desktop, enterprise systems</p></div>
           </div>
+          <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl border border-brisk-purple-100 hover-lift">
+            <span class="material-symbols-outlined text-brisk-purple-900 mt-0.5 icon-fill">vpn_key</span>
+            <div><p class="text-sm font-bold text-brisk-gray-950">Auth headers on API requests</p><p class="text-xs text-brisk-gray-600">Bearer token or static headers applied to API, replay, schema-fuzz, and live-message engines</p></div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl border border-brisk-purple-100 hover-lift">
+            <span class="material-symbols-outlined text-brisk-purple-900 mt-0.5 icon-fill">login</span>
+            <div><p class="text-sm font-bold text-brisk-gray-950">Browser login via credentials</p><p class="text-xs text-brisk-gray-600">Playwright login flow when <code class="bg-white px-1 rounded text-xs font-mono">auth.loginUrl</code> is provided</p></div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-brisk-purple-50 rounded-xl border border-brisk-purple-100 hover-lift">
+            <span class="material-symbols-outlined text-brisk-purple-900 mt-0.5 icon-fill">tune</span>
+            <div><p class="text-sm font-bold text-brisk-gray-950">Custom auth via metadata</p><p class="text-xs text-brisk-gray-600">Host provides auth logic (e.g. refresh tokens, SSO) via SDK metadata</p></div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-brisk-yellow-100 rounded-xl border border-brisk-yellow-200 hover-lift">
+            <span class="material-symbols-outlined text-brisk-yellow-900 mt-0.5 icon-fill">visibility_off</span>
+            <div><p class="text-sm font-extrabold text-brisk-gray-950">Auth secrets redacted in evidence</p><p class="text-xs text-brisk-gray-700">Authorization, cookie, token, password, secret headers are stripped before evidence is written</p></div>
+          </div>
         </div>
 
         <div id="cap-handover" role="tabpanel" class="cap-panel hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -3341,6 +3357,50 @@ function requiredEnv(name) {
 }</code></pre>
         </div>
 
+        <!-- Auth types -->
+        <h3 class="text-xl font-extrabold text-brisk-gray-950 mb-4 flex items-center gap-2">
+          <span class="step-icon bg-brisk-purple-100 text-brisk-purple-900">
+            <span class="material-symbols-outlined icon-fill">vpn_key</span>
+          </span>
+          Auth types
+        </h3>
+        <p class="text-sm text-brisk-gray-600 mb-3">Brisk ships four auth types. Pick one (or none).</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
+          <div class="bg-white border border-brisk-gray-300 rounded-xl p-4">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="material-symbols-outlined text-brisk-purple-900 text-base">block</span>
+              <p class="text-sm font-bold text-brisk-gray-950">none</p>
+            </div>
+            <p class="text-xs text-brisk-gray-600">No auth required. Use for public endpoints or local dev.</p>
+            <pre class="mt-2 bg-brisk-gray-100 rounded p-2 text-xs font-mono text-brisk-gray-800">auth: { type: 'none' }</pre>
+          </div>
+          <div class="bg-white border border-brisk-gray-300 rounded-xl p-4">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="material-symbols-outlined text-brisk-purple-900 text-base">vpn_key</span>
+              <p class="text-sm font-bold text-brisk-gray-950">bearer</p>
+            </div>
+            <p class="text-xs text-brisk-gray-600">Bearer token attached to all API requests. Static, no refresh.</p>
+            <pre class="mt-2 bg-brisk-gray-100 rounded p-2 text-xs font-mono text-brisk-gray-800">auth: { type: 'bearer', token: requiredEnv('API_TOKEN') }</pre>
+          </div>
+          <div class="bg-white border border-brisk-gray-300 rounded-xl p-4">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="material-symbols-outlined text-brisk-purple-900 text-base">login</span>
+              <p class="text-sm font-bold text-brisk-gray-950">credentials</p>
+            </div>
+            <p class="text-xs text-brisk-gray-600">Username/password with optional browser login via Playwright at loginUrl.</p>
+            <pre class="mt-2 bg-brisk-gray-100 rounded p-2 text-xs font-mono text-brisk-gray-800">auth: { type: 'credentials', username: 'u', password: 'p', loginUrl: '/login' }</pre>
+          </div>
+          <div class="bg-white border border-brisk-gray-300 rounded-xl p-4">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="material-symbols-outlined text-brisk-purple-900 text-base">tune</span>
+              <p class="text-sm font-bold text-brisk-gray-950">custom</p>
+            </div>
+            <p class="text-xs text-brisk-gray-600">Host provides auth logic via SDK metadata (e.g. refresh tokens, SSO, mTLS).</p>
+            <pre class="mt-2 bg-brisk-gray-100 rounded p-2 text-xs font-mono text-brisk-gray-800">auth: { type: 'custom', description: 'OAuth refresh on 401', metadata: { ... } }</pre>
+          </div>
+        </div>
+        <p class="text-xs text-brisk-gray-500 mb-10">Auth secrets (tokens, passwords, cookies) are auto-redacted from evidence before any result is written.</p>
+
         <!-- Run -->
         <h3 class="text-xl font-extrabold text-brisk-gray-950 mb-4 flex items-center gap-2">
           <span class="step-icon bg-brisk-yellow-100 text-brisk-yellow-900">
@@ -3762,7 +3822,11 @@ setupTabs('.comparison-tab', 'aria-controls', '.comparison-panel');
     { name: 'Multi-engine orchestration',       brisk: '✅', mabl: '🔧', katalon: '✅', tosca: '✅', testrigor: '🔧', functionize: '✅' },
     { name: 'Embeddable SDK & host-owned UI',   brisk: '✅', mabl: '❌', katalon: '🔧', tosca: '🔧', testrigor: '❌', functionize: '🔧' },
     { name: 'Stable result handover contract',  brisk: '✅', mabl: '🔧', katalon: '🔧', tosca: '🔧', testrigor: '🔧', functionize: '🔧' },
-    { name: 'Local-first operation',            brisk: '✅', mabl: '❌', katalon: '🔧', tosca: '🔧', testrigor: '❌', functionize: '❌' }
+    { name: 'Local-first operation',            brisk: '✅', mabl: '❌', katalon: '🔧', tosca: '🔧', testrigor: '❌', functionize: '❌' },
+    { name: 'Bearer / static-header auth',      brisk: '✅', mabl: '✅', katalon: '✅', tosca: '✅', testrigor: '✅', functionize: '✅' },
+    { name: 'Browser login via credentials',    brisk: '✅', mabl: '✅', katalon: '✅', tosca: '✅', testrigor: '✅', functionize: '✅' },
+    { name: 'Custom auth via host metadata',     brisk: '✅', mabl: '❌', katalon: '🔧', tosca: '🔧', testrigor: '🔧', functionize: '🔧' },
+    { name: 'Auth-secret redaction in evidence',brisk: '✅', mabl: '✅', katalon: '✅', tosca: '✅', testrigor: '✅', functionize: '✅' }
   ];
   const benchmarkScenarios = [
     { num: 1,  name: 'Discover an undocumented frontend application',  brisk: '🔧', mabl: '🔧', katalon: '🔧', tosca: '🔧', testrigor: '🔧', functionize: '🔧' },
