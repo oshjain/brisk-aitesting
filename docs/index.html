@@ -4673,26 +4673,26 @@ if (document.readyState === 'loading') {
 
         <!-- =================== 1. THE BASKET =================== -->
         <section class="potential-modal-section active" data-pot-section="basket" role="tabpanel">
+          <div class="bg-gradient-to-r from-brisk-purple-900 to-brisk-purple-950 text-white rounded-2xl p-5 mb-4">
+            <div class="flex items-baseline justify-between flex-wrap gap-2">
+              <div>
+                <p class="text-xs text-white/70 uppercase tracking-wider font-bold">Final basket (ideal customer pool)</p>
+                <p class="potential-big-number text-brisk-yellow-400">2,822</p>
+                <p class="text-xs text-white/50 mt-1">Companies globally that match every Brisk filter.</p>
+              </div>
+              <div class="text-right text-xs text-white/70">
+                <p>(28k × 40%) × 70% × 90% × 40%</p>
+                <p class="font-mono mt-1">= 2,822</p>
+              </div>
+            </div>
+          </div>
+
           <div class="mb-6">
             <h3 class="text-2xl font-extrabold text-brisk-gray-950 mb-2 flex items-center gap-2">
               <span class="material-symbols-outlined text-brisk-purple-900 icon-fill">shopping_basket</span>
               Step 1: who actually fits Brisk's basket
             </h3>
             <p class="text-sm text-brisk-gray-600">Start with every SaaS company in the world. Filter down by what Brisk actually needs. Each filter is a fact with a source.</p>
-          </div>
-
-          <div class="bg-gradient-to-r from-brisk-purple-900 to-brisk-purple-950 text-white rounded-2xl p-5 mb-4">
-            <div class="flex items-baseline justify-between flex-wrap gap-2">
-              <div>
-                <p class="text-xs text-white/70 uppercase tracking-wider font-bold">Final basket (Brisk's ideal customer pool)</p>
-                <p class="potential-big-number text-brisk-yellow-400">2,822</p>
-                <p class="text-sm text-white/80 mt-1">Companies globally that match every Brisk filter.</p>
-              </div>
-              <div class="text-right text-xs text-white/70">
-                <p>28,000 × 40% × 70% × 90% × 40%</p>
-                <p class="font-mono mt-1">= 2,822</p>
-              </div>
-            </div>
           </div>
 
           <div class="space-y-2">
@@ -4857,7 +4857,7 @@ if (document.readyState === 'loading') {
           </div>
 
           <div class="potential-assumption mb-4">
-            <p class="text-xs font-bold uppercase tracking-wider text-yellow-900">The big assumption (your call)</p>
+            <p class="text-xs font-bold uppercase tracking-wider text-yellow-900">The big assumption (practical assumption)</p>
             <p class="text-sm text-brisk-gray-950 mt-1">"Take 50% of the 5-year testing spend from the basket." Why 50% is a reasonable upper bound: Brisk is the only open-source, embeddable, local-first option. No direct competitor. The remaining 50% is held back by switching cost, OSS-to-paid conversion friction, and slower SMB adoption.</p>
           </div>
 
@@ -4903,18 +4903,18 @@ if (document.readyState === 'loading') {
 
         <!-- =================== 4. REALITY CHECK =================== -->
         <section class="potential-modal-section" data-pot-section="reality" role="tabpanel">
+          <div class="bg-brisk-purple-900 text-white rounded-2xl p-5 mb-4">
+            <p class="text-xs font-bold uppercase tracking-widest text-brisk-yellow-400">The headline</p>
+            <p class="text-xl font-extrabold mt-1">A defensible, fact-anchored 50% capture puts Brisk's 5-year obtainable market at <span class="text-brisk-yellow-400">~$900M cumulative</span>.</p>
+            <p class="text-sm text-white/80 mt-2">The TAM is real. The SAM is reachable. The SOM is plausible. The competitor set is empty in Brisk's category. The only open question is execution velocity — which is what the next 12 months are about.</p>
+          </div>
+
           <div class="mb-6">
             <h3 class="text-2xl font-extrabold text-brisk-gray-950 mb-2 flex items-center gap-2">
               <span class="material-symbols-outlined text-brisk-purple-900 icon-fill">fact_check</span>
               Step 4: what's fact, what's assumption
             </h3>
             <p class="text-sm text-brisk-gray-600">Every number on this page, separated by confidence level.</p>
-          </div>
-
-          <div class="bg-brisk-purple-900 text-white rounded-2xl p-5 mb-4">
-            <p class="text-xs font-bold uppercase tracking-widest text-brisk-yellow-400">The headline</p>
-            <p class="text-xl font-extrabold mt-1">A defensible, fact-anchored 50% capture puts Brisk's 5-year obtainable market at <span class="text-brisk-yellow-400">~$900M cumulative</span>.</p>
-            <p class="text-sm text-white/80 mt-2">The TAM is real. The SAM is reachable. The SOM is plausible. The competitor set is empty in Brisk's category. The only open question is execution velocity — which is what the next 12 months are about.</p>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -4959,7 +4959,7 @@ if (document.readyState === 'loading') {
             </div>
             <div>
               <p class="text-sm font-extrabold text-yellow-700 mb-2 flex items-center gap-1">
-                <span class="material-symbols-outlined text-base">warning</span> Assumptions (your call)
+                <span class="material-symbols-outlined text-base">warning</span> Assumptions (practical assumptions)
               </p>
               <div class="space-y-2">
                 <div class="potential-assumption text-xs">
