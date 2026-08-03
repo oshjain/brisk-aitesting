@@ -3,7 +3,7 @@
 This package turns a testing goal into checked plans, runnable tests, and evidence. The simple flow is:
 
 ```text
-goal -> discovery -> AI plan -> validation/repair -> grounding -> execution -> evidence -> handover
+goal -> intent -> evidence graph -> semantic compilation -> workflow -> adapter lowering -> validation -> execution -> evidence -> handover
 ```
 
 Host apps should not have to care about the moving parts. Developers should still be able to inspect each step when something fails.
@@ -14,8 +14,10 @@ Host apps should not have to care about the moving parts. Developers should stil
 - AI providers do not write executable Playwright scripts for us to run blindly.
 - UI selectors are not accepted directly from AI.
 - UI actions execute only through `ui_el_*` evidence IDs from `brisk-aitesting.ui-grounding.v1`.
-- Engines run only after the plan passes the public JSON Schema gate and Brisk-specific execution checks.
-- Broken plans get a clear validation report and, when possible, a repair attempt.
+- AI describes intent; it does not choose executable routes, selectors, payload shapes, statuses, captures, or cleanup operations.
+- Mutation operations require authoritative contract, host, runtime, or observed evidence.
+- Engines run only after deterministic compilation, lowering, and validation succeed.
+- Unsupported or ambiguous intent becomes a stable compilation outcome, never guessed execution.
 - Every real run must produce evidence artifacts.
 - Product configuration uses `BRISK_AITESTING_*` as the primary namespace. Provider-specific env vars are aliases only.
 - Host apps own storage. This package returns stable handover JSON and artifact references.
@@ -30,20 +32,26 @@ Host apps should not have to care about the moving parts. Developers should stil
    BuiltinDiscoverer finds UI routes, API routes, contracts, and repo signals.
    JavaScript/TypeScript source discovery covers direct Express-style route calls, nested router prefixes, `router.route(...).get(...)` chains, and Nest-style decorators.
 
-3. Planning
-    Planner returns `brisk-aitesting.plan.v1`.
-    AiPlanner requests JSON only from an AiPlannerProvider.
-    BuiltinPlanner can generate API scenarios from OpenAPI operations.
+3. Intent Planning
+   SemanticPlanner asks an AI provider for `brisk-aitesting.intent.v1`.
+   The intent contract contains semantic goals and assertions, not executable targets.
+   AiPlanner remains an explicit legacy compatibility path.
 
-4. Validation And Repair
-   BuiltinPlanValidator first applies the public `brisk-aitesting.plan.v1` JSON Schema with AJV, then checks Brisk-specific executability.
-   AiPlanner.repair can fix invalid plans using validator issues.
+4. Evidence And Semantic Compilation
+   Capability adapters contribute `brisk-aitesting.evidence-graph.v1`.
+   UniversalSemanticCompiler binds typed inputs, resolves dependencies, enforces mutation authority, and emits `brisk-aitesting.compilation.v1`.
+   A successful compilation contains `brisk-aitesting.workflow.v1`.
 
-5. Route Grounding Feedback
+5. Adapter Lowering And Validation
+   Capability adapters lower proven workflow operations into `brisk-aitesting.lowered-plan.v1`, whose executable payload is the existing `brisk-aitesting.plan.v1`.
+   BuiltinPlanValidator applies the public plan JSON Schema with AJV, then checks executability.
+   The compiler does not use prompt repair to invent missing executable facts.
+
+6. Route Grounding Feedback
    Optional `uiActionFeedback` pre-grounds UI routes.
    Planner.enrichUiActions receives real `brisk-aitesting.ui-grounding.v1` evidence.
 
-6. Execution
+7. Execution
     BuiltinApiEngine executes API scenarios.
     BuiltinApiEngine validates JSON responses against OpenAPI response schemas when available.
     BuiltinSchemaFuzzEngine sends lightweight malformed OpenAPI requests and records rejection evidence.
@@ -52,7 +60,7 @@ Host apps should not have to care about the moving parts. Developers should stil
     BuiltinPlaywrightEngine executes UI scenarios and grounded UI actions.
     BuiltinContractEngine parses OpenAPI JSON/YAML contracts and emits operation summaries.
 
-7. Evidence And Handover
+8. Evidence And Handover
    Engines produce schema-versioned evidence artifacts.
    buildResult returns `brisk-aitesting.result.v1` plus `brisk-aitesting.handover.v1`.
 
@@ -102,7 +110,12 @@ Stable schema names currently used by the package:
 
 | Schema | Owner | Purpose |
 | --- | --- | --- |
-| `brisk-aitesting.plan.v1` | planner | Structured test plan |
+| `brisk-aitesting.intent.v1` | intent planner | Non-executable semantic test intent |
+| `brisk-aitesting.evidence-graph.v1` | capability adapters | Proven capabilities, typed data slots, outcomes, and provenance |
+| `brisk-aitesting.workflow.v1` | semantic compiler | Protocol-neutral dependency graph of proven operations |
+| `brisk-aitesting.compilation.v1` | semantic compiler | Success, unsupported, ambiguous, or needs-evidence compilation result |
+| `brisk-aitesting.lowered-plan.v1` | adapter lowering | Executable plan plus compiler provenance |
+| `brisk-aitesting.plan.v1` | lowering/legacy planner | Structured engine input |
 | `brisk-aitesting.validation.v1` | validator | Plan validation result |
 | `brisk-aitesting.discovery.v1` | discoverer | Discovered app surface |
 | `brisk-aitesting.contract-drift.v1` | discoverer | Implementation-vs-OpenAPI drift report |
@@ -152,6 +165,7 @@ Host apps and integrators can replace these interfaces:
 
 - `AiPlannerProvider`
 - `Planner`
+- `CapabilityAdapter`
 - `PlanValidator`
 - `Discoverer`
 - `Engine`
@@ -234,7 +248,11 @@ npm run pack:check
 
 Built:
 
-- Provider-agnostic AI planning adapter.
+- Provider-agnostic intent planning adapter with strict structured output.
+- Protocol-neutral semantic compiler with typed data-flow, dependency, authority, ambiguity, and cleanup invariants.
+- Evidence graph merger with authority precedence and conflict detection.
+- Real OpenAPI capability adapter and typed host HTTP capability adapter.
+- Workflow lowering into the established engine plan contract.
 - Plan validation and repair.
 - Public AJV-backed plan contract gate through `planJsonSchema` and `validatePlanJsonContract`.
 - Route grounding feedback loop.
@@ -261,3 +279,5 @@ Still missing:
 - Public npm publishing automation.
 - Metrics/analytics module.
 - Source-route discovery for Python, .NET, Go, Java, generated routes, and complex dynamic route composition.
+- Real GraphQL, browser-accessibility, messaging, and proprietary capability adapters. These currently have protocol-neutral compiler fixtures, not production lowering adapters.
+- Automatic evidence acquisition and recompilation when compilation returns `needs-evidence`.

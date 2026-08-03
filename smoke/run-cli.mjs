@@ -27,7 +27,33 @@ if (address === null || typeof address === 'string') throw new Error('CLI smoke 
 try {
   const configPath = join(workDir, 'brisk-aitesting.config.mjs');
   const outputPath = join(workDir, 'cli-output-result.json');
-  await writeFile(configPath, cliSmokeConfig(address.port, workDir), 'utf8');
+  const contractPath = join(workDir, 'openapi.json');
+  await writeFile(contractPath, JSON.stringify({
+    openapi: '3.0.3',
+    info: { title: 'CLI smoke API', version: '1.0.0' },
+    paths: {
+      '/api/health': {
+        get: {
+          operationId: 'getHealth',
+          responses: {
+            200: {
+              description: 'Healthy',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['ok'],
+                    properties: { ok: { type: 'boolean' } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  }, null, 2), 'utf8');
+  await writeFile(configPath, cliSmokeConfig(address.port, workDir, contractPath), 'utf8');
 
   const success = await runCli([
     'run',
@@ -107,7 +133,7 @@ try {
   await new Promise((resolve) => server.close(resolve));
 }
 
-function cliSmokeConfig(port, artifactsRoot) {
+function cliSmokeConfig(port, artifactsRoot, contractPath) {
   return `import { defineConfig } from '../dist/index.js';
 
 export default defineConfig({
@@ -116,21 +142,27 @@ export default defineConfig({
     baseUrl: 'http://127.0.0.1:${port}',
     env: 'local',
   },
+  contracts: { openApiPath: ${JSON.stringify(contractPath)} },
   aiProvider: {
     name: 'cli-smoke-provider',
     async complete() {
       return {
         content: JSON.stringify({
-          mode: 'automatic',
+          warnings: [],
           scenarios: [{
             id: 'cli_smoke_health_api',
             name: 'CLI smoke health API',
-            type: 'api',
             objective: 'Health endpoint responds through the CLI.',
-            target: { method: 'GET', path: '/api/health', sourceOfTruth: 'observed' },
-            expect: { status: 200, json: { ok: true } },
-            assertions: ['status is 200', 'json.ok is true'],
-            evidenceRequired: ['api']
+            actions: [{
+              id: 'health',
+              verb: 'get',
+              resource: 'health',
+              capability: 'api.http',
+              expectedOutcomes: []
+            }],
+            invariants: [],
+            evidenceRequired: ['observable health response'],
+            cleanup: 'isolated'
           }]
         })
       };
@@ -147,7 +179,8 @@ export default defineConfig({
     includeRepo: false,
     includeUi: false,
     includeApi: true,
-    includeContracts: false,
+    includeContracts: true,
+    apiRoutes: [{ method: 'GET', path: '/api/health' }],
   },
   security: {
     networkPolicy: 'localhost-only',

@@ -296,7 +296,11 @@ try {
         evidenceRequired: ['api'],
       }, { allowedHosts: ['127.0.0.1'] }, { explicitUserTargets: ['GET /api/health'] });
       const test = result.tests[0];
-      const passed = result.status === 'skipped' && test?.diagnostics.some((diagnostic) => /Network policy blocked host/i.test(diagnostic));
+      const passed = result.status === 'failed'
+        && test?.status === 'failed'
+        && test?.failureCategory === 'network'
+        && result.outcome.issues.some((entry) => entry.category === 'network')
+        && test?.diagnostics.some((diagnostic) => /Network policy blocked host/i.test(diagnostic));
       return { passed, observed: JSON.stringify({ status: result.status, diagnostics: test?.diagnostics }) };
     },
   });
@@ -673,7 +677,19 @@ function validationBenchmarkCases(baseUrl) {
             },
           ],
         };
-        const result = validator.validate({ config, input: { goal: 'planned workflow placeholders match discovered dynamic API routes', scenarios: 1, mode: 'automatic' }, plan });
+        const result = validator.validate({
+          config,
+          input: {
+            goal: 'planned workflow placeholders match discovered dynamic API routes',
+            scenarios: 2,
+            mode: 'automatic',
+            authoritativeOperations: [
+              { method: 'POST', path: '/api/topics', requiredBodyFields: ['name'], successStatusCodes: [201], source: 'host-adapter' },
+              { method: 'POST', path: '/api/topics/:topicId/messages', requiredBodyFields: ['text'], successStatusCodes: [201], source: 'host-adapter' },
+            ],
+          },
+          plan,
+        });
         return { passed: result.valid === true, observed: JSON.stringify(result.issues) };
       },
     },
@@ -712,7 +728,7 @@ function apiRuntimeBenchmarkCases(baseUrl, contractPath) {
     apiRunCase(baseUrl, contractPath, 'api.expected-status-array-passes', 'status arrays are accepted', { ...apiScenario('api_status_array'), target: { method: 'GET', path: '/api/query', sourceOfTruth: 'contract' }, expect: { status: [200, 204] } }, (result) => result.status === 'passed'),
     apiRunCase(baseUrl, contractPath, 'api.expected-status-range-passes', 'status ranges are accepted', { ...apiScenario('api_status_range'), target: { method: 'GET', path: '/api/query', sourceOfTruth: 'contract' }, expect: { status: { min: 200, max: 299 } } }, (result) => result.status === 'passed'),
     apiRunCase(baseUrl, undefined, 'replay.native-http-replay-passes', 'built-in replay reruns declared HTTP interactions', { id: 'replay_query', name: 'Replay query', type: 'replay', objective: 'Replay query request.', assertions: ['replay works'], evidenceRequired: ['api'], metadata: { replay: { requests: [{ method: 'GET', path: '/api/query?mode=fast', expectStatus: 200 }] } } }, (result) => result.status === 'passed' && result.artifacts.some((artifact) => artifact.metadata?.schemaVersion === 'brisk-aitesting.replay-evidence.v1')),
-    apiRunCase(baseUrl, undefined, 'replay.empty-requests-skips', 'replay scenarios without requests skip cleanly', { id: 'replay_empty', name: 'Empty replay', type: 'replay', objective: 'Empty replay should skip.', assertions: ['skip'], evidenceRequired: ['api'], metadata: { replay: { requests: [] } } }, (result) => result.status === 'skipped'),
+    apiRunCase(baseUrl, undefined, 'replay.empty-requests-rejected', 'replay scenarios without requests are rejected before execution', { id: 'replay_empty', name: 'Empty replay', type: 'replay', objective: 'Empty replay must not be accepted.', assertions: ['request is required'], evidenceRequired: ['api'], metadata: { replay: { requests: [] } } }, (result) => result.tests.length === 0 && result.outcome.issues.some((entry) => entry.code === 'PLAN_REJECTED')),
   ];
 }
 
@@ -753,16 +769,21 @@ function cliBenchmarkCases(baseUrl, contractPath) {
     async complete() {
       return {
         content: JSON.stringify({
-          mode: 'automatic',
+          warnings: [],
           scenarios: [{
             id: 'cli_json_query',
             name: 'CLI JSON query check',
-            type: 'api',
             objective: 'Query endpoint responds through CLI JSON mode.',
-            target: { method: 'GET', path: '/api/query', sourceOfTruth: 'contract' },
-            expect: { status: 200 },
-            assertions: ['status is 200'],
-            evidenceRequired: ['api']
+            actions: [{
+              id: 'query',
+              verb: 'get',
+              resource: 'query',
+              capability: 'api.http',
+              expectedOutcomes: []
+            }],
+            invariants: [],
+            evidenceRequired: ['observable API response'],
+            cleanup: 'isolated'
           }]
         })
       };

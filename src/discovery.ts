@@ -15,12 +15,6 @@ import type {
 
 type MatchedDriftRoute = ContractDriftReport['matchedRoutes'][number];
 
-const COMMON_UI_ROUTES = ['/', '/login', '/dashboard', '/settings'];
-const COMMON_API_ROUTES: readonly Pick<DiscoveryApiRoute, 'method' | 'path'>[] = [
-  { method: 'GET', path: '/api/health' },
-  { method: 'GET', path: '/api/me' },
-];
-
 export class BuiltinDiscoverer implements Discoverer {
   readonly name = 'builtin-discoverer';
 
@@ -31,20 +25,20 @@ export class BuiltinDiscoverer implements Discoverer {
     const repoSignals: DiscoveryResult['repoSignals'][number][] = [];
 
     if (context.config.discovery.includeUi) {
-      for (const path of COMMON_UI_ROUTES) {
-        uiRoutes.set(path, { path, source: 'config', confidence: path === '/' ? 0.9 : 0.45 });
+      for (const path of context.config.discovery.uiRoutes) {
+        uiRoutes.set(path, { path, source: 'config', confidence: 1 });
       }
     }
 
     if (context.config.discovery.includeApi) {
-      for (const route of COMMON_API_ROUTES) {
-        apiRoutes.set(`${route.method} ${route.path}`, { ...route, source: 'config', confidence: 0.45 });
+      for (const route of context.config.discovery.apiRoutes) {
+        apiRoutes.set(`${route.method.toUpperCase()} ${route.path}`, { method: route.method.toUpperCase(), path: route.path, source: 'config', confidence: 1 });
       }
     }
 
     const repoPath = context.config.app.repoPath;
     if (repoPath !== undefined && context.config.discovery.includeRepo) {
-      await discoverRepo(repoPath, { uiRoutes, apiRoutes, repoSignals, warnings });
+      await discoverRepo(repoPath, { uiRoutes, apiRoutes, repoSignals, warnings }, context.config.discovery.maxSourceFiles);
     }
 
     const implementedApiRoutes = implementationRoutesFrom(apiRoutes);
@@ -79,7 +73,7 @@ async function discoverRepo(repoPath: string, state: {
   readonly apiRoutes: Map<string, DiscoveryApiRoute>;
   readonly repoSignals: DiscoveryResult['repoSignals'][number][];
   readonly warnings: string[];
-}): Promise<void> {
+}, maxSourceFiles: number): Promise<void> {
   try {
     const packageJsonPath = join(repoPath, 'package.json');
     const rawPackage = await readFile(packageJsonPath, 'utf8');
@@ -101,7 +95,7 @@ async function discoverRepo(repoPath: string, state: {
     state.warnings.push(`Could not inspect package.json: ${error instanceof Error ? error.message : String(error)}`);
   }
 
-  await discoverRouteFiles(repoPath, state);
+  await discoverRouteFiles(repoPath, state, maxSourceFiles);
 }
 
 async function discoverRouteFiles(repoPath: string, state: {
@@ -109,8 +103,12 @@ async function discoverRouteFiles(repoPath: string, state: {
   readonly apiRoutes: Map<string, DiscoveryApiRoute>;
   readonly repoSignals: DiscoveryResult['repoSignals'][number][];
   readonly warnings: string[];
-}): Promise<void> {
-  const files = await listSourceFiles(repoPath, 500);
+}, maxSourceFiles: number): Promise<void> {
+  const inventory = await listSourceFiles(repoPath, maxSourceFiles);
+  const files = inventory.files;
+  if (inventory.truncated) {
+    state.warnings.push(`Source discovery reached discovery.maxSourceFiles=${maxSourceFiles}. Results are incomplete; raise the limit or narrow app.repoPath.`);
+  }
   for (const file of files) {
     const normalized = file.replace(/\\/g, '/');
     state.repoSignals.push({ kind: 'source-file', value: normalized, source: 'repo' });
@@ -128,27 +126,34 @@ async function discoverRouteFiles(repoPath: string, state: {
   }
 }
 
-async function listSourceFiles(root: string, limit: number): Promise<readonly string[]> {
+async function listSourceFiles(root: string, limit: number): Promise<{ readonly files: readonly string[]; readonly truncated: boolean }> {
   const result: string[] = [];
-  await walk(root, '', result, limit);
-  return result;
+  const state = { truncated: false };
+  await walk(root, '', result, limit, state);
+  return { files: result, truncated: state.truncated };
 }
 
-async function walk(root: string, relativeDir: string, result: string[], limit: number): Promise<void> {
-  if (result.length >= limit) return;
+async function walk(root: string, relativeDir: string, result: string[], limit: number, state: { truncated: boolean }): Promise<void> {
+  if (result.length >= limit) {
+    state.truncated = true;
+    return;
+  }
   const absoluteDir = join(root, relativeDir);
   let entries;
   try {
-    entries = await readdir(absoluteDir, { withFileTypes: true });
+    entries = (await readdir(absoluteDir, { withFileTypes: true })).sort((left, right) => left.name.localeCompare(right.name));
   } catch {
     return;
   }
   for (const entry of entries) {
-    if (result.length >= limit) return;
+    if (result.length >= limit) {
+      state.truncated = true;
+      return;
+    }
     if (entry.name.startsWith('.') || ['node_modules', 'dist', 'build', 'coverage'].includes(entry.name)) continue;
     const relativePath = join(relativeDir, entry.name);
     if (entry.isDirectory()) {
-      await walk(root, relativePath, result, limit);
+      await walk(root, relativePath, result, limit, state);
     } else if (/\.(ts|tsx|js|jsx|mjs|cjs)$/.test(entry.name)) {
       result.push(relativePath);
     }

@@ -14,6 +14,7 @@ import type {
   UiRouteGrounder,
   ValidationResult,
 } from './types.js';
+import { containsObviousSecretLikeValue } from './secret-safety.js';
 
 export interface EnginePluginConformanceCase {
   readonly engine: Engine;
@@ -175,7 +176,7 @@ async function checkExtension(params: {
     record('extension call completes', false, error instanceof Error ? error.message : String(error));
   }
 
-  record('extension output has no obvious secret leakage', !containsSecretLikeValue(checks));
+  record('extension output has no obvious secret leakage', !containsObviousSecretLikeValue(checks));
 
   return {
     name: extension.name,
@@ -308,7 +309,7 @@ function validateEngineOutput(
   record('result.assertions is an array', Array.isArray(result.assertions));
   record('result.artifacts is an array', Array.isArray(result.artifacts));
   record('result.diagnostics is an array', Array.isArray(result.diagnostics));
-  record('result has no obvious secret leakage', !containsSecretLikeValue(result));
+  record('result has no obvious secret leakage', !containsObviousSecretLikeValue(result));
 
   if (Array.isArray(result.assertions)) {
     for (const [index, assertion] of result.assertions.entries()) {
@@ -325,7 +326,7 @@ function validateEngineOutput(
   if (output.artifacts !== undefined) {
     record('output.artifacts is an array when provided', Array.isArray(output.artifacts));
     if (Array.isArray(output.artifacts)) {
-      record('output artifacts have no obvious secret leakage', !containsSecretLikeValue(output.artifacts));
+      record('output artifacts have no obvious secret leakage', !containsObviousSecretLikeValue(output.artifacts));
       for (const [index, artifact] of output.artifacts.entries()) {
         record(`output artifact ${index + 1} shape is valid`, isValidArtifact(artifact), JSON.stringify(artifact));
       }
@@ -348,10 +349,6 @@ function isValidArtifact(value: unknown): value is ArtifactRef {
     && typeof value.label === 'string'
     && value.label.trim().length > 0
     && (value.metadata === undefined || isRecord(value.metadata));
-}
-
-function containsSecretLikeValue(value: unknown): boolean {
-  return /sk-[A-Za-z0-9]{12,}|npm_[A-Za-z0-9]{12,}|Bearer\s+[A-Za-z0-9._-]{12,}|AKIA[A-Z0-9]{12,}/i.test(JSON.stringify(value));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

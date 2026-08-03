@@ -1,8 +1,8 @@
-import type { PlanValidator, PlanValidatorContext, ValidationIssue, ValidationResult } from './types.js';
+import type { PlanValidator, PlanValidatorContext, ScenarioPlan, ValidationIssue, ValidationResult } from './types.js';
 import { validatePlanJsonContract } from './plan-contract.js';
 
 const ENGINE_TYPES = new Set(['ui', 'api', 'contract', 'schema', 'replay', 'message', 'custom']);
-const PLAN_KEYS = new Set(['schemaVersion', 'runId', 'goal', 'mode', 'scenarios', 'discovery', 'warnings', 'createdAt']);
+const PLAN_KEYS = new Set(['schemaVersion', 'runId', 'goal', 'mode', 'scenarios', 'discovery', 'warnings', 'evidenceDecisions', 'createdAt']);
 const SCENARIO_KEYS = new Set(['id', 'name', 'type', 'objective', 'target', 'request', 'expect', 'assertions', 'dependsOn', 'capture', 'cleanup', 'uiActions', 'evidenceRequired', 'metadata']);
 const TARGET_KEYS = new Set(['method', 'path', 'route', 'schema', 'channel', 'sourceOfTruth']);
 const REQUEST_KEYS = new Set(['headers', 'query', 'body']);
@@ -46,7 +46,7 @@ export class BuiltinPlanValidator implements PlanValidator {
     if (plan.scenarios.length === 0) {
       issues.push(error('plan.scenarios', 'REQUIRED', 'Plan must contain at least one scenario.'));
     }
-    validateScenarioCount(plan.scenarios.length, context.input.scenarios, context.input.scenarioCountPolicy, issues);
+    validateScenarioCount(logicalScenarioCount(plan.scenarios), context.input.scenarios, context.input.scenarioCountPolicy, issues);
     if (plan.mode !== 'automatic' && !ENGINE_TYPES.has(plan.mode)) {
       issues.push(error('plan.mode', 'INVALID_MODE', `Unsupported plan mode "${plan.mode}".`));
     }
@@ -56,6 +56,7 @@ export class BuiltinPlanValidator implements PlanValidator {
     if (Number.isNaN(Date.parse(plan.createdAt))) {
       issues.push(error('plan.createdAt', 'INVALID_DATE', 'Plan createdAt must be an ISO-compatible date string.'));
     }
+    validateEvidenceDecisions(plan.evidenceDecisions ?? [], issues);
     for (const requiredType of context.input.requiredTypes ?? []) {
       if (!plan.scenarios.some((scenario) => scenario.type === requiredType)) {
         issues.push(error('plan.scenarios', 'MISSING_REQUIRED_TYPE', `Plan must include at least one ${requiredType} scenario.`));
@@ -101,6 +102,30 @@ export class BuiltinPlanValidator implements PlanValidator {
   }
 }
 
+function validateEvidenceDecisions(
+  decisions: NonNullable<import('./types.js').TestPlan['evidenceDecisions']>,
+  issues: ValidationIssue[],
+): void {
+  const ids = new Set<string>();
+  decisions.forEach((decision, index) => {
+    const path = `plan.evidenceDecisions.${index}`;
+    if (ids.has(decision.id)) issues.push(error(`${path}.id`, 'DUPLICATE_EVIDENCE_DECISION', `Evidence decision id "${decision.id}" is duplicated.`));
+    ids.add(decision.id);
+    const affected = new Set(decision.affectedScenarioIds);
+    const recompiled = new Set(decision.recompiledScenarioIds);
+    const preserved = new Set(decision.preservedScenarioIds);
+    if ([...recompiled].some((id) => !affected.has(id))) {
+      issues.push(error(`${path}.recompiledScenarioIds`, 'INVALID_EVIDENCE_DECISION', 'Every recompiled scenario must be identified as affected.'));
+    }
+    if ([...recompiled].some((id) => preserved.has(id))) {
+      issues.push(error(path, 'INVALID_EVIDENCE_DECISION', 'A scenario cannot be both recompiled and preserved in one decision.'));
+    }
+    if (decision.reasonCode === 'EVIDENCE_ACQUIRED' && decision.acquiredGraphRevisions.length === 0) {
+      issues.push(error(`${path}.acquiredGraphRevisions`, 'INVALID_EVIDENCE_DECISION', 'An evidence-acquired decision must reference at least one acquired graph.'));
+    }
+  });
+}
+
 function validateScenarioCount(
   actual: number,
   requested: number | undefined,
@@ -119,6 +144,17 @@ function validateScenarioCount(
   if (policy === 'at-most' && actual > expected) {
     issues.push(error('plan.scenarios', 'SCENARIO_COUNT_TOO_HIGH', `Plan must contain at most ${expected} scenario(s); received ${actual}.`));
   }
+}
+
+function logicalScenarioCount(scenarios: readonly ScenarioPlan[]): number {
+  const compiled = scenarios.filter((scenario) => scenario.metadata?.generatedBy === 'universal-semantic-compiler');
+  if (compiled.length === 0) return scenarios.length;
+  const intentScenarioIds = new Set(compiled
+    .filter((scenario) => scenario.metadata?.workflowPhase !== 'cleanup')
+    .map((scenario) => scenario.metadata?.intentScenarioId)
+    .filter((id): id is string => typeof id === 'string' && id.length > 0));
+  const legacyCount = scenarios.length - compiled.length;
+  return legacyCount + intentScenarioIds.size;
 }
 
 function validateUiActions(path: string, scenario: PlanValidatorContext['plan']['scenarios'][number], issues: ValidationIssue[]): void {
@@ -182,8 +218,16 @@ function validateEngineTarget(path: string, scenario: PlanValidatorContext['plan
         issues.push(error(`${path}.target.path`, 'UNPROVEN_API_ROUTE', `API route "${normalizedMethod} ${apiPath}" is marked ${target.sourceOfTruth} but was not found in discovery.`));
       }
     }
-    if ((normalizedMethod === 'POST' || normalizedMethod === 'PUT' || normalizedMethod === 'PATCH') && expectsSuccessfulStatus(scenario.expect?.status) && scenario.request?.body === undefined) {
+    if (
+      (normalizedMethod === 'POST' || normalizedMethod === 'PUT' || normalizedMethod === 'PATCH')
+      && expectsSuccessfulStatus(scenario.expect?.status)
+      && scenario.request?.body === undefined
+      && mutationBodyIsRequired(normalizedMethod, apiPath, scenario, context)
+    ) {
       issues.push(error(`${path}.request.body`, 'REQUIRED_MUTATION_BODY', 'Successful POST/PUT/PATCH API scenarios must include a request.body so the engine does not execute an empty mutation.'));
+    }
+    if (normalizedMethod !== undefined && apiPath !== undefined && isSuccessfulMutation(normalizedMethod, scenario)) {
+      validateAuthoritativeMutation(path, normalizedMethod, apiPath, scenario, context, issues);
     }
   }
   if ((scenario.type === 'contract' || scenario.type === 'schema') && scenario.target?.schema === undefined && scenario.evidenceRequired.includes('schema')) {
@@ -197,6 +241,94 @@ function validateEngineTarget(path: string, scenario: PlanValidatorContext['plan
       issues.push(error(`${path}.target.channel`, 'REQUIRED_MESSAGE_CHANNEL', 'Message scenario target.channel is required.'));
     }
   }
+  if (scenario.type === 'replay') {
+    const replay = isRecord(scenario.metadata?.replay) ? scenario.metadata?.replay : undefined;
+    if (!Array.isArray(replay?.requests) || replay.requests.length === 0) {
+      issues.push(error(`${path}.metadata.replay.requests`, 'REPLAY_REQUESTS_REQUIRED', 'Replay scenarios must declare at least one request before they can be accepted for execution.'));
+    }
+  }
+}
+
+function mutationBodyIsRequired(method: string, path: string | undefined, scenario: PlanValidatorContext['plan']['scenarios'][number], context: PlanValidatorContext): boolean {
+  if (path === undefined) return true;
+  const supplied = suppliedAuthoritativeOperation(method, path, scenario, context);
+  if (supplied?.requiredBodyFields !== undefined) return supplied.requiredBodyFields.length > 0;
+  const contractRoute = context.plan.discovery.apiRoutes.find((route) => (
+    route.source === 'contract' && route.method.toUpperCase() === method && routePathMatches(route.path, path)
+  ));
+  return contractRoute?.requestBodyRequired ?? true;
+}
+
+function isSuccessfulMutation(method: string, scenario: PlanValidatorContext['plan']['scenarios'][number]): boolean {
+  return ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method) && expectsSuccessfulStatus(scenario.expect?.status);
+}
+
+function validateAuthoritativeMutation(
+  path: string,
+  method: string,
+  apiPath: string,
+  scenario: PlanValidatorContext['plan']['scenarios'][number],
+  context: PlanValidatorContext,
+  issues: ValidationIssue[],
+): void {
+  const supplied = suppliedAuthoritativeOperation(method, apiPath, scenario, context);
+  const contractRoute = context.plan.discovery.apiRoutes.find((route) => (
+    route.source === 'contract' && route.method.toUpperCase() === method && routePathMatches(route.path, apiPath)
+  ));
+  if (supplied === undefined && contractRoute === undefined) {
+    issues.push(error(
+      `${path}.target.path`,
+      'MUTATION_CONTRACT_REQUIRED',
+      `Successful mutation ${method} ${apiPath} is not backed by OpenAPI or a host/runtime authoritative operation. Refusing to guess its payload or response contract.`,
+    ));
+    return;
+  }
+  const allowedStatuses = supplied?.successStatusCodes ?? contractRoute?.statusCodes;
+  const expectedStatuses = declaredStatuses(scenario.expect?.status);
+  if (allowedStatuses !== undefined && allowedStatuses.length > 0 && expectedStatuses.length > 0 && !expectedStatuses.some((status) => allowedStatuses.includes(status))) {
+    issues.push(error(
+      `${path}.expect.status`,
+      'STATUS_NOT_IN_OPERATION_CONTRACT',
+      `Expected status ${expectedStatuses.join(', ')} is not declared for ${method} ${apiPath}; declared statuses: ${allowedStatuses.join(', ')}.`,
+    ));
+  }
+  if (supplied?.requiredBodyFields !== undefined) {
+    const body = isRecord(scenario.request?.body) ? scenario.request?.body : {};
+    for (const field of supplied.requiredBodyFields) {
+      if (!hasPath(body, field)) {
+        issues.push(error(`${path}.request.body.${field}`, 'REQUIRED_OPERATION_FIELD', `Authoritative operation ${method} ${apiPath} requires request field "${field}".`));
+      }
+    }
+  }
+}
+
+function suppliedAuthoritativeOperation(
+  method: string,
+  path: string,
+  scenario: PlanValidatorContext['plan']['scenarios'][number],
+  context: PlanValidatorContext,
+): NonNullable<PlanValidatorContext['input']['authoritativeOperations']>[number] | undefined {
+  const operationId = typeof scenario.metadata?.operationId === 'string' ? scenario.metadata.operationId : undefined;
+  const matching = context.input.authoritativeOperations?.filter((operation) => (
+    operation.method.toUpperCase() === method && routePathMatches(operation.path, path)
+  )) ?? [];
+  if (operationId !== undefined) return matching.find((operation) => operation.operationId === operationId);
+  return matching.length === 1 ? matching[0] : undefined;
+}
+
+function declaredStatuses(status: NonNullable<ScenarioPlan['expect']>['status']): readonly number[] {
+  if (typeof status === 'number') return [status];
+  if (Array.isArray(status)) return status;
+  return [];
+}
+
+function hasPath(value: Record<string, unknown>, path: string): boolean {
+  let current: unknown = value;
+  for (const segment of path.split('.').filter(Boolean)) {
+    if (!isRecord(current) || !(segment in current)) return false;
+    current = current[segment];
+  }
+  return current !== undefined && current !== null;
 }
 
 function isExplicitUserTarget(scenario: PlanValidatorContext['plan']['scenarios'][number], context: PlanValidatorContext): boolean {

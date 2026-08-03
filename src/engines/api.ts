@@ -65,6 +65,11 @@ export class BuiltinApiEngine implements Engine {
             before: await captureStateSnapshot(context, snapshot, headers, variables),
           });
         }
+        // Register compensation before a mutation can create durable state. A failed
+        // request may leave no resource; cleanup defaults deliberately accept 404.
+        if (context.scenario.cleanup !== undefined && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) {
+          context.runState?.cleanup.push(...context.scenario.cleanup);
+        }
         const requestStarted = Date.now();
         const response = await fetch(url, {
           method,
@@ -79,9 +84,6 @@ export class BuiltinApiEngine implements Engine {
           captureExplicitWorkflowVariables(context, response, responseJson, variables);
           if (context.config.security.allowHeuristicWorkflowCapture === true) {
             captureHeuristicWorkflowVariables(context, responseJson, variables);
-          }
-          if (context.scenario.cleanup !== undefined) {
-            context.runState?.cleanup.push(...context.scenario.cleanup);
           }
         }
         assertions.push(assertStatus(response.status, context.scenario.expect?.status));
@@ -279,7 +281,15 @@ function resolveWorkflowString(value: string, variables: Record<string, string>)
     }
     return variable;
   };
-  const resolved = value
+  const secretResolved = value.replace(/<secret:([A-Za-z_][A-Za-z0-9_]*)>/g, (match, name: string) => {
+    const secret = process.env[name];
+    if (secret === undefined || secret.length === 0) {
+      unresolved.push(`secret:${name}`);
+      return match;
+    }
+    return secret;
+  });
+  const resolved = secretResolved
     .replace(/<([A-Za-z_$][A-Za-z0-9_$-]*)>/g, replaceToken)
     .replace(/\{([A-Za-z_$][A-Za-z0-9_$-]*)\}/g, replaceToken);
   return { value: resolved, unresolved };

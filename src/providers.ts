@@ -74,6 +74,20 @@ async function requestProvider(
     temperature: config.temperature ?? 0.1,
     max_tokens: config.maxTokens ?? 4096,
     stream: false,
+    ...(request.structuredOutput === 'json-schema' && request.jsonSchema !== undefined
+      ? {
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: request.jsonSchemaName.replace(/[^A-Za-z0-9_-]/g, '_'),
+              strict: true,
+              schema: request.jsonSchema,
+            },
+          },
+        }
+      : request.structuredOutput === 'json'
+        ? { response_format: { type: 'json_object' } }
+        : {}),
   });
 
   try {

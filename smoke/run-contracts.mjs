@@ -14,6 +14,7 @@ const indexTypes = await readFile(join(packageDir, 'dist', 'index.d.ts'), 'utf8'
 
 const expectedRuntimeExports = [
   'AiPlanner',
+  'AiIntentPlanner',
   'BriskAiTesting',
   'BriskAiTestingProviderError',
   'BuiltinApiEngine',
@@ -29,9 +30,16 @@ const expectedRuntimeExports = [
   'BuiltinSchemaFuzzEngine',
   'PactMessageEngine',
   'OpenAiCompatibleProvider',
+  'OpenApiCapabilityAdapter',
+  'HostHttpCapabilityAdapter',
+  'SemanticPlanner',
+  'UniversalSemanticCompiler',
+  'WorkflowLowerer',
   'SchemathesisOpenApiFuzzEngine',
   'SpecmaticContractEngine',
   'createInvalidSchemaExample',
+  'createEvidenceGraph',
+  'createHttpEvidenceGraph',
   'createAiProviderFromConfig',
   'createBriskAiTesting',
   'createSchemaExample',
@@ -42,9 +50,11 @@ const expectedRuntimeExports = [
   'loadEnvFiles',
   'loadOpenApiSummary',
   'mergeConfig',
+  'mergeEvidenceGraphs',
   'openApiOperationsToDiscoveryRoutes',
   'normalizeConfig',
   'parseAiPlanForTesting',
+  'parseAiIntentForTesting',
   'planJsonSchema',
   'resultJsonSchema',
   'runEnginePluginConformance',
@@ -55,6 +65,7 @@ const expectedRuntimeExports = [
   'validateHandoverJsonContract',
   'validatePlanJsonContract',
   'validateResultJsonContract',
+  'validateWorkflowInvariants',
 ];
 
 const expectedTypeExports = [
@@ -69,6 +80,8 @@ const expectedTypeExports = [
   'ContractDriftReport',
   'ContractDriftRoute',
   'Engine',
+  'EvidenceGraph',
+  'EvidenceOperation',
   'EnginePluginConformanceReport',
   'ExtensionConformanceCase',
   'ExtensionConformanceExtensionReport',
@@ -77,6 +90,8 @@ const expectedTypeExports = [
   'OpenApiDocumentSummary',
   'OpenApiOperationSummary',
   'OpenApiResponseSummary',
+  'HttpOperationContract',
+  'IntentPlan',
   'Planner',
   'PlanValidator',
   'ScenarioPlan',
@@ -90,6 +105,7 @@ const expectedTypeExports = [
   'UiRouteGrounderContext',
   'UiRouteGrounderResult',
   'ValidationResult',
+  'WorkflowPlan',
   'SchemaValidationResult',
   'SchemathesisEngineOptions',
   'SpecmaticEngineOptions',
@@ -97,6 +113,11 @@ const expectedTypeExports = [
 
 const expectedSchemas = [
   'brisk-aitesting.plan.v1',
+  'brisk-aitesting.intent.v1',
+  'brisk-aitesting.evidence-graph.v1',
+  'brisk-aitesting.workflow.v1',
+  'brisk-aitesting.compilation.v1',
+  'brisk-aitesting.lowered-plan.v1',
   'brisk-aitesting.validation.v1',
   'brisk-aitesting.discovery.v1',
   'brisk-aitesting.contract-drift.v1',
@@ -144,6 +165,8 @@ const expectedScripts = [
   'typecheck',
   'smoke',
   'smoke:contracts',
+  'smoke:universal-compiler',
+  'smoke:semantic-workflow',
   'smoke:engine-conformance',
   'smoke:plugin-conformance',
   'smoke:extension-conformance',
@@ -186,8 +209,21 @@ for (const script of expectedScripts) {
   if (typeof packageJson.scripts?.[script] !== 'string') errors.push(`package.json missing script ${script}`);
 }
 
-if (!Array.isArray(packageJson.files) || !packageJson.files.includes('dist') || !packageJson.files.includes('README.md') || !packageJson.files.includes('adapters') || !packageJson.files.includes('docs') || !packageJson.files.includes('examples')) {
-  errors.push('package.json files must include dist, README.md, adapters, docs, and examples');
+const requiredPackageFiles = [
+  'dist',
+  'README.md',
+  'CHANGELOG.md',
+  'adapters/manifest.json',
+  'docs/GETTING_STARTED.md',
+  'docs/CONFIGURATION.md',
+  'docs/API_REFERENCE.md',
+  'docs/SECURITY.md',
+  'docs/TROUBLESHOOTING.md',
+  'docs/COMPATIBILITY.md',
+  'docs/UNIVERSAL_COMPILER.md',
+];
+if (!Array.isArray(packageJson.files) || !requiredPackageFiles.every((file) => packageJson.files.includes(file))) {
+  errors.push(`package.json files must include the lightweight runtime documentation set: ${requiredPackageFiles.join(', ')}`);
 }
 
 if (errors.length > 0) {

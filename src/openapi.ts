@@ -78,6 +78,7 @@ export function openApiOperationsToDiscoveryRoutes(summary: OpenApiDocumentSumma
     ...(operation.tags.length > 0 ? { tags: operation.tags } : {}),
     contractPath: summary.path,
     ...(operation.statusCodes.length > 0 ? { statusCodes: operation.statusCodes } : {}),
+    requestBodyRequired: operation.requestBodyRequired,
   }));
 }
 

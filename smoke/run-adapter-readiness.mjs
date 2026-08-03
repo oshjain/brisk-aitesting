@@ -15,7 +15,12 @@ const errors = [];
 
 if (manifest.schemaVersion !== 'brisk-aitesting.adapter-manifest.v1') errors.push('wrong adapter manifest schema');
 if (!Array.isArray(manifest.adapters)) errors.push('adapter manifest must contain adapters array');
-if (!Array.isArray(packageJson.files) || !packageJson.files.includes('adapters')) errors.push('package.json files must include adapters');
+if (
+  !Array.isArray(packageJson.files)
+  || !packageJson.files.some((entry) => entry === 'adapters' || entry === 'adapters/manifest.json')
+) {
+  errors.push('package.json files must include the adapter manifest');
+}
 
 for (const adapter of manifest.adapters ?? []) {
   checkString(adapter, 'id');

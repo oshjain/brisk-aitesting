@@ -162,7 +162,7 @@ Brisk is designed differently: local, embeddable, evidence-first, and built arou
 | Evidence handover | Results come back as versioned JSON your product can store, render, or send to CI |
 | Extensible by design | Custom engines and adapters fit the same result contract |
 
-See the sourced enterprise comparison: [Competitive Comparison](./docs/COMPETITIVE_COMPARISON.md).
+See the sourced enterprise comparison in the repository: [Competitive Comparison](https://github.com/oshjain/brisk-aitesting/blob/main/docs/COMPETITIVE_COMPARISON.md).
 
 ## How It Works
 
@@ -658,9 +658,14 @@ flowchart TD
 | [API Reference](./docs/API_REFERENCE.md) | You are embedding Brisk through the SDK |
 | [Security](./docs/SECURITY.md) | You need to understand data flow, AI boundaries, artifacts, and network policy |
 | [Compatibility](./docs/COMPATIBILITY.md) | You want to know where Brisk works best today |
-| [Competitive Comparison](./docs/COMPETITIVE_COMPARISON.md) | You want the sourced Brisk-vs-market feature matrix |
+| [Cross-Architecture Proof](./docs/CROSS_ARCHITECTURE_PROOF.md) | You want to understand what Directus, Medusa, and n8n prove and what remains open |
+| [Real-System Proof Log](./docs/engineering/REAL_SYSTEM_PROOF_LOG.md) | You want exact dated tests, reasons, results, defects, corrections, counts, and exclusions |
+| [Real-System Change Gate](./docs/engineering/REAL_SYSTEM_CHANGE_GATE.md) | You are changing product behavior and must test the three minimum real architectures |
+| [Real-System Target Depth](./docs/engineering/REAL_SYSTEM_TARGET_DEPTH.md) | You want live page/element/API/contract denominators, honest executed coverage, secondary source context, and required expansion |
+| [Real AI Pipeline](./docs/engineering/REAL_SYSTEM_AI_PIPELINE.md) | You want to know exactly what AI chooses, what safe code controls, what has actually run, and what remains at zero |
+| [Competitive Comparison](https://github.com/oshjain/brisk-aitesting/blob/main/docs/COMPETITIVE_COMPARISON.md) | You want the sourced Brisk-vs-market feature matrix |
 | [Troubleshooting](./docs/TROUBLESHOOTING.md) | A run failed and you need a direct fix |
-| [Release](./docs/RELEASE.md) | You are publishing or validating a release |
+| [Release](https://github.com/oshjain/brisk-aitesting/blob/main/docs/RELEASE.md) | You are publishing or validating a release |
 
 ## 📦 Install
 
@@ -1015,33 +1020,33 @@ AI does **not** write trusted executable scripts directly.
 
 ### The Pipeline
 
-The AI planner returns JSON shaped as `brisk-aitesting.plan.v1`. The engine then processes it through this pipeline:
+The default AI planner returns non-executable intent shaped as `brisk-aitesting.intent.v1`. Deterministic code then proves and compiles that intent:
 
 <table>
   <tr>
     <td align="center">1️⃣</td>
     <td>📦</td>
-    <td><strong>Extracts JSON</strong></td>
+    <td><strong>Validates intent</strong> with strict structured output</td>
   </tr>
   <tr>
     <td align="center">2️⃣</td>
     <td>🔄</td>
-    <td><strong>Normalizes</strong> safe aliases</td>
+    <td><strong>Collects evidence</strong> from capability adapters</td>
   </tr>
   <tr>
     <td align="center">3️⃣</td>
     <td>🛣️</td>
-    <td><strong>Injects</strong> discovered routes when needed</td>
+    <td><strong>Compiles</strong> typed operations and dependencies</td>
   </tr>
   <tr>
     <td align="center">4️⃣</td>
     <td>✅</td>
-    <td><strong>Validates</strong> structure and executability</td>
+    <td><strong>Proves</strong> authority, inputs, outcomes, and cleanup</td>
   </tr>
   <tr>
     <td align="center">5️⃣</td>
     <td>🔧</td>
-    <td><strong>Repairs</strong> invalid plans through feedback</td>
+    <td><strong>Lowers</strong> the proven workflow through an adapter</td>
   </tr>
   <tr>
     <td align="center">6️⃣</td>
@@ -1194,6 +1199,11 @@ This may be the most valuable part of the product for enterprise teams. The resu
 
 | Schema | Version |
 |:-------|:-------:|
+| `brisk-aitesting.intent.v1` | Semantic Intent |
+| `brisk-aitesting.evidence-graph.v1` | Capability Evidence |
+| `brisk-aitesting.workflow.v1` | Compiled Workflow |
+| `brisk-aitesting.compilation.v1` | Compilation Outcome |
+| `brisk-aitesting.lowered-plan.v1` | Lowered Engine Plan |
 | `brisk-aitesting.plan.v1` | 📋 Plan |
 | `brisk-aitesting.validation.v1` | ✅ Validation |
 | `brisk-aitesting.discovery.v1` | 🔍 Discovery |

@@ -28,6 +28,7 @@ export function seriousSaasConfig(baseUrl) {
       includeUi: true,
       includeApi: false,
       includeContracts: true,
+      uiRoutes: ['/', '/login', '/dashboard', '/users'],
     },
     security: {
       networkPolicy: 'localhost-only',

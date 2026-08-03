@@ -2,6 +2,30 @@
 
 All notable changes to `brisk-aitesting` are recorded here.
 
+## 0.2.0
+
+- Added a pinned Directus 12.2.0, Medusa 2.18.0/PostgreSQL 16, and n8n 2.32.7 real-system lab with isolated readiness, secret, source-integrity, reset-safety, and helper-owned Medusa process proof. The dated proof log records 66/66 current checks plus the exact defects and limits; the change-gate guide makes all three architectures the minimum default for future product-behavior upgrades without presenting readiness as business-scenario support.
+- Added a reproducible target-depth inventory and honest coverage-gap guide. The pinned sources contain 54,025 tracked files, 441 statically counted UI route records, and at least 1,261 statically counted HTTP handlers, while current executed business UI scenarios on Directus, Medusa, and n8n remain 0; the guide defines a meaningful 67-check-per-application minimum rather than treating route discovery or shallow visibility checks as behavior proof.
+- Replaced the default AI-to-executable-plan path with a non-executable intent boundary (`brisk-aitesting.intent.v1`), authoritative evidence graph, protocol-neutral semantic compiler, workflow IR, and adapter lowering.
+- Added deterministic typed input binding, dependency construction, ambiguity detection, mutation authority, outcome selection, capture derivation, and automatic cleanup synthesis.
+- Made automatic cleanup follow reverse resource dependencies instead of one global reverse list, kept independent branches independent, and created distinct cleanup steps for multiple resources produced by the same operation.
+- Added a shared pre-lowering validation gate that blocks stale, altered, or de-authorized cleanup workflows before any adapter receives them and returns structured `WORKFLOW_VALIDATION_FAILED` diagnostics.
+- Added real OpenAPI and typed host HTTP capability adapters, using Swagger Parser and OpenAPI Sampler rather than a new hand-written OpenAPI parser.
+- Added real semantic workflow proof for a five-operation channel/topic/subscription/message lifecycle reported as one logical test, plus executed compensation cleanup that leaves no resource behind.
+- Added protocol-neutral compiler fixtures for REST, GraphQL, messaging, browser accessibility, and proprietary capabilities. Only OpenAPI and typed host HTTP currently have production evidence/lowering adapters.
+- Separated operational run completion (`outcome`) from application test verdicts. Accepted tests now finish as `passed` or `failed`; invalid plans complete with diagnostics and no fabricated test.
+- Added an append-only per-run journal, interrupted-run recovery on the next invocation, stage and engine timeouts, observer isolation, engine exception containment, and best-effort completion when reporting or persistence fails.
+- Added atomic final result writing. The returned result and successfully persisted `result.json` now describe the same finalized artifact set.
+- Moved cleanup out of the test summary, registered mutation compensation before requests execute, continued cleanup after individual cleanup errors, and exposed cleanup under `operations`.
+- Added an authoritative mutation gate. Successful mutations require an OpenAPI-backed operation or a typed host/runtime operation adapter; required fields and declared success statuses are checked before execution.
+- Added actual JSON Schema structured-output requests for compatible AI providers while retaining deterministic SDK validation as the authority.
+- Added result-level plan redaction and structured diagnostic redaction.
+- Added an adversarial reliability smoke covering engine exceptions, broken observers, discovery failure, invalid input, journaling, redaction, and saved/returned result identity.
+- Removed forced CLI process termination. This fixed the reproduced Windows `UV_HANDLE_CLOSING` crash that could occur after an otherwise successful command with pending HTTP runtime cleanup.
+- Removed invented default routes from discovery, added explicit route seeds, raised the configurable source inventory limit from a silent 500-file cutoff to 20,000, and report truncation instead of silently presenting an incomplete large-repository view.
+
+This release establishes the control-plane contract but does not claim literal availability under machine loss or permanently unavailable storage. Broader external-adapter chaos coverage remains in progress.
+
 ## 0.1.10
 
 - Added `scenarioCountPolicy` to run input so hosts can make scenario count an exact validation contract instead of a loose planning hint.

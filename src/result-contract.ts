@@ -6,12 +6,41 @@ const ajv = new Ajv({ allErrors: true, strict: false });
 export const resultJsonSchema = {
   $id: 'brisk-aitesting.result.v1',
   type: 'object',
-  additionalProperties: true,
-  required: ['schemaVersion', 'runId', 'status', 'app', 'goal', 'discovery', 'plan', 'summary', 'tests', 'artifacts', 'diagnosis', 'handover'],
+  additionalProperties: false,
+  required: ['schemaVersion', 'runId', 'status', 'verdict', 'outcome', 'app', 'goal', 'discovery', 'plan', 'summary', 'tests', 'operations', 'artifacts', 'diagnosis', 'handover'],
   properties: {
     schemaVersion: { const: 'brisk-aitesting.result.v1' },
     runId: { type: 'string', minLength: 1 },
     status: { enum: ['passed', 'failed', 'error', 'skipped', 'blocked'] },
+    verdict: { enum: ['passed', 'failed', 'not_run'] },
+    outcome: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['schemaVersion', 'status', 'terminalStage', 'acceptedTests', 'issues'],
+      properties: {
+        schemaVersion: { const: 'brisk-aitesting.run-outcome.v1' },
+        status: { enum: ['completed', 'completed_with_diagnostics', 'recovered'] },
+        terminalStage: { const: 'completed' },
+        acceptedTests: { type: 'integer', minimum: 0 },
+        journalPath: { type: 'string' },
+        issues: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['category', 'stage', 'code', 'message', 'recoverable'],
+            properties: {
+              category: { enum: ['input', 'discovery', 'planning', 'validation', 'dependency', 'engine_internal', 'timeout', 'network', 'cleanup', 'reporting', 'persistence', 'interrupted'] },
+              stage: { enum: ['accepted', 'discovery', 'planning', 'validation', 'grounding', 'execution', 'cleanup', 'reporting', 'persistence', 'completed'] },
+              code: { type: 'string', minLength: 1 },
+              message: { type: 'string', minLength: 1 },
+              recoverable: { type: 'boolean' },
+              scenarioId: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
     app: { type: 'object' },
     goal: { type: 'string', minLength: 1 },
     discovery: { type: 'object' },
@@ -30,6 +59,10 @@ export const resultJsonSchema = {
       },
     },
     tests: {
+      type: 'array',
+      items: { $ref: '#/$defs/scenarioResult' },
+    },
+    operations: {
       type: 'array',
       items: { $ref: '#/$defs/scenarioResult' },
     },
@@ -54,6 +87,7 @@ export const resultJsonSchema = {
   $defs: {
     scenarioResult: {
       type: 'object',
+      additionalProperties: false,
       required: ['scenarioId', 'name', 'type', 'engine', 'status', 'durationMs', 'assertions', 'artifacts', 'diagnostics'],
       properties: {
         scenarioId: { type: 'string', minLength: 1 },
@@ -65,10 +99,12 @@ export const resultJsonSchema = {
         assertions: { type: 'array' },
         artifacts: { type: 'array' },
         diagnostics: { type: 'array', items: { type: 'string' } },
+        failureCategory: { enum: ['application_assertion', 'dependency', 'engine_internal', 'timeout', 'network'] },
       },
     },
     artifact: {
       type: 'object',
+      additionalProperties: false,
       required: ['kind', 'label'],
       properties: {
         kind: { enum: ['json', 'junit', 'html', 'trace', 'screenshot', 'video', 'test-file', 'log', 'other'] },

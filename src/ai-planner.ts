@@ -15,6 +15,41 @@ import type {
 
 type ExpectedStatus = NonNullable<ScenarioPlan['expect']>['status'];
 
+export const aiPlanOutputJsonSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['scenarios'],
+  properties: {
+    mode: { enum: ['automatic', 'ui', 'api', 'contract', 'schema', 'replay', 'message', 'custom'] },
+    warnings: { type: 'array', items: { type: 'string' } },
+    scenarios: {
+      type: 'array',
+      minItems: 1,
+      items: {
+        type: 'object',
+        required: ['name', 'type', 'objective', 'target', 'assertions', 'evidenceRequired'],
+        additionalProperties: true,
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string', minLength: 1 },
+          type: { enum: ['ui', 'api', 'contract', 'schema', 'replay', 'message', 'custom'] },
+          objective: { type: 'string', minLength: 1 },
+          target: { type: 'object' },
+          request: { type: 'object' },
+          expect: { type: 'object' },
+          assertions: { type: 'array', minItems: 1, items: { type: 'string' } },
+          dependsOn: { type: 'array', items: { type: 'string' } },
+          capture: { type: 'array', items: { type: 'object' } },
+          cleanup: { type: 'array', items: { type: 'object' } },
+          uiActions: { type: 'array', items: { type: 'object' } },
+          evidenceRequired: { type: 'array', items: { enum: ['repo', 'ui', 'api', 'schema', 'auth', 'message'] } },
+          metadata: { type: 'object' },
+        },
+      },
+    },
+  },
+} as const;
+
 export class AiPlanner implements Planner {
   readonly name = 'ai-planner';
   private readonly fallback = new BuiltinPlanner();
@@ -24,6 +59,8 @@ export class AiPlanner implements Planner {
   async plan(context: PlannerContext): Promise<TestPlan> {
     const response = await this.provider.complete({
       jsonSchemaName: 'brisk-aitesting.plan.v1',
+      jsonSchema: aiPlanOutputJsonSchema,
+      structuredOutput: 'json-schema',
       system: buildSystemPrompt(),
       user: buildUserPrompt(context),
     });
@@ -34,6 +71,8 @@ export class AiPlanner implements Planner {
   async repair(context: PlannerRepairContext): Promise<TestPlan> {
     const response = await this.provider.complete({
       jsonSchemaName: 'brisk-aitesting.plan.v1',
+      jsonSchema: aiPlanOutputJsonSchema,
+      structuredOutput: 'json-schema',
       system: buildRepairSystemPrompt(),
       user: buildRepairUserPrompt(context),
     });
@@ -44,6 +83,7 @@ export class AiPlanner implements Planner {
   async enrichUiActions(context: UiActionEnrichmentContext): Promise<readonly UiActionPlan[]> {
     const response = await this.provider.complete({
       jsonSchemaName: 'brisk-aitesting.plan.v1',
+      structuredOutput: 'json',
       system: buildUiActionEnrichmentSystemPrompt(),
       user: buildUiActionEnrichmentUserPrompt(context),
     });

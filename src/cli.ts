@@ -33,11 +33,11 @@ try {
     help();
     exitCode = command === undefined ? 0 : 2;
   }
-  process.exit(exitCode);
+  process.exitCode = exitCode;
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
   console.error(`brisk-aitesting: ${message}`);
-  process.exit(error instanceof UsageError ? 2 : 2);
+  process.exitCode = error instanceof UsageError ? 2 : 2;
 }
 
 async function init(args: readonly string[]): Promise<void> {
@@ -49,7 +49,8 @@ async function init(args: readonly string[]): Promise<void> {
   }
 
   await mkdir('.brisk-aitesting/artifacts', { recursive: true });
-  await writeFile(configPath, starterConfig(options), 'utf8');
+  const observedSurface = await probeStarterSurface(options.baseUrl);
+  await writeFile(configPath, starterConfig(options, observedSurface), 'utf8');
   console.log(`Created ${configPath}`);
   console.log('Next: brisk-aitesting run --goal "Test login, dashboard, APIs, and permissions"');
 }
@@ -76,6 +77,7 @@ async function run(args: readonly string[]): Promise<number> {
   const result = await tester.run({
     goal,
     scenarios: options.scenarios,
+    scenarioCountPolicy: 'exact',
     mode: options.mode,
     ...(options.requiredTypes.length > 0 ? { requiredTypes: options.requiredTypes } : {}),
     ...(options.uiActionFeedback !== undefined ? { uiActionFeedback: options.uiActionFeedback } : {}),
@@ -162,6 +164,7 @@ async function runDoctorChecks(configPath: string): Promise<readonly {
     readonly status: 'passed' | 'warning' | 'failed';
     readonly message: string;
   }[] = [];
+  const projectRoot = dirname(resolve(configPath));
   checks.push({
     name: 'Node.js',
     status: Number(process.versions.node.split('.')[0] ?? 0) >= 20 ? 'passed' : 'failed',
@@ -211,10 +214,10 @@ async function runDoctorChecks(configPath: string): Promise<readonly {
       message: error instanceof Error ? error.message : String(error),
     });
   }
-  checks.push(playwrightCheck());
-  checks.push(playwrightBrowserCheck());
+  checks.push(playwrightCheck(projectRoot));
+  checks.push(playwrightBrowserCheck(projectRoot));
   checks.push(javaRuntimeCheck());
-  checks.push(specmaticRuntimeCheck());
+  checks.push(specmaticRuntimeCheck(projectRoot));
   return checks;
 }
 
@@ -252,9 +255,9 @@ async function openApiContractCheck(path: string): Promise<{ readonly name: stri
   }
 }
 
-function playwrightCheck(): { readonly name: string; readonly status: 'passed' | 'warning' | 'failed'; readonly message: string } {
+function playwrightCheck(projectRoot: string): { readonly name: string; readonly status: 'passed' | 'warning' | 'failed'; readonly message: string } {
   try {
-    const require = createRequire(import.meta.url);
+    const require = createRequire(resolve(projectRoot, 'package.json'));
     const path = require.resolve('@playwright/test/package.json');
     return { name: 'Playwright', status: 'passed', message: `Found @playwright/test at ${path}.` };
   } catch {
@@ -262,8 +265,8 @@ function playwrightCheck(): { readonly name: string; readonly status: 'passed' |
   }
 }
 
-function playwrightBrowserCheck(): { readonly name: string; readonly status: 'passed' | 'warning' | 'failed'; readonly message: string } {
-  const result = spawnSync(process.execPath, ['-e', "import('@playwright/test').then(async ({ chromium }) => { const browser = await chromium.launch({ headless: true }); await browser.close(); }).catch((error) => { console.error(error.message); process.exit(1); })"], { encoding: 'utf8' });
+function playwrightBrowserCheck(projectRoot: string): { readonly name: string; readonly status: 'passed' | 'warning' | 'failed'; readonly message: string } {
+  const result = spawnSync(process.execPath, ['-e', "import('@playwright/test').then(async ({ chromium }) => { const browser = await chromium.launch({ headless: true }); await browser.close(); }).catch((error) => { console.error(error.message); process.exit(1); })"], { encoding: 'utf8', cwd: projectRoot });
   if (result.status === 0) return { name: 'Playwright browser', status: 'passed', message: 'Chromium can launch locally.' };
   const detail = (result.stderr || result.stdout || '').trim();
   return { name: 'Playwright browser', status: 'warning', message: `UI tests may need browser binaries installed. ${detail || 'Run the host app Playwright install command.'}` };
@@ -275,9 +278,9 @@ function javaRuntimeCheck(): { readonly name: string; readonly status: 'passed' 
   return { name: 'Java runtime', status: 'warning', message: 'Java is not available. Optional JVM-based adapters will not run on this machine.' };
 }
 
-function specmaticRuntimeCheck(): { readonly name: string; readonly status: 'passed' | 'warning' | 'failed'; readonly message: string } {
+function specmaticRuntimeCheck(projectRoot: string): { readonly name: string; readonly status: 'passed' | 'warning' | 'failed'; readonly message: string } {
   try {
-    const require = createRequire(import.meta.url);
+    const require = createRequire(resolve(projectRoot, 'package.json'));
     const path = require.resolve('specmatic/package.json');
     return { name: 'Specmatic adapter runtime', status: 'passed', message: `Found optional specmatic package at ${path}.` };
   } catch {
@@ -659,7 +662,10 @@ function cliResult(result: BriskAiTestingResult, outputPath: string | undefined)
   };
 }
 
-function starterConfig(options: { readonly appName: string; readonly baseUrl: string }): string {
+function starterConfig(
+  options: { readonly appName: string; readonly baseUrl: string },
+  observed: { readonly uiRoutes: readonly string[]; readonly apiRoutes: readonly { readonly method: string; readonly path: string }[] },
+): string {
   return `import { defineConfig } from 'brisk-aitesting';
 
 export default defineConfig({
@@ -671,6 +677,34 @@ export default defineConfig({
   auth: {
     type: 'none',
   },
+  discovery: {
+    // Observed during init. Edit these seeds or provide OpenAPI for stronger API contracts.
+    uiRoutes: ${JSON.stringify(observed.uiRoutes)},
+    apiRoutes: ${JSON.stringify(observed.apiRoutes)},
+  },
 });
 `;
+}
+
+async function probeStarterSurface(baseUrl: string): Promise<{
+  readonly uiRoutes: readonly string[];
+  readonly apiRoutes: readonly { readonly method: string; readonly path: string }[];
+}> {
+  const uiRoutes: string[] = [];
+  const apiRoutes: { method: string; path: string }[] = [];
+  try {
+    const response = await fetch(baseUrl, { method: 'GET', signal: AbortSignal.timeout(3000) });
+    if (response.status < 500) uiRoutes.push('/');
+  } catch {
+    // The generated config remains honest and empty when the app is not running.
+  }
+  try {
+    const response = await fetch(new URL('/api/health', baseUrl), { method: 'GET', signal: AbortSignal.timeout(3000) });
+    if (response.status >= 200 && response.status < 500 && response.status !== 404) {
+      apiRoutes.push({ method: 'GET', path: '/api/health' });
+    }
+  } catch {
+    // Health is optional; do not claim it exists without observing a response.
+  }
+  return { uiRoutes, apiRoutes };
 }

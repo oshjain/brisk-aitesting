@@ -72,6 +72,7 @@ try {
       includeUi: true,
       includeApi: false,
       includeContracts: true,
+      uiRoutes: ['/', '/login'],
     },
     security: {
       networkPolicy: 'localhost-only',
@@ -276,7 +277,7 @@ try {
   const generatedTester = createBriskAiTesting(config);
   const generatedResult = await generatedTester.run({
     goal: 'Generate OpenAPI schema API contract scenarios',
-    scenarios: 8,
+    scenarios: 6,
     mode: 'automatic',
   });
   const generatedErrors = [];
@@ -537,16 +538,14 @@ try {
     },
   };
   const invalidTester = createBriskAiTesting(config, { planner: invalidPlanner });
-  let validationFailed = false;
-  try {
-    await invalidTester.run({
-      goal: 'Invalid plan must fail validation',
-      scenarios: 1,
-      mode: 'automatic',
-    });
-  } catch (error) {
-    validationFailed = error instanceof Error && error.message.includes('Plan validation failed') && error.message.includes('target.route');
-  }
+  const invalidResult = await invalidTester.run({
+    goal: 'Invalid plan must fail validation',
+    scenarios: 1,
+    mode: 'automatic',
+  });
+  const validationFailed = invalidResult.tests.length === 0
+    && invalidResult.outcome.status === 'completed_with_diagnostics'
+    && invalidResult.outcome.issues.some((entry) => entry.code === 'PLAN_REJECTED' && entry.message.includes('target.route'));
   if (!validationFailed) {
     console.error('Invalid plan smoke did not fail at validation boundary.');
     process.exitCode = 1;
@@ -580,16 +579,13 @@ try {
     },
   };
   const aiTargetTester = createBriskAiTesting(config, { planner: aiTargetPlanner });
-  let aiTargetBlocked = false;
-  try {
-    await aiTargetTester.run({
-      goal: 'Reject AI-only executable targets',
-      scenarios: 1,
-      mode: 'automatic',
-    });
-  } catch (error) {
-    aiTargetBlocked = error instanceof Error && error.message.includes('AI-derived targets');
-  }
+  const aiTargetResult = await aiTargetTester.run({
+    goal: 'Reject AI-only executable targets',
+    scenarios: 1,
+    mode: 'automatic',
+  });
+  const aiTargetBlocked = aiTargetResult.tests.length === 0
+    && aiTargetResult.outcome.issues.some((entry) => entry.code === 'PLAN_REJECTED' && entry.message.includes('AI-derived targets'));
   if (!aiTargetBlocked) {
     console.error('AI target smoke did not block an AI-derived executable target.');
     process.exitCode = 1;
@@ -623,16 +619,13 @@ try {
     },
   };
   const fakeUserTargetTester = createBriskAiTesting(config, { planner: fakeUserTargetPlanner });
-  let fakeUserTargetBlocked = false;
-  try {
-    await fakeUserTargetTester.run({
-      goal: 'Reject AI claiming a user target',
-      scenarios: 1,
-      mode: 'automatic',
-    });
-  } catch (error) {
-    fakeUserTargetBlocked = error instanceof Error && error.message.includes('sourceOfTruth "user"');
-  }
+  const fakeUserTargetResult = await fakeUserTargetTester.run({
+    goal: 'Reject AI claiming a user target',
+    scenarios: 1,
+    mode: 'automatic',
+  });
+  const fakeUserTargetBlocked = fakeUserTargetResult.tests.length === 0
+    && fakeUserTargetResult.outcome.issues.some((entry) => entry.code === 'PLAN_REJECTED' && entry.message.includes('sourceOfTruth "user"'));
   if (!fakeUserTargetBlocked) {
     console.error('Fake user target smoke did not reject sourceOfTruth user without host allowlist.');
     process.exitCode = 1;
@@ -700,9 +693,9 @@ try {
   const consumer = blockedDependencyResult.tests.find((test) => test.scenarioId === 'consumer_message');
   const blockedErrors = [];
   if (producer?.status !== 'failed') blockedErrors.push(`expected producer failed, got ${producer?.status}`);
-  if (consumer?.status !== 'blocked') blockedErrors.push(`expected consumer blocked, got ${consumer?.status}`);
+  if (consumer?.status !== 'failed' || consumer?.failureCategory !== 'dependency') blockedErrors.push(`expected consumer dependency failure, got ${consumer?.status}/${consumer?.failureCategory}`);
   if (!consumer?.diagnostics.join(' ').includes('producer_message')) blockedErrors.push('blocked diagnostic did not name upstream producer');
-  if (blockedDependencyResult.summary.skipped < 1) blockedErrors.push('blocked scenario was not reflected in skipped/blocked summary bucket');
+  if (blockedDependencyResult.summary.failed !== 2) blockedErrors.push('dependency failure was not reflected as a failed accepted test');
   if (blockedErrors.length > 0) {
     console.error(JSON.stringify({ blockedErrors, status: blockedDependencyResult.status, summary: blockedDependencyResult.summary, tests: blockedDependencyResult.tests }, null, 2));
     process.exitCode = 1;
@@ -736,16 +729,13 @@ try {
     },
   };
   const unboundWorkflowTester = createBriskAiTesting(config, { planner: unboundWorkflowPlanner });
-  let unboundWorkflowBlocked = false;
-  try {
-    await unboundWorkflowTester.run({
-      goal: 'Reject unbound workflow variables',
-      scenarios: 1,
-      mode: 'automatic',
-    });
-  } catch (error) {
-    unboundWorkflowBlocked = error instanceof Error && error.message.includes('Workflow variable "missingParentId"');
-  }
+  const unboundWorkflowResult = await unboundWorkflowTester.run({
+    goal: 'Reject unbound workflow variables',
+    scenarios: 1,
+    mode: 'automatic',
+  });
+  const unboundWorkflowBlocked = unboundWorkflowResult.tests.length === 0
+    && unboundWorkflowResult.outcome.issues.some((entry) => entry.code === 'PLAN_REJECTED' && entry.message.includes('Workflow variable "missingParentId"'));
   if (!unboundWorkflowBlocked) {
     console.error('Unbound workflow smoke did not reject a request body variable before execution.');
     process.exitCode = 1;

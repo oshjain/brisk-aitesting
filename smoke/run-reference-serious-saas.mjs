@@ -85,6 +85,7 @@ try {
       errors,
       tests: result.tests.map((test) => ({ id: test.scenarioId, name: test.name, type: test.type, status: test.status, assertions: test.assertions })),
       diagnosis: result.diagnosis,
+      outcome: result.outcome,
     }, null, 2));
     process.exitCode = 1;
   } else {

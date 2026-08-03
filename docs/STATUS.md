@@ -2,10 +2,24 @@
 
 This package is an alpha release. It already runs real checks, but we are still building toward the larger vision.
 
+The current accepted real-AI application baseline is 0/300 required connected
+scenarios: Directus 0/100, Medusa 0/100, and n8n 0/100. One historical Directus
+API journey passed but lacks the stricter raw-response digest/token record and
+therefore is not counted. Real UI, database-behaviour,
+contract-drift, load, stress, and soak proof is still 0. See the
+[world-class real validation gate](engineering/WORLD_CLASS_REAL_VALIDATION_GATE.md).
+
 The rule is simple: AI can suggest what to test, but Brisk checks the plan before anything runs. Engines do the execution. Evidence records what happened.
 
 ## Built
 
+- Strict non-executable AI intent contract: `brisk-aitesting.intent.v1`.
+- Evidence graph contract with authority and provenance: `brisk-aitesting.evidence-graph.v1`.
+- Protocol-neutral semantic compiler with typed input binding, dependency ordering, mutation authority, ambiguity detection, and cleanup synthesis: `brisk-aitesting.compilation.v1` and `brisk-aitesting.workflow.v1`.
+- Adapter lowering with compiler provenance: `brisk-aitesting.lowered-plan.v1`.
+- Real OpenAPI capability adapter backed by Swagger Parser and OpenAPI Sampler.
+- Typed host HTTP capability adapter for product-specific operations without product-specific compiler rules.
+- Logical user scenarios remain one reported test while compiled engine operations are retained as operation evidence.
 - Provider-agnostic AI planner adapter.
 - AJV-backed public plan contract gate: `brisk-aitesting.plan.v1`.
 - Validation and repair loop for AI-generated plans after the public contract gate.
@@ -43,9 +57,17 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - Golden expected-output report: `brisk-aitesting.golden-fixtures.v1`.
 - Release readiness check and versioned changelog: `brisk-aitesting.release-readiness.v1`.
 - npm package publication path.
+- Operational run outcomes separated from application test verdicts through `brisk-aitesting.run-outcome.v1`.
+- Append-only run journal, next-invocation recovery of interrupted runs, contained engine failures, observer isolation, cleanup operation reporting, and atomic final result writes.
+- Authoritative mutation validation through OpenAPI operations or typed host/runtime operation adapters.
+- JSON Schema structured-output requests for compatible AI providers, followed by deterministic contract and semantic validation.
 
 ## Partly Built
 
+- The semantic compiler core has deterministic fixtures for REST, GraphQL, messaging, browser accessibility, and a proprietary capability. Only OpenAPI and typed host HTTP currently have real evidence/lowering adapters.
+- Automatic cleanup is synthesized and lowered for HTTP workflows. The compiler has focused synthetic proof for reverse dependency chains, independent branches, and two same-type resources; runtime interruption, exactly-once cleanup, every mutation shape, and failure-point proof remain open.
+- A `needs-evidence` compilation outcome is stable and non-crashing. Automatic evidence acquisition and affected-scenario recompilation are implemented with synthetic provider proof; real-provider, persisted restart, and broad reference proof remain open.
+- Semantic action matching is deterministic but intentionally small; richer adapter-owned vocabularies and ontology matching need broader real-repository proof.
 - UI workflow generation is grounded and executable, but complex multi-page journeys still need broader proof coverage.
 - OpenAPI scenario generation handles common request/response schemas, but deeper OpenAPI and JSON Schema coverage will keep expanding.
 - Contract drift detection compares OpenAPI operations with repo/runtime API routes discovered from supported JavaScript/TypeScript patterns. It now covers direct Express-style routes, nested router prefixes, `router.route(...).get(...)` chains, Nest-style controller/method decorators, and common `:id` versus `{id}` parameter route shapes. Coverage still needs expansion for dynamic route composition, generated routes, and non-JS/TS backend source discovery.
@@ -53,6 +75,8 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - Business-intent scenarios can be expressed in goals/objectives/assertions, but reusable rule IDs, rule coverage, and contradiction checks are future work.
 - Scenario routing already understands `schema`, `replay`, and `custom` types. Schemathesis covers optional deep OpenAPI checking now. Built-in replay covers declared HTTP interactions.
 - Message/event testing can inspect AsyncAPI channel/message contracts, run local live message publish/verify flows, and verify Pact message contracts. Broker-specific adapters are future expansion.
+- Interrupted runs are finalized as recovered outcomes on the next invocation. Mid-scenario continuation is intentionally not attempted because repeating an unknown mutation would be unsafe.
+- Control-plane errors are contained in the main SDK run path, but exhaustive fault injection across every optional external adapter is still being expanded.
 
 ## Not Built Yet
 
@@ -62,6 +86,9 @@ The rule is simple: AI can suggest what to test, but Brisk checks the plan befor
 - Real provider quality is not compared across multiple AI models yet.
 - Broader proof coverage for Specmatic service virtualization across larger apps.
 - More enterprise proof apps beyond the current serious-saas, API-only, Todo, multi-tenant, e-commerce, and event/messaging set.
+- Guaranteed operation when the process cannot write anywhere or the machine is permanently lost.
+- Production GraphQL, browser-accessibility, broker/message, and arbitrary proprietary lowering adapters.
+- A truthful guarantee that every possible application can always produce a runnable test. Unsupported or ambiguous intent is returned as a product outcome rather than guessed.
 
 ## Next Work
 

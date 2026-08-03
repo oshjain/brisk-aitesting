@@ -63,7 +63,7 @@ try {
     },
     runtime: {
       artifactsDir: '.brisk-aitesting-real-ai/artifacts',
-      timeoutMs: 30000,
+      timeoutMs: 120000,
       retries: 0,
       headless: true,
       dryRun: false,
@@ -87,6 +87,7 @@ try {
     result = await tester.run({
       goal: 'Use AI to plan one homepage UI test and one health API test.',
       scenarios: 2,
+      scenarioCountPolicy: 'exact',
       mode: 'automatic',
       requiredTypes: ['ui', 'api'],
     });

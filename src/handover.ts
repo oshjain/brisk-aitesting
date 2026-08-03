@@ -1,6 +1,6 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, open, rename, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { ArtifactRef, BriskAiTestingConfig, BriskAiTestingResult, HandoverEnvelope, ScenarioResult, TestPlan } from './types.js';
+import type { ArtifactRef, BriskAiTestingConfig, BriskAiTestingResult, HandoverEnvelope, RunOutcome, ScenarioResult, TestPlan } from './types.js';
 
 export function buildResult(params: {
   readonly config: BriskAiTestingConfig;
@@ -10,31 +10,74 @@ export function buildResult(params: {
   readonly discovery: BriskAiTestingResult['discovery'];
   readonly startedAt: number;
   readonly tests: readonly ScenarioResult[];
+  readonly operations?: readonly ScenarioResult[];
   readonly artifacts: readonly ArtifactRef[];
+  readonly outcome: RunOutcome;
 }): BriskAiTestingResult {
-  const summary = summarize(params.tests, Date.now() - params.startedAt);
-  const status = summary.errors > 0 ? 'error' : summary.failed > 0 ? 'failed' : summary.passed > 0 ? 'passed' : 'skipped';
+  const summary = summarize(params.tests, Date.now() - params.startedAt, params.outcome);
+  const status = summary.failed > 0 ? 'failed' : summary.errors > 0 ? 'error' : summary.passed > 0 ? 'passed' : 'skipped';
 
   return {
     schemaVersion: 'brisk-aitesting.result.v1',
     runId: params.runId,
     status,
+    verdict: summary.failed > 0 || summary.errors > 0 ? 'failed' : summary.passed > 0 ? 'passed' : 'not_run',
+    outcome: params.outcome,
     app: {
       name: params.config.app.name,
       baseUrl: params.config.app.baseUrl,
       ...(params.config.app.env !== undefined ? { env: params.config.app.env } : {}),
     },
     goal: params.goal,
-    discovery: params.discovery,
-    plan: params.plan,
+    discovery: redactResultValue(params.discovery) as BriskAiTestingResult['discovery'],
+    plan: redactResultValue(params.plan) as BriskAiTestingResult['plan'],
     summary,
     tests: params.tests,
+    operations: params.operations ?? [],
     artifacts: params.artifacts,
-    diagnosis: params.tests
+    diagnosis: [
+      ...params.tests
       .filter((test) => test.status === 'failed' || test.status === 'error' || test.status === 'blocked')
       .map((test) => diagnoseTest(test)),
+      ...params.outcome.issues
+        .filter((entry) => entry.scenarioId === undefined)
+        .map(diagnoseOperationalIssue),
+    ],
     handover: buildHandover(params.config, params.runId),
   };
+}
+
+function diagnoseOperationalIssue(issue: RunOutcome['issues'][number]): BriskAiTestingResult['diagnosis'][number] {
+  const timeout = issue.category === 'timeout' || issue.code.includes('TIMEOUT');
+  return {
+    reason: `${issue.stage}: ${issue.message}`,
+    suggestedFixes: timeout
+      ? [
+          `The ${issue.stage} stage exceeded its configured time limit; no unfinished work should be counted as an executed test.`,
+          'Check provider or application availability and measured latency before changing the time limit, then rerun the same test.',
+        ]
+      : [
+          `The run stopped during ${issue.stage} before it could produce a normal scenario result.`,
+          'Inspect the retained run issue and journal, correct the cause, and rerun the same goal.',
+        ],
+  };
+}
+
+function redactResultValue(value: unknown, key = ''): unknown {
+  if (/authorization|cookie|token|secret|password/i.test(key)) return '[redacted]';
+  if (typeof value === 'string') {
+    return value
+      .replace(/\bBearer\s+[A-Za-z0-9._~+/=-]{8,}\b/gi, 'Bearer [redacted]')
+      .replace(/\b(sk|pk|rk|npm)[-_][A-Za-z0-9._-]{8,}\b/g, '[redacted]');
+  }
+  if (Array.isArray(value)) return value.map((entry) => redactResultValue(entry));
+  if (value !== null && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([entryKey, entry]) => [
+      entryKey,
+      redactResultValue(entry, entryKey),
+    ]));
+  }
+  return value;
 }
 
 function diagnoseTest(test: ScenarioResult): BriskAiTestingResult['diagnosis'][number] {
@@ -126,7 +169,20 @@ export async function persistResult(config: BriskAiTestingConfig, result: BriskA
   const dir = join(config.runtime.artifactsDir, result.runId);
   await mkdir(dir, { recursive: true });
   const path = join(dir, 'result.json');
-  await writeFile(path, `${JSON.stringify(result, null, 2)}\n`, 'utf8');
+  const temporaryPath = join(dir, `result.${process.pid}.tmp`);
+  const handle = await open(temporaryPath, 'w');
+  try {
+    await handle.writeFile(`${JSON.stringify(result, null, 2)}\n`, 'utf8');
+    await handle.sync();
+  } finally {
+    await handle.close();
+  }
+  try {
+    await rename(temporaryPath, path);
+  } catch (error) {
+    await rm(temporaryPath, { force: true }).catch(() => undefined);
+    throw error;
+  }
   return { kind: 'json', path, label: 'Result JSON' };
 }
 
@@ -159,18 +215,19 @@ export async function persistCiReports(config: BriskAiTestingConfig, result: Bri
   ];
 }
 
-function summarize(tests: readonly ScenarioResult[], durationMs: number): BriskAiTestingResult['summary'] {
+function summarize(tests: readonly ScenarioResult[], durationMs: number, outcome: RunOutcome): BriskAiTestingResult['summary'] {
   const total = tests.length;
   const passed = tests.filter((test) => test.status === 'passed').length;
   const failed = tests.filter((test) => test.status === 'failed').length;
   const skipped = tests.filter((test) => test.status === 'skipped').length;
-  const errors = tests.filter((test) => test.status === 'error').length;
+  const testErrors = tests.filter((test) => test.status === 'error').length;
+  const runLevelErrors = tests.length === 0 && outcome.issues.length > 0 ? 1 : 0;
   return {
     total,
     passed,
     failed,
     skipped: skipped + tests.filter((test) => test.status === 'blocked').length,
-    errors,
+    errors: testErrors + runLevelErrors,
     passRate: total === 0 ? 0 : Math.round((passed / total) * 10000) / 100,
     durationMs,
   };

@@ -1,5 +1,28 @@
+import type { CapabilityAdapter, EvidenceGraph } from './compiler-types.js';
+import type { EvidenceProvider } from './pipeline-stage-contracts.js';
+
 export type EngineType = 'ui' | 'api' | 'contract' | 'schema' | 'replay' | 'message' | 'custom';
 export type BriskAiTestingStatus = 'passed' | 'failed' | 'error' | 'skipped' | 'blocked';
+export type RunStage = 'accepted' | 'discovery' | 'planning' | 'validation' | 'grounding' | 'execution' | 'cleanup' | 'reporting' | 'persistence' | 'completed';
+export type OperationalIssueCategory = 'input' | 'discovery' | 'planning' | 'validation' | 'dependency' | 'engine_internal' | 'timeout' | 'network' | 'cleanup' | 'reporting' | 'persistence' | 'interrupted';
+
+export interface OperationalIssue {
+  readonly category: OperationalIssueCategory;
+  readonly stage: RunStage;
+  readonly code: string;
+  readonly message: string;
+  readonly recoverable: boolean;
+  readonly scenarioId?: string;
+}
+
+export interface RunOutcome {
+  readonly schemaVersion: 'brisk-aitesting.run-outcome.v1';
+  readonly status: 'completed' | 'completed_with_diagnostics' | 'recovered';
+  readonly terminalStage: 'completed';
+  readonly acceptedTests: number;
+  readonly issues: readonly OperationalIssue[];
+  readonly journalPath?: string;
+}
 
 export interface AppConfig {
   readonly name: string;
@@ -59,6 +82,9 @@ export interface DiscoveryConfig {
   readonly includeUi: boolean;
   readonly includeApi: boolean;
   readonly includeContracts: boolean;
+  readonly maxSourceFiles: number;
+  readonly uiRoutes: readonly string[];
+  readonly apiRoutes: readonly { readonly method: string; readonly path: string }[];
 }
 
 export interface SecurityConfig {
@@ -70,10 +96,21 @@ export interface SecurityConfig {
   readonly allowAiTargets?: boolean;
   readonly allowHeuristicWorkflowCapture?: boolean;
   readonly uiHealing?: 'off' | 'safe' | 'aggressive';
+  readonly allowLegacyFullContextEvidenceProviders?: boolean;
+  readonly requireEvidenceProviderTenantId?: boolean;
+  readonly requireEvidenceWorkerHostIsolation?: boolean;
 }
 
 export interface PlanningConfig {
   readonly repairAttempts?: number;
+  readonly evidenceAcquisitionRounds?: number;
+  readonly evidenceProviderTimeoutMs?: number;
+  readonly evidenceCacheTtlMs?: number;
+  readonly evidenceCacheMaxEntries?: number;
+  readonly evidenceMaxResponseBytes?: number;
+  readonly evidenceMaxGraphsPerResponse?: number;
+  readonly evidenceMaxOperationsPerResponse?: number;
+  readonly evidenceMaxArtifactsPerResponse?: number;
 }
 
 export interface BriskAiTestingConfig {
@@ -89,6 +126,8 @@ export interface BriskAiTestingConfig {
   readonly discoverer?: Discoverer;
   readonly validator?: PlanValidator;
   readonly aiProvider?: AiPlannerProvider;
+  readonly capabilityAdapters?: readonly CapabilityAdapter[];
+  readonly evidenceProviders?: readonly EvidenceProvider[];
 }
 
 export interface BriskAiTestingRunInput {
@@ -99,7 +138,19 @@ export interface BriskAiTestingRunInput {
   readonly requiredTypes?: readonly EngineType[];
   readonly uiActionFeedback?: 'off' | 'when-missing' | 'always';
   readonly tags?: readonly string[];
+  readonly tenantId?: string;
   readonly metadata?: Record<string, unknown>;
+  readonly authoritativeOperations?: readonly AuthoritativeOperation[];
+  readonly evidenceGraph?: EvidenceGraph;
+}
+
+export interface AuthoritativeOperation {
+  readonly operationId?: string;
+  readonly method: string;
+  readonly path: string;
+  readonly requiredBodyFields?: readonly string[];
+  readonly successStatusCodes?: readonly number[];
+  readonly source: 'contract' | 'host-adapter' | 'runtime';
 }
 
 export interface ScenarioPlan {
@@ -208,6 +259,30 @@ export type UiActionPlan =
       readonly description?: string;
     };
 
+export interface AcquisitionRecompilationDecisionV1 {
+  readonly schemaVersion: 'brisk-aitesting.acquisition-recompilation-decision.v1';
+  readonly id: string;
+  readonly round: number;
+  readonly outcome: 'recompiled' | 'completed' | 'stopped';
+  readonly reasonCode: 'EVIDENCE_ACQUIRED' | 'NO_ACQUIRABLE_REQUIREMENT' | 'NO_ELIGIBLE_PROVIDER' | 'NO_USABLE_EVIDENCE' | 'IRRELEVANT_EVIDENCE' | 'CONTRADICTORY_EVIDENCE' | 'MAX_ROUNDS_REACHED';
+  readonly explanation: string;
+  readonly requirementIds: readonly string[];
+  readonly affectedScenarioIds: readonly string[];
+  readonly recompiledScenarioIds: readonly string[];
+  readonly preservedScenarioIds: readonly string[];
+  readonly attemptedProviderIds: readonly string[];
+  readonly cacheHitProviderIds: readonly string[];
+  readonly acquiredGraphRevisions: readonly string[];
+  readonly conflictIds: readonly string[];
+  readonly diagnosticCodes: readonly string[];
+  readonly beforeEvidenceRevision: string;
+  readonly afterEvidenceRevision: string;
+  readonly beforeEvidenceDigest: string;
+  readonly afterEvidenceDigest: string;
+  readonly authorityPolicyDigest: string;
+  readonly compilationStatus: 'compiled' | 'needs-evidence' | 'ambiguous' | 'unsupported';
+}
+
 export interface TestPlan {
   readonly schemaVersion: 'brisk-aitesting.plan.v1';
   readonly runId: string;
@@ -216,6 +291,7 @@ export interface TestPlan {
   readonly scenarios: readonly ScenarioPlan[];
   readonly discovery: DiscoveryResult;
   readonly warnings: readonly string[];
+  readonly evidenceDecisions?: readonly AcquisitionRecompilationDecisionV1[];
   readonly createdAt: string;
 }
 
@@ -235,6 +311,7 @@ export interface DiscoveryApiRoute {
   readonly tags?: readonly string[];
   readonly contractPath?: string;
   readonly statusCodes?: readonly number[];
+  readonly requestBodyRequired?: boolean;
 }
 
 export interface DiscoveryContract {
@@ -380,12 +457,15 @@ export interface ScenarioResult {
   }[];
   readonly artifacts: readonly ArtifactRef[];
   readonly diagnostics: readonly string[];
+  readonly failureCategory?: 'application_assertion' | 'dependency' | 'engine_internal' | 'timeout' | 'network';
 }
 
 export interface BriskAiTestingResult {
   readonly schemaVersion: 'brisk-aitesting.result.v1';
   readonly runId: string;
   readonly status: BriskAiTestingStatus;
+  readonly verdict: 'passed' | 'failed' | 'not_run';
+  readonly outcome: RunOutcome;
   readonly app: Pick<AppConfig, 'name' | 'baseUrl' | 'env'>;
   readonly goal: string;
   readonly discovery: DiscoveryResult;
@@ -400,6 +480,7 @@ export interface BriskAiTestingResult {
     readonly durationMs: number;
   };
   readonly tests: readonly ScenarioResult[];
+  readonly operations: readonly ScenarioResult[];
   readonly artifacts: readonly ArtifactRef[];
   readonly diagnosis: readonly {
     readonly scenarioId?: string;
@@ -430,6 +511,7 @@ export interface PlannerContext {
   readonly input: BriskAiTestingRunInput;
   readonly runId: string;
   readonly discovery: DiscoveryResult;
+  readonly signal?: AbortSignal;
 }
 
 export interface PlannerRepairContext extends PlannerContext {
@@ -505,7 +587,9 @@ export interface UiRouteGrounder {
 export interface AiPlannerProviderRequest {
   readonly system: string;
   readonly user: string;
-  readonly jsonSchemaName: 'brisk-aitesting.plan.v1';
+  readonly jsonSchemaName: 'brisk-aitesting.plan.v1' | 'brisk-aitesting.intent.v1';
+  readonly jsonSchema?: Record<string, unknown>;
+  readonly structuredOutput?: 'json-schema' | 'json' | 'text';
 }
 
 export interface AiPlannerProviderResponse {

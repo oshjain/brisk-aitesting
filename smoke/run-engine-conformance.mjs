@@ -21,6 +21,7 @@ const artifactsDir = join(workDir, 'artifacts');
 const openApiPath = join(workDir, 'openapi.json');
 const asyncApiPath = join(workDir, 'asyncapi.json');
 const workflowParents = new Map();
+let secretAuthRequests = 0;
 
 await rm(workDir, { recursive: true, force: true });
 await mkdir(workDir, { recursive: true });
@@ -60,6 +61,13 @@ const server = createServer(async (request, response) => {
       ssn: '123-45-6789',
       nested: { apiKey: 'sk_12345678901234567890' },
     }));
+    return;
+  }
+  if (request.url === '/api/secret-auth') {
+    secretAuthRequests += 1;
+    const accepted = request.headers.authorization === 'Bearer runtime-secret-value-123456';
+    response.writeHead(accepted ? 200 : 401, { 'content-type': 'application/json' });
+    response.end(JSON.stringify({ accepted }));
     return;
   }
   if (request.url === '/api/parents' && request.method === 'POST') {
@@ -289,6 +297,10 @@ try {
   engines.push(redactionReport);
   errors.push(...redactionReport.errors.map((error) => `builtin-api-engine redaction: ${error}`));
 
+  const runtimeSecretReport = await checkRuntimeSecretReference({ config, discovery });
+  engines.push(runtimeSecretReport);
+  errors.push(...runtimeSecretReport.errors.map((error) => `builtin-api-engine runtime secret: ${error}`));
+
   const status = errors.length === 0 ? 'passed' : 'failed';
   const output = {
     schemaVersion,
@@ -301,6 +313,33 @@ try {
   if (status !== 'passed') process.exitCode = 1;
 } finally {
   await new Promise((resolve) => server.close(resolve));
+}
+
+async function checkRuntimeSecretReference({ config, discovery }) {
+  const engine = new BuiltinApiEngine();
+  const scenario = {
+    id: 'runtime_secret_reference', name: 'Resolve named secret only at execution', type: 'api',
+    objective: 'Use a named authorization secret without storing its value in the plan or artifact.',
+    target: { method: 'GET', path: '/api/secret-auth', sourceOfTruth: 'observed' },
+    request: { headers: { authorization: '<secret:BRISK_ENGINE_CONFORMANCE_AUTH>' } },
+    expect: { status: 200 }, assertions: ['runtime secret is accepted'], evidenceRequired: ['api', 'auth'],
+  };
+  const plan = { schemaVersion: 'brisk-aitesting.plan.v1', runId: 'engine_conformance_runtime_secret', goal: 'Runtime secret conformance', mode: 'automatic', scenarios: [scenario], discovery, warnings: [], createdAt: new Date().toISOString() };
+  const checks = []; const errors = [];
+  const record = (name, passed, detail) => { checks.push({ name, status: passed ? 'passed' : 'failed', ...(detail === undefined ? {} : { detail }) }); if (!passed) errors.push(`${name}${detail === undefined ? '' : `: ${detail}`}`); };
+  process.env.BRISK_ENGINE_CONFORMANCE_AUTH = 'Bearer runtime-secret-value-123456';
+  const before = secretAuthRequests;
+  const present = await engine.run({ config, runId: plan.runId, plan, scenario, runState: { variables: {}, captures: {}, cleanup: [], scenarioStatus: {} } });
+  const artifactPath = present.result.artifacts[0]?.path;
+  const artifactText = artifactPath === undefined ? '' : await readFile(artifactPath, 'utf8');
+  record('present named secret executes', present.result.status === 'passed');
+  record('present named secret reaches server once', secretAuthRequests === before + 1);
+  record('secret value is absent from artifact', !artifactText.includes('runtime-secret-value-123456'));
+  delete process.env.BRISK_ENGINE_CONFORMANCE_AUTH;
+  const missing = await engine.run({ config, runId: `${plan.runId}_missing`, plan, scenario, runState: { variables: {}, captures: {}, cleanup: [], scenarioStatus: {} } });
+  record('missing named secret blocks request', missing.result.status === 'failed' && secretAuthRequests === before + 1, missing.result.diagnostics.join('; '));
+  record('missing secret name is diagnosed', missing.result.diagnostics.some((entry) => entry.includes('secret:BRISK_ENGINE_CONFORMANCE_AUTH')));
+  return { name: 'builtin-api-engine runtime secret reference', type: 'api', status: errors.length === 0 ? 'passed' : 'failed', checks, errors };
 }
 
 async function checkApiRedaction({ config, discovery }) {

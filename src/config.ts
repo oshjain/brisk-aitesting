@@ -5,8 +5,9 @@ import { parse as parseYaml } from 'yaml';
 import type { BriskAiTestingConfig } from './types.js';
 import { createAiProviderFromConfig } from './providers.js';
 
-export type UserConfig = Partial<BriskAiTestingConfig> & {
+export type UserConfig = Omit<Partial<BriskAiTestingConfig>, 'app' | 'discovery'> & {
   readonly app: BriskAiTestingConfig['app'];
+  readonly discovery?: Partial<BriskAiTestingConfig['discovery']>;
 };
 
 export function defineConfig(config: UserConfig): UserConfig {
@@ -67,6 +68,10 @@ export function normalizeConfig(input: UserConfig): BriskAiTestingConfig {
   if (input.app.baseUrl.trim().length === 0) throw new Error('app.baseUrl is required');
   validateAiConfig(input.ai);
   validatePlanningConfig(input.planning);
+  validateEvidenceProviders(input.evidenceProviders, input.security?.allowLegacyFullContextEvidenceProviders === true);
+  if (input.discovery?.maxSourceFiles !== undefined && (!Number.isInteger(input.discovery.maxSourceFiles) || input.discovery.maxSourceFiles < 1 || input.discovery.maxSourceFiles > 1_000_000)) {
+    throw new Error('discovery.maxSourceFiles must be an integer between 1 and 1000000.');
+  }
 
   const artifactsDir = input.runtime?.artifactsDir ?? '.brisk-aitesting/artifacts';
   const timeoutMs = input.runtime?.timeoutMs ?? 120_000;
@@ -95,6 +100,9 @@ export function normalizeConfig(input: UserConfig): BriskAiTestingConfig {
       includeUi: input.discovery?.includeUi ?? true,
       includeApi: input.discovery?.includeApi ?? true,
       includeContracts: input.discovery?.includeContracts ?? true,
+      maxSourceFiles: input.discovery?.maxSourceFiles ?? 20_000,
+      uiRoutes: input.discovery?.uiRoutes ?? [],
+      apiRoutes: input.discovery?.apiRoutes ?? [],
     },
     security: {
       networkPolicy: input.security?.networkPolicy ?? 'localhost-only',
@@ -105,10 +113,15 @@ export function normalizeConfig(input: UserConfig): BriskAiTestingConfig {
       allowAiTargets: input.security?.allowAiTargets ?? false,
       allowHeuristicWorkflowCapture: input.security?.allowHeuristicWorkflowCapture ?? false,
       uiHealing: input.security?.uiHealing ?? 'safe',
+      allowLegacyFullContextEvidenceProviders: input.security?.allowLegacyFullContextEvidenceProviders ?? false,
+      requireEvidenceProviderTenantId: input.security?.requireEvidenceProviderTenantId ?? false,
+      requireEvidenceWorkerHostIsolation: input.security?.requireEvidenceWorkerHostIsolation ?? false,
     },
     ...(input.engines !== undefined ? { engines: input.engines } : {}),
     ...(input.discoverer !== undefined ? { discoverer: input.discoverer } : {}),
     ...(input.validator !== undefined ? { validator: input.validator } : {}),
+    ...(input.capabilityAdapters !== undefined ? { capabilityAdapters: input.capabilityAdapters } : {}),
+    ...(input.evidenceProviders !== undefined ? { evidenceProviders: input.evidenceProviders } : {}),
     ...(input.aiProvider !== undefined ? { aiProvider: input.aiProvider } : input.ai !== undefined ? { aiProvider: createAiProviderFromConfig(input.ai) } : {}),
   };
 }
@@ -132,5 +145,66 @@ function validatePlanningConfig(planning: UserConfig['planning']): void {
   if (planning === undefined) return;
   if (planning.repairAttempts !== undefined && (!Number.isFinite(planning.repairAttempts) || planning.repairAttempts < 0 || planning.repairAttempts > 5)) {
     throw new Error('planning.repairAttempts must be a number between 0 and 5.');
+  }
+  if (planning.evidenceAcquisitionRounds !== undefined && (!Number.isInteger(planning.evidenceAcquisitionRounds) || planning.evidenceAcquisitionRounds < 0 || planning.evidenceAcquisitionRounds > 5)) {
+    throw new Error('planning.evidenceAcquisitionRounds must be an integer between 0 and 5.');
+  }
+  if (planning.evidenceProviderTimeoutMs !== undefined && (!Number.isInteger(planning.evidenceProviderTimeoutMs) || planning.evidenceProviderTimeoutMs < 1 || planning.evidenceProviderTimeoutMs > 3_600_000)) {
+    throw new Error('planning.evidenceProviderTimeoutMs must be an integer between 1 and 3600000.');
+  }
+  if (planning.evidenceCacheTtlMs !== undefined && (!Number.isInteger(planning.evidenceCacheTtlMs) || planning.evidenceCacheTtlMs < 0 || planning.evidenceCacheTtlMs > 86_400_000)) {
+    throw new Error('planning.evidenceCacheTtlMs must be an integer between 0 and 86400000.');
+  }
+  if (planning.evidenceCacheMaxEntries !== undefined && (!Number.isInteger(planning.evidenceCacheMaxEntries) || planning.evidenceCacheMaxEntries < 0 || planning.evidenceCacheMaxEntries > 1024)) {
+    throw new Error('planning.evidenceCacheMaxEntries must be an integer between 0 and 1024.');
+  }
+  if (planning.evidenceMaxResponseBytes !== undefined && (!Number.isInteger(planning.evidenceMaxResponseBytes) || planning.evidenceMaxResponseBytes < 1024 || planning.evidenceMaxResponseBytes > 104_857_600)) {
+    throw new Error('planning.evidenceMaxResponseBytes must be an integer between 1024 and 104857600.');
+  }
+  if (planning.evidenceMaxGraphsPerResponse !== undefined && (!Number.isInteger(planning.evidenceMaxGraphsPerResponse) || planning.evidenceMaxGraphsPerResponse < 1 || planning.evidenceMaxGraphsPerResponse > 1024)) {
+    throw new Error('planning.evidenceMaxGraphsPerResponse must be an integer between 1 and 1024.');
+  }
+  if (planning.evidenceMaxOperationsPerResponse !== undefined && (!Number.isInteger(planning.evidenceMaxOperationsPerResponse) || planning.evidenceMaxOperationsPerResponse < 1 || planning.evidenceMaxOperationsPerResponse > 100_000)) {
+    throw new Error('planning.evidenceMaxOperationsPerResponse must be an integer between 1 and 100000.');
+  }
+  if (planning.evidenceMaxArtifactsPerResponse !== undefined && (!Number.isInteger(planning.evidenceMaxArtifactsPerResponse) || planning.evidenceMaxArtifactsPerResponse < 0 || planning.evidenceMaxArtifactsPerResponse > 10_000)) {
+    throw new Error('planning.evidenceMaxArtifactsPerResponse must be an integer between 0 and 10000.');
+  }
+}
+
+function validateEvidenceProviders(providers: UserConfig['evidenceProviders'], allowLegacyFullContext: boolean): void {
+  if (providers === undefined) return;
+  const ids = new Set<string>();
+  for (const provider of providers) {
+    const declaredExecution = (provider as { readonly execution?: unknown }).execution;
+    if (!/^[a-z0-9][a-z0-9._-]{0,127}$/i.test(provider.id)) {
+      throw new Error(`Evidence provider id "${provider.id}" is invalid.`);
+    }
+    if (!['brisk-aitesting.evidence-provider.v1', 'brisk-aitesting.evidence-provider.v2', 'brisk-aitesting.evidence-worker-provider.v1'].includes(provider.schemaVersion)) {
+      throw new Error(`Evidence provider "${provider.id}" uses unsupported contract ${provider.schemaVersion as string}.`);
+    }
+    if (provider.schemaVersion === 'brisk-aitesting.evidence-provider.v1' && !allowLegacyFullContext) {
+      throw new Error(`Evidence provider "${provider.id}" uses the legacy full-context contract. Set security.allowLegacyFullContextEvidenceProviders to true only for reviewed trusted code, or migrate it to evidence-provider.v2.`);
+    }
+    if (provider.schemaVersion === 'brisk-aitesting.evidence-provider.v2' && declaredExecution !== 'trusted-in-process') {
+      throw new Error(`Evidence provider "${provider.id}" must declare execution as trusted-in-process.`);
+    }
+    if (provider.schemaVersion === 'brisk-aitesting.evidence-worker-provider.v1') {
+      if (declaredExecution !== 'isolated-worker') throw new Error(`Evidence worker "${provider.id}" must declare isolated-worker execution.`);
+      if (provider.modulePath.trim().length === 0) throw new Error(`Evidence worker "${provider.id}" must declare a modulePath.`);
+      if (!Number.isInteger(provider.limits.memoryMb) || provider.limits.memoryMb < 16 || provider.limits.memoryMb > 4096) {
+        throw new Error(`Evidence worker "${provider.id}" memoryMb must be an integer between 16 and 4096.`);
+      }
+      const supportCount = (provider.supports.reasonCodes?.length ?? 0) + (provider.supports.semanticTypes?.length ?? 0) + (provider.supports.capabilities?.length ?? 0);
+      if (supportCount === 0) throw new Error(`Evidence worker "${provider.id}" must declare at least one supported requirement selector.`);
+      if (provider.allowedEnvironmentVariables?.some((name) => !/^[A-Z_][A-Z0-9_]*$/.test(name)) === true) {
+        throw new Error(`Evidence worker "${provider.id}" has an invalid environment-variable name.`);
+      }
+    }
+    if (provider.revision.trim().length === 0 || provider.revision.length > 256) {
+      throw new Error(`Evidence provider "${provider.id}" must declare a non-empty revision no longer than 256 characters.`);
+    }
+    if (ids.has(provider.id)) throw new Error(`Evidence provider id "${provider.id}" is registered more than once.`);
+    ids.add(provider.id);
   }
 }

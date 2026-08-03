@@ -1,186 +1,116 @@
-# AI Prompts
+# AI Intent Planning
 
-This page explains how `brisk-aitesting` builds prompts for AI planning.
+This page defines the boundary between AI-owned intent and SDK-owned execution in `brisk-aitesting`.
 
-## Short Answer
+## Primary Rule
 
-`brisk-aitesting` uses built-in SDK prompts for safety and structure.
+The default `SemanticPlanner` asks AI for `brisk-aitesting.intent.v1`. That schema can describe semantic actions, resources, assertions, fixtures, and the requested logical scenario count. It cannot contain:
 
-Host apps can add their own product instructions, but they do not replace the SDK safety prompts.
+- HTTP methods, routes, or status codes
+- selectors, query expressions, or engine names
+- executable request payloads
+- captures, variable paths, or cleanup operations
 
-## Prompt Layers
+Those facts come from evidence and deterministic compilation. AI plans what should be proven; capability adapters and engines decide how a proven operation runs.
 
-| Layer | Owned by | Location | Can host override it? | Purpose |
-|:------|:---------|:---------|:----------------------|:--------|
-| Core planning system prompt | SDK | `src/ai-planner.ts` | No | Forces JSON plans, no executable code, supported scenario types, route provenance, workflow captures, and safe planning rules |
-| Repair system prompt | SDK | `src/ai-planner.ts` | No | Repairs invalid plans after validation fails |
-| UI action grounding prompt | SDK | `src/ai-planner.ts` | No | Converts UI intent into grounded actions using observed UI evidence IDs |
-| User prompt payload | SDK | `src/ai-planner.ts` | Partly, through run input | Sends goal, scenario count, count policy, mode, required types, app config, discovery, and expected output shape |
-| Host application instructions | Host app | Host integration code | Yes | Adds product-specific rules, credentials guidance, domain language, and local app constraints |
+## Ownership
 
-## Why Some Prompts Are Built In
+| Layer | Owner | Purpose |
+| --- | --- | --- |
+| Intent system prompt and JSON Schema | SDK, `src/ai-intent-planner.ts` | Enforces non-executable `brisk-aitesting.intent.v1` |
+| Semantic vocabulary | Capability evidence | Tells AI which actions and resources are actually available |
+| Host instructions | Host app | Adds product terminology and testing priorities |
+| Evidence graph | SDK and host capability adapters | Supplies authoritative operations, typed inputs/outputs, outcomes, and provenance |
+| Compilation and lowering | SDK | Selects operations, binds data, proves dependencies, and creates engine input |
+| Legacy executable-plan prompt and repair | SDK, `src/ai-planner.ts` | Compatibility path only; not the default orchestrator path |
 
-The SDK prompt is built in because these rules must not be casually removed:
+Host instructions are appended to SDK instructions. They do not replace the intent schema or compiler invariants.
 
-- AI returns JSON plans, not TypeScript or Playwright code.
-- AI does not execute arbitrary code.
-- AI cannot claim a target is user-supplied.
-- UI actions must use grounded evidence IDs.
-- API routes must come from discovery, contracts, or explicit host input.
-- Workflow variables must be captured before use.
-- Scenario count can be enforced by the host.
-- The validator can reject or repair bad plans before engines run.
+## What The AI Receives
 
-Host apps should customize product context, not remove the safety contract.
+The intent planner receives the goal, requested logical scenario count, count
+policy, requested capability types, application name/environment, and the
+semantic action/resource vocabulary from the evidence graph. It does not
+receive operation bindings, the full discovery object, raw configured
+credentials, or a truncated list of executable routes. A common raw credential
+pattern is rejected before the provider call; callers must use secret
+references at the typed execution boundary.
 
-## Where The Built-In Prompts Are Defined
-
-Source file:
-
-```text
-src/ai-planner.ts
-```
-
-Main functions:
-
-```text
-buildSystemPrompt()
-buildRepairSystemPrompt()
-buildUiActionEnrichmentSystemPrompt()
-buildUserPrompt(context)
-buildRepairUserPrompt(context)
-buildUiActionEnrichmentUserPrompt(context)
-```
-
-## What A Host App Can Control
-
-Host apps control prompt behavior through the run input and provider bridge.
-
-Common controls:
-
-| Control | Where it comes from | What it changes |
-|:--------|:--------------------|:----------------|
-| `goal` | User or host UI | What should be tested |
-| `scenarios` | User or host UI | Requested scenario count |
-| `scenarioCountPolicy` | Host integration | Whether the count is exact or flexible |
-| `mode` | User or host UI | Automatic, UI, API, contract, schema, replay, message, custom |
-| `requiredTypes` | Host integration | Forces at least one scenario of selected engine types |
-| `uiActionFeedback` | Host integration | Whether UI actions are grounded before execution |
-| Host prompt | Host settings/config | Product-specific instructions appended to the SDK prompt |
-| AI max tokens | Host settings/config | Output budget for generated JSON |
-| Repair attempts | Host settings/config | How many times invalid AI output can be repaired |
-
-## Example SDK User Prompt Payload
-
-This is the kind of JSON payload the SDK sends as the user message to the AI provider.
+Example intent:
 
 ```json
 {
-  "goal": "Test publisher, topic, message, playground, and monitoring workflows",
-  "scenarios": 15,
-  "scenarioCountPolicy": "exact",
-  "mode": "automatic",
-  "requiredTypes": [],
-  "app": {
-    "name": "Host SaaS",
-    "baseUrl": "http://127.0.0.1:3000",
-    "repoPath": ".",
-    "env": "local"
-  },
-  "discovery": {
-    "uiRoutes": [
-      { "path": "/playground", "source": "runtime", "confidence": 0.9 }
-    ],
-    "apiRoutes": [
-      { "method": "POST", "path": "/api/topics/:topicId/messages", "source": "repo", "confidence": 0.8 }
-    ],
-    "contracts": [],
-    "repoSignals": []
-  },
-  "planningRules": {
-    "scenarioCount": "Return exactly 15 scenarios. Do not return fewer or more."
-  },
-  "outputShape": {
-    "mode": "automatic",
-    "warnings": [],
-    "scenarios": [
-      {
-        "name": "Scenario name",
-        "type": "api",
-        "objective": "What this proves",
-        "target": {
-          "method": "POST",
-          "path": "/api/topics/<topicId>/messages",
-          "sourceOfTruth": "observed"
+  "schema": "brisk-aitesting.intent.v1",
+  "goal": "Prove that a user can create and retrieve a todo",
+  "scenarios": [
+    {
+      "id": "todo-lifecycle",
+      "name": "Create and retrieve a todo",
+      "objective": "A created todo can be retrieved",
+      "steps": [
+        {
+          "action": "create",
+          "resource": "todo",
+          "values": {
+            "title": "compiler proof"
+          }
         },
-        "request": {
-          "body": { "text": "message-<unique>" }
-        },
-        "expect": { "status": 201 },
-        "capture": [
-          { "name": "messageId", "from": "response.body", "path": "id" }
-        ],
-        "assertions": ["message is published"],
-        "evidenceRequired": ["api"]
-      }
-    ]
-  }
+        {
+          "action": "read",
+          "resource": "todo"
+        }
+      ],
+      "assertions": [
+        "the retrieved todo has the requested title"
+      ]
+    }
+  ]
 }
 ```
 
-## Example Host Prompt
+There is no method, route, selector, payload shape, status, capture path, or cleanup route in this output.
 
-A host app can append product-specific instructions like this:
+## What Happens Next
 
-```text
-Host application instructions:
-Use the configured test login only for authentication scenarios.
-Prefer API tests for backend behavior.
-Use UI tests only when page navigation, forms, or visible behavior must be verified.
-For publisher/topic/message workflows, capture IDs from create responses before using them.
-Do not invent routes. Use only discovered routes, contract routes, or explicit host targets.
-```
+1. `AiIntentPlanner` validates strict JSON and exact scenario-count rules.
+2. Capability adapters produce `brisk-aitesting.evidence-graph.v1`.
+3. `UniversalSemanticCompiler` matches semantic steps to evidenced operations.
+4. The compiler binds required typed inputs from intent values, fixtures, secrets, generated values, or earlier outputs.
+5. Mutations are allowed only with contract, host, runtime, or observed authority.
+6. A successful result contains `brisk-aitesting.workflow.v1`.
+7. The owning capability adapter lowers the workflow to `brisk-aitesting.lowered-plan.v1` and the existing engine plan contract.
+8. Existing validation runs before any engine executes.
 
-## Example Final Message Shape
+Unsupported, ambiguous, or insufficiently evidenced intent produces a stable compilation result. The SDK does not ask AI to invent the missing executable fact.
 
-The AI provider receives messages like this:
+## Host Controls
 
-```json
-[
-  {
-    "role": "system",
-    "content": "SDK core planning prompt\n\nHost application instructions:\n..."
-  },
-  {
-    "role": "user",
-    "content": "{ \"goal\": \"...\", \"scenarios\": 15, \"discovery\": { ... } }"
-  }
-]
-```
+Hosts can control:
 
-## Brisk Host App Example
+- the user goal and logical scenario count
+- exact or flexible count policy
+- product terminology and priorities
+- typed fixtures and secret references
+- authoritative capability adapters and evidence graphs
+- enabled engines and execution policy
 
-In the BRISK app, the Testing settings prompt is appended as host instructions.
+Hosts cannot weaken compiler invariants through prompt text.
 
-BRISK source file:
+## Brisk Integration
+
+Brisk supplies product-specific HTTP operation contracts through a typed host capability adapter in:
 
 ```text
 packages/server/src/domains/testing-aitesting.ts
 ```
 
-Config key:
+Its `testing_ai_prompt` setting adds domain guidance. The executable Brisk operations remain host-owned evidence, not AI-authored facts.
 
-```text
-testing_ai_prompt
-```
+## Current Limits
 
-That setting does not replace the SDK prompt. It is appended after the SDK system prompt.
-
-## Current Design Rule
-
-The SDK owns safety.
-
-The host app owns product context.
-
-The validator decides whether the final plan is allowed to run.
-
+OpenAPI and typed host HTTP have real evidence and lowering adapters. GraphQL,
+browser accessibility, messaging, and proprietary capability shapes currently
+prove that the compiler core is protocol-neutral, but their production
+adapters are not yet built. Bounded evidence acquisition and selective
+recompilation exist; real third-party providers and wider reference proofs
+remain open.

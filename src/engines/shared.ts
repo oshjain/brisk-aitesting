@@ -5,6 +5,7 @@ import { basename, dirname, join } from 'node:path';
 import { loadOpenApiSummary } from '../openapi.js';
 import { validateJsonSchema } from '../schema.js';
 import type { ArtifactRef, DiscoveryApiRoute, EngineContext, OpenApiOperationSummary, ScenarioPlan, ScenarioResult, UiGroundingEvidence } from '../types.js';
+import { query as queryJsonPath, type JsonValue } from 'jsonpath-rfc9535';
 export type HeaderRecord = Record<string, string>;
 export type StatusExpectation = NonNullable<NonNullable<ScenarioPlan['expect']>['status']>;
 export function scenarioResult(
@@ -203,6 +204,20 @@ export function assertJsonShape(actual: unknown, expected: Record<string, unknow
 }
 
 export function getPath(value: unknown, path: string): unknown {
+  if (path.startsWith('$')) {
+    try {
+      return queryJsonPath(value as JsonValue, path)[0];
+    } catch {
+      return undefined;
+    }
+  }
+  if (path.startsWith('/')) {
+    return path.split('/').slice(1).reduce<unknown>((current, rawSegment) => {
+      if (current === null || typeof current !== 'object') return undefined;
+      const segment = rawSegment.replace(/~1/g, '/').replace(/~0/g, '~');
+      return (current as Record<string, unknown>)[segment];
+    }, value);
+  }
   return path.split('.').reduce<unknown>((current, segment) => {
     if (current === null || typeof current !== 'object') return undefined;
     return (current as Record<string, unknown>)[segment];

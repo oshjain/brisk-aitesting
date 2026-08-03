@@ -7,6 +7,8 @@ import {
   BuiltinPlanValidator,
   createBriskAiTesting,
   defineConfig,
+  normalizeConfig,
+  parseAiIntentForTesting,
   parseAiPlanForTesting,
   validatePlanJsonContract,
 } from '../dist/index.js';
@@ -15,7 +17,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const server = createServer((request, response) => {
   if (request.url === '/api/health') {
     response.writeHead(200, { 'content-type': 'application/json' });
-    response.end(JSON.stringify({ ok: true }));
+    response.end(JSON.stringify({ ok: true, service: 'ai-fixture' }));
     return;
   }
   response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
@@ -27,7 +29,7 @@ const address = server.address();
 if (address === null || typeof address === 'string') throw new Error('Fixture server did not expose a TCP port');
 
 try {
-  const config = defineConfig({
+  const config = normalizeConfig(defineConfig({
     app: {
       name: 'AI fixture app',
       baseUrl: `http://127.0.0.1:${address.port}`,
@@ -53,13 +55,17 @@ try {
       includeUi: true,
       includeApi: true,
       includeContracts: false,
+      uiRoutes: ['/'],
+      apiRoutes: [{ method: 'GET', path: '/api/health' }],
     },
     security: {
       networkPolicy: 'localhost-only',
       allowedHosts: ['localhost', '127.0.0.1'],
       redactSecrets: true,
+      allowFallbackTargets: true,
+      allowAiTargets: true,
     },
-  });
+  }));
   const runId = `fixture_${randomUUID()}`;
   const discoverer = new BuiltinDiscoverer();
   const discovery = await discoverer.discover({ config, input: { goal: 'fixture coverage' }, runId });
@@ -189,6 +195,36 @@ try {
   ];
 
   const errors = [];
+
+  const validIntent = JSON.stringify({
+    scenarios: [{
+      id: 'intent_home',
+      name: 'Home intent',
+      objective: 'Prove the home experience is available',
+      actions: [{ id: 'view_home', verb: 'read', resource: 'home', expectedOutcomes: ['home is available'] }],
+      invariants: [],
+      evidenceRequired: ['observable home result'],
+      cleanup: 'automatic',
+    }],
+    warnings: [],
+  });
+  const intentEnvelopeFixtures = [
+    { name: 'strict intent JSON', content: validIntent, accepted: true },
+    { name: 'one closed reasoning envelope then strict intent JSON', content: `<think>reasoning is not executable</think>\n${validIntent}`, accepted: true },
+    { name: 'one closed reasoning envelope then one strict JSON fence', content: '<think>reasoning is not executable</think>\n```json\n' + validIntent + '\n```', accepted: true },
+    { name: 'unterminated reasoning envelope', content: `<think>unfinished\n${validIntent}`, accepted: false },
+    { name: 'reasoning envelope with trailing prose', content: `<think>done</think>\n${validIntent}\nextra`, accepted: false },
+    { name: 'two reasoning envelopes', content: `<think>first</think><think>second</think>\n${validIntent}`, accepted: false },
+  ];
+  for (const fixture of intentEnvelopeFixtures) {
+    try {
+      parseAiIntentForTesting(fixture.content, { ...context, input: { ...context.input, scenarios: 1, scenarioCountPolicy: 'exact' } });
+      if (!fixture.accepted) errors.push(`${fixture.name}: expected rejection`);
+    } catch (error) {
+      if (fixture.accepted) errors.push(`${fixture.name}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
   for (const fixture of fixtures) {
     try {
       const plan = parseAiPlanForTesting(fixture.content, context);
@@ -349,86 +385,77 @@ try {
     errors.push(`low-value name validator gate: expected LOW_VALUE_NAME, got ${JSON.stringify(lowValueNameValidation)}`);
   }
 
-  const duplicateRepairProvider = {
-    name: 'duplicate-repair-provider',
+  const sameRouteDiscovery = {
+    ...context.discovery,
+    apiRoutes: [{ method: 'DELETE', path: '/api/items/{id}', source: 'runtime', confidence: 1 }],
+  };
+  const sameRoutePlan = {
+    ...validPlanSkeleton(context),
+    discovery: sameRouteDiscovery,
+    scenarios: [
+      { ...validApiScenario(), id: 'same_route_cleanup', name: 'Cleanup item', target: { method: 'DELETE', path: '/api/items/known-id', sourceOfTruth: 'observed' }, expect: { status: 204 }, metadata: { operationId: 'item.cleanup' } },
+      { ...validApiScenario(), id: 'same_route_archive', name: 'Archive item', target: { method: 'DELETE', path: '/api/items/known-id', sourceOfTruth: 'observed' }, expect: { status: 202 }, metadata: { operationId: 'item.archive' } },
+    ],
+  };
+  const sameRouteInput = { goal: 'Distinguish same-route operations', requiredTypes: ['api'], authoritativeOperations: [
+    { operationId: 'item.cleanup', method: 'DELETE', path: '/api/items/{id}', successStatusCodes: [204], source: 'runtime' },
+    { operationId: 'item.archive', method: 'DELETE', path: '/api/items/{id}', successStatusCodes: [202], source: 'runtime' },
+  ] };
+  const sameRouteValidation = validator.validate({ config, input: sameRouteInput, plan: sameRoutePlan });
+  if (!sameRouteValidation.valid) errors.push(`same-route operation identity: expected valid, got ${JSON.stringify(sameRouteValidation.issues)}`);
+  const ambiguousSameRoute = validator.validate({ config, input: sameRouteInput, plan: { ...sameRoutePlan, scenarios: [{ ...sameRoutePlan.scenarios[0], metadata: undefined }] } });
+  if (ambiguousSameRoute.valid || !ambiguousSameRoute.issues.some((issue) => issue.code === 'MUTATION_CONTRACT_REQUIRED')) errors.push('same-route operation identity: missing operation id was not rejected');
+
+  const semanticIntentProvider = {
+    name: 'semantic-intent-provider',
     calls: 0,
-    async complete() {
+    requests: [],
+    async complete(request) {
       this.calls += 1;
-      if (this.calls === 1) {
-        return {
-          content: JSON.stringify({
-            mode: 'automatic',
-            scenarios: [
-              {
-                id: 'same_id',
-                name: 'Duplicate UI',
-                type: 'ui',
-                objective: 'load page',
-                target: { route: '/', sourceOfTruth: 'observed' },
-                assertions: ['visible'],
-                evidenceRequired: ['ui'],
-              },
-              {
-                id: 'same_id',
-                name: 'Duplicate API',
-                type: 'api',
-                objective: 'health responds',
-                target: { method: 'GET', path: '/api/health', sourceOfTruth: 'observed' },
-                expect: { status: 200 },
-                assertions: ['ok'],
-                evidenceRequired: ['api'],
-              },
-            ],
-          }),
-        };
-      }
+      this.requests.push(request);
       return {
         content: JSON.stringify({
-          mode: 'automatic',
-          warnings: ['duplicate id repaired'],
           scenarios: [
             {
-              id: 'fixed_ui',
-              name: 'Fixed UI',
-              type: 'ui',
-              objective: 'load page',
-              target: { route: '/', sourceOfTruth: 'observed' },
-              assertions: ['visible'],
-              evidenceRequired: ['ui'],
-            },
-            {
-              id: 'fixed_api',
-              name: 'Fixed API',
-              type: 'api',
-              objective: 'health responds',
-              target: { method: 'GET', path: '/api/health', sourceOfTruth: 'observed' },
-              expect: { status: 200 },
-              assertions: ['ok'],
-              evidenceRequired: ['api'],
+              id: 'health_intent',
+              name: 'Application health is observable',
+              objective: 'Prove the application reports healthy operation.',
+              actions: [{
+                id: 'read_health',
+                verb: 'read',
+                resource: 'health',
+                capability: 'api.http',
+                expectedOutcomes: [],
+              }],
+              invariants: ['the application remains available'],
+              evidenceRequired: ['health observation'],
+              cleanup: 'isolated',
             },
           ],
+          warnings: [],
         }),
       };
     },
   };
-  const repairEvents = [];
   const tester = createBriskAiTesting({
     ...config,
-    aiProvider: duplicateRepairProvider,
+    contracts: { openApiPath: join(here, 'openapi.json') },
+    discovery: { ...config.discovery, includeContracts: true },
+    aiProvider: semanticIntentProvider,
   });
-  tester.onEvent((event) => {
-    if (event.type === 'plan.repair.started') repairEvents.push(event.attempt);
-  });
-  const repairedResult = await tester.run({
-    goal: 'Repair duplicate ids',
-    scenarios: 2,
+  const semanticResult = await tester.run({
+    goal: 'Prove application health',
+    scenarios: 1,
+    scenarioCountPolicy: 'exact',
     mode: 'automatic',
-    requiredTypes: ['ui', 'api'],
+    requiredTypes: ['api'],
   });
-  if (duplicateRepairProvider.calls !== 2) errors.push(`expected provider to be called twice, got ${duplicateRepairProvider.calls}`);
-  if (repairEvents.length !== 1) errors.push(`expected one repair event, got ${repairEvents.length}`);
-  if (repairedResult.summary.passed !== 2) errors.push(`expected repaired run to pass 2, got ${repairedResult.summary.passed}`);
-  if (repairedResult.plan.warnings[0] !== 'duplicate id repaired') errors.push('expected repaired warning to be preserved');
+  if (semanticIntentProvider.calls !== 1) errors.push(`expected semantic provider to be called once, got ${semanticIntentProvider.calls}`);
+  if (semanticIntentProvider.requests[0]?.jsonSchemaName !== 'brisk-aitesting.intent.v1') errors.push('expected primary AI boundary to request brisk-aitesting.intent.v1');
+  if ('target' in (semanticIntentProvider.requests[0]?.jsonSchema?.properties?.scenarios?.items?.properties ?? {})) errors.push('intent schema must not expose executable target');
+  if (semanticResult.summary.passed !== 1) errors.push(`expected semantic run to pass 1, got ${semanticResult.summary.passed}`);
+  if (semanticResult.plan.scenarios[0]?.target?.path !== '/api/health') errors.push(`expected compiler to select /api/health, got ${semanticResult.plan.scenarios[0]?.target?.path}`);
+  if (semanticResult.plan.scenarios[0]?.metadata?.generatedBy !== 'universal-semantic-compiler') errors.push('expected universal compiler provenance on executable scenario');
 
   if (errors.length > 0) {
     console.error(JSON.stringify({ status: 'failed', errors }, null, 2));
@@ -437,9 +464,11 @@ try {
     console.log(JSON.stringify({
       status: 'passed',
       fixtures: fixtures.length,
+      intentEnvelopeFixtures: intentEnvelopeFixtures.length,
+      authorityIdentityFixtures: 2,
       contractFixtures: contractFixtures.length,
-      repairedRun: repairedResult.summary,
-      repairEvents: repairEvents.length,
+      semanticRun: semanticResult.summary,
+      primaryAiSchema: semanticIntentProvider.requests[0]?.jsonSchemaName,
     }, null, 2));
   }
 } finally {
