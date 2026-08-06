@@ -182,7 +182,10 @@ async function validateCoverageFilesystem(records) {
   for (const coverage of records.testCoverage) {
     if (!files.includes(coverage.path)) continue;
     const bytes = await readFile(path.join(root, coverage.path));
-    const digest = createHash('sha256').update(bytes).digest('hex');
+    // Normalize line endings so the digest is stable regardless of checkout
+    // (Windows core.autocrlf=true yields CRLF locally, CI checks out LF).
+    const text = bytes.toString('utf8').replace(/\r\n/g, '\n');
+    const digest = createHash('sha256').update(text, 'utf8').digest('hex');
     if (digest !== coverage.sha256) issues.push(`Test coverage ${coverage.id} digest is stale for ${coverage.path}.`);
   }
   return issues;
