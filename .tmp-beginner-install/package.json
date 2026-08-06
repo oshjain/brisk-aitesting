@@ -1,6 +1,0 @@
-{
-  "description": "",
-  "dependencies": {
-    "brisk-aitesting": "file:../brisk-aitesting-0.1.10.tgz"
-  }
-}
