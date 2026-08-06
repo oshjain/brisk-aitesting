@@ -14,6 +14,7 @@ const required = [
   'package/adapters/manifest.json',
   'package/docs/GETTING_STARTED.md',
   'package/docs/CONFIGURATION.md',
+  'package/docs/HOST_INTEGRATION.md',
   'package/docs/API_REFERENCE.md',
   'package/docs/SECURITY.md',
   'package/docs/COMPATIBILITY.md',
@@ -108,7 +109,7 @@ if (errors.length === 0) {
     await execAsync('npm init -y', { cwd: installDir, maxBuffer: 1024 * 1024 * 10 });
     await execAsync(`npm install --ignore-scripts --no-audit --no-fund ${JSON.stringify(tarballPath)}`, { cwd: installDir, maxBuffer: 1024 * 1024 * 10 });
     cleanInstall = 'passed';
-    await execAsync(`node --input-type=module -e "const p=await import('brisk-aitesting');if(typeof p.createBriskAiTesting!=='function'||typeof p.validateRealValidationManifest!=='function'||typeof p.validateRealValidationBenchmarkSample!=='function')process.exit(1)"`, { cwd: installDir, maxBuffer: 1024 * 1024 * 10 });
+    await execAsync(`node --input-type=module -e "const p=await import('brisk-aitesting');if(typeof p.createBriskAiTesting!=='function'||typeof p.defineHostConfig!=='function'||typeof p.validateRealValidationManifest!=='function'||typeof p.validateRealValidationBenchmarkSample!=='function')process.exit(1);const c=await p.defineHostConfig({app:{name:'packed-host',baseUrl:'http://localhost:3000'}},{environment:{}});if(c.runtime.dryRun!==true||c.security.strictMode!==true)process.exit(1)"`, { cwd: installDir, maxBuffer: 1024 * 1024 * 10 });
     installedImport = 'passed';
   } catch (error) {
     errors.push(`clean package consumption failed: ${error instanceof Error ? error.message : String(error)}`);

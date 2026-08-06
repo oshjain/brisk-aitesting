@@ -12,6 +12,20 @@ export {
 } from './config.js';
 
 export {
+  defineHostConfig,
+} from './host-config.js';
+
+export type {
+  DefineHostConfigOptions,
+  HostAppConfig,
+  HostAuthConfig,
+  HostBuiltInAiConfig,
+  HostConfig,
+  HostExecutionMode,
+  HostRunConfig,
+} from './host-config.js';
+
+export {
   loadEnvFiles,
 } from './env.js';
 

@@ -75,16 +75,52 @@ try {
   await symlink(packageDir, join(starterDir, 'node_modules', 'brisk-aitesting'), 'junction');
   const starterInit = await runCli(['init', '--base-url', `http://127.0.0.1:${address.port}`, '--app-name', 'CLI starter app'], starterDir);
   if (starterInit.code !== 0) errors.push(`expected starter init exit 0, got ${starterInit.code}: ${starterInit.stderr}`);
+  const starterConfigPath = join(starterDir, 'brisk-aitesting.config.mjs');
+  const starterEnvironmentPath = join(starterDir, '.env.brisk-aitesting.example');
+  const starterConfigText = await readFile(starterConfigPath, 'utf8');
+  const starterEnvironmentText = await readFile(starterEnvironmentPath, 'utf8');
+  if (!starterConfigText.includes('defineHostConfig')) errors.push('starter config did not use the minimal host API');
+  if (!starterEnvironmentText.includes('BRISK_AITESTING_APP_NAME=CLI starter app')) errors.push('starter environment example did not include the application name');
+  if (!starterEnvironmentText.includes('BRISK_AITESTING_EXECUTION=preview')) errors.push('starter environment example did not default to preview');
+  if (/^(?!#).*API_KEY=.*replace-me/m.test(starterEnvironmentText)) errors.push('starter environment example activated a placeholder AI key');
+  await writeFile(starterEnvironmentPath, `${starterEnvironmentText}\n# user-owned-line\n`, 'utf8');
+  const secondInit = await runCli(['init', '--base-url', 'http://should-not-overwrite.example', '--app-name', 'Must not overwrite'], starterDir);
+  if (secondInit.code !== 0) errors.push(`expected repeated init exit 0, got ${secondInit.code}: ${secondInit.stderr}`);
+  if ((await readFile(starterConfigPath, 'utf8')) !== starterConfigText) errors.push('repeated init overwrote the existing host config');
+  if (!(await readFile(starterEnvironmentPath, 'utf8')).includes('# user-owned-line')) errors.push('repeated init overwrote the existing environment example');
   const starterDoctor = await runCli(['doctor', '--json'], starterDir);
   if (starterDoctor.code !== 0) errors.push(`expected starter doctor exit 0, got ${starterDoctor.code}: ${starterDoctor.stderr}`);
+  const starterPreview = await runCli(['run', '--goal', 'API health endpoint', '--scenarios', '1', '--mode', 'api', '--json'], starterDir);
+  if (starterPreview.code !== 1) errors.push(`expected safe starter preview exit 1 because nothing executed, got ${starterPreview.code}: ${starterPreview.stderr}`);
+  if (starterPreview.stdout.trim().length > 0) {
+    const starterPreviewParsed = parseStdoutJson(starterPreview.stdout);
+    if (starterPreviewParsed.schemaVersion !== 'brisk-aitesting.cli-result.v1' || starterPreviewParsed.status !== 'skipped') errors.push('starter preview did not report an honest non-executed result');
+  } else {
+    errors.push(`starter preview did not print JSON stdout: ${starterPreview.stderr}`);
+  }
+  await writeFile(join(starterDir, '.env.brisk-aitesting'), [
+    'BRISK_AITESTING_EXECUTION=enabled',
+  ].join('\n'), 'utf8');
   const starterRun = await runCli(['run', '--goal', 'API health endpoint', '--scenarios', '1', '--mode', 'api', '--json'], starterDir);
-  if (starterRun.code !== 0) errors.push(`expected starter run exit 0, got ${starterRun.code}: ${starterRun.stderr}\n${starterRun.stdout}`);
+  if (starterRun.code !== 0) errors.push(`expected explicitly enabled starter run exit 0, got ${starterRun.code}: ${starterRun.stderr}\n${starterRun.stdout}`);
   if (starterRun.stdout.trim().length > 0) {
     const starterParsed = parseStdoutJson(starterRun.stdout);
-    if (starterParsed.schemaVersion !== 'brisk-aitesting.cli-result.v1') errors.push('starter run did not return CLI schema');
-  } else {
-    errors.push(`starter run did not print JSON stdout: ${starterRun.stderr}`);
+    if (starterParsed.schemaVersion !== 'brisk-aitesting.cli-result.v1' || starterParsed.status !== 'passed') errors.push('enabled starter run did not return a passed CLI result');
   }
+
+  const environmentOnlyDir = join(workDir, 'environment-only');
+  await mkdir(join(environmentOnlyDir, 'node_modules'), { recursive: true });
+  await symlink(packageDir, join(environmentOnlyDir, 'node_modules', 'brisk-aitesting'), 'junction');
+  await writeFile(join(environmentOnlyDir, '.env.brisk-aitesting'), [
+    'BRISK_AITESTING_APP_NAME=Environment-only CLI host',
+    `BRISK_AITESTING_BASE_URL=http://127.0.0.1:${address.port}`,
+    'BRISK_AITESTING_EXECUTION=enabled',
+    `BRISK_AITESTING_OPENAPI_PATH=${contractPath}`,
+  ].join('\n'), 'utf8');
+  const environmentDoctor = await runCli(['doctor', '--json'], environmentOnlyDir);
+  if (environmentDoctor.code !== 0) errors.push(`expected environment-only doctor exit 0, got ${environmentDoctor.code}: ${environmentDoctor.stderr}`);
+  const environmentRun = await runCli(['run', '--goal', 'API health endpoint', '--scenarios', '1', '--mode', 'api', '--json'], environmentOnlyDir);
+  if (environmentRun.code !== 0) errors.push(`expected environment-only run exit 0, got ${environmentRun.code}: ${environmentRun.stderr}\n${environmentRun.stdout}`);
 
   if (success.code !== 0) errors.push(`expected success exit 0, got ${success.code}: ${success.stderr}`);
   const parsed = parseStdoutJson(success.stdout);

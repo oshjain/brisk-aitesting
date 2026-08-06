@@ -6,7 +6,7 @@ Scope: complete product-engineering mandate approved by the product owner
 
 ## Overall Progress
 
-Task-count progress: **179 / 548 completed (32.7%)**  
+Task-count progress: **207 / 584 completed (35.4%)**
 Progress: `███████░░░░░░░░░░░░░`
 
 This is a count of explicit checklist tasks, not an estimate of elapsed time,
@@ -64,6 +64,8 @@ does not qualify.
   Evidence: product-owner non-negotiable correction on 2026-08-03; `docs/engineering/REAL_SYSTEM_AI_PIPELINE.md` defines the resulting claim boundary and required response-to-execution trace.
 - [x] ~~DEC-008: Make complex connected real-business journeys the default AI acceptance proof. A simple demo may diagnose connectivity or one pipeline boundary but can never approve a product capability or set the product's quality ceiling.~~  
   Evidence: product-owner correction on 2026-08-03 after rejecting a basic-pipeline framing. Complex means connected UI/API or workflow steps, meaningful state, multiple identities or permission boundaries where applicable, positive and negative paths, dependent values, failure/recovery, cleanup, and final-state verification.
+- [x] ~~DEC-009: Make zero-friction global host integration the normal product path: either documented `BRISK_AITESTING_*` environment settings or one ready `defineHostConfig({...})` object with inferred types and safe defaults. Keep `defineConfigFromHost` as an advanced compatibility path, never the normal onboarding requirement.~~  
+  Evidence: product-owner approval on 2026-08-06 after rejecting the existing type-plus-mapper-plus-manual-runtime setup as unsuitable for broad adoption.
 
 ## Execution Rules
 
@@ -114,6 +116,84 @@ engineering truth and gates
   -> benchmark corpus and regression gates
   -> cross-platform packed release proof
 ```
+
+## Zero-Friction Global Host Integration Gate
+
+This gate defines **zero-friction host integration** globally, not from Brisk's
+private configuration shape. A normal user connects an application without
+declaring TypeScript interfaces, writing a mapper, selecting engines, copying
+security settings, or understanding internal planning objects. The normal paths
+are:
+
+1. environment-only: populate documented `BRISK_AITESTING_*` settings and run;
+2. ready host object: call `defineHostConfig({...})` with application values
+   and optional host-owned AI/authentication functions.
+
+`defineConfigFromHost` remains available for advanced hosts, but its flexibility
+must not leak into five-minute onboarding. AI setting detection means reading
+only the documented product namespace or an explicit host object; it never
+means scanning arbitrary environment secrets.
+
+Tradeoff: read-only discovery can use safe defaults immediately. State-changing
+tests still require trustworthy authentication and cleanup knowledge. The
+product must request only that missing information in plain language instead
+of exposing its complete internal configuration.
+
+### A. Product contract and honest baseline
+
+- [x] ~~Define zero-friction globally and freeze environment-only plus ready-host-object as the two normal paths.~~  
+  Evidence: the definition above was approved by the product owner on 2026-08-06; Brisk is only the first host proof.
+- [x] ~~Inspect and record reusable configuration paths before adding code.~~  
+  Evidence: inspection on 2026-08-06 found reusable `defineConfig`, `defineConfigFromHost`, `normalizeConfig`, environment-file loading, provider configuration, CLI configuration loading, and existing examples. It confirmed `defineHostConfig` has never existed in repository history and the current host guide requires expert-owned types, mapping, engines, security settings, evidence, and execution plumbing.
+- [x] ~~Freeze the small public `HostConfig` object accepted by `defineHostConfig`, with TypeScript inference and JavaScript compatibility; users must not declare their own interface.~~  
+  Evidence: `src/host-config.ts` exports the inferred `HostConfig` object and `defineHostConfig`; README, JavaScript config, and TypeScript example use the function without declaring a host interface; build and installed-package import passed.
+- [x] ~~Freeze the complete documented `BRISK_AITESTING_*` environment catalogue for application, AI, authentication, contracts, and only the small set of normal runtime choices.~~  
+  Evidence: `docs/HOST_INTEGRATION.md` records the exact application, execution, AI, auth, contract, artifact, timeout, retry, and browser names plus their required conditions and limits; TCV-0038 exercises the implemented catalogue.
+- [x] ~~Define and enforce one precedence rule: explicit host object, then documented product environment, then safe default, otherwise a plain missing-information error.~~  
+  Evidence: the host guide states the four-step order; TCV-0038 proves explicit object values override environment, existing process environment overrides named files, defaults apply, and unresolved requirements stop with exact object/environment names.
+- [x] ~~Define safe defaults for discovery, engines, artifacts, retries, timeout, browser mode, network policy, secret redaction, strict validation, fallback refusal, and preview/execution behavior.~~  
+  Evidence: `defineHostConfig` supplies built-in engines through existing orchestrator defaults, automatic host HTTP capability adapter, all-surface discovery, 120-second timeout, one retry, headless browser, local/target-only network, redaction, strict validation, fallback/AI-target refusal, safe UI healing, and preview-only execution; TCV-0038 checks these defaults and the packed installed call rechecks preview plus strict mode.
+
+### B. Minimal implementation
+
+- [x] ~~Implement and export `defineHostConfig({...})` without a mapper or manually constructed internal configuration.~~  
+  Evidence: public source/export, build, TCV-0005 runtime inventory, TCV-0038 behavior suite, and TCV-0010 clean-installed invocation passed.
+- [x] ~~Support an environment-only host path that reads only documented `BRISK_AITESTING_*` names and never scans arbitrary secrets.~~  
+  Evidence: CLI falls back to `defineHostConfig()` when no config file exists; named environment files load deterministically; TCV-0038 proves unrelated `OPENAI_API_KEY` is ignored; TCV-0004 executes an environment-only OpenAPI scenario successfully.
+- [x] ~~Support one small host-owned AI completion function so native or future providers do not require a full provider class.~~  
+  Evidence: `HostConfig.ai` accepts the common `AiPlannerProvider` shape with `name` and `complete`; TCV-0038 proves it passes through without creating built-in provider config. Real native provider families remain separately unproven.
+- [x] ~~Support one small host-owned test-session function for applications that already own login/session creation.~~  
+  Evidence: `auth.createSession()` accepts sync/async `AuthConfig`; TCV-0038 proves preview calls it zero times, enabled execution calls it exactly once, and an empty returned bearer token is rejected.
+- [x] ~~Return plain errors for every missing or contradictory required value, naming the exact environment setting or object field that resolves it.~~  
+  Evidence: TCV-0038 rejects missing app name/URL/model/key/token, invalid URL/provider/execution/timeout, and empty callback token with the exact resolving field or environment name; 54/54 checks pass.
+- [x] ~~Keep secrets out of generated configuration, prompts, plans, results, diagnostics, logs, and artifacts; generated files may contain secret environment-variable names only.~~  
+  Evidence: init emits only commented placeholders and environment names; TCV-0004 checks no active placeholder AI key, TCV-0038 proves built-in config retains `apiKeyEnv` rather than copying the AI key, and the existing TCV-0026 secret-context/output gate remains the connected redaction proof. Runtime auth necessarily exists in memory for execution; memory erasure remains unproven.
+- [x] ~~Preserve `defineConfig`, `defineConfigFromHost`, existing files, and current CLI behavior as backwards-compatible advanced paths.~~  
+  Evidence: legacy functions remain exported; TCV-0038 maps the legacy host successfully; TCV-0005 retains required exports; TCV-0004 passes prior run/doctor/inspect/clean/error behavior while adding the minimal paths.
+- [x] ~~Make `init` generate a ready host config and `.env.example` without overwriting files or inserting real secrets.~~  
+  Evidence: TCV-0004 runs init twice, proves generated `defineHostConfig` and `.env.brisk-aitesting.example`, preserves an inserted user line and the original config on the second run, and confirms AI/auth secret placeholders remain commented.
+
+### C. Public documentation and examples
+
+- [x] ~~Replace the README mapper-first host section with environment-only and minimal `defineHostConfig` five-minute paths; link advanced control separately.~~  
+  Evidence: README installation, quick config, host section, AI environment setup, and website host example now lead with pinned Git, environment-only, and minimal object paths; the mapper is linked only as advanced.
+- [x] ~~Rewrite `docs/HOST_INTEGRATION.md` so the first complete path is minimal and expert mapping is clearly advanced.~~  
+  Evidence: the shipped guide now starts with the two normal paths, then documents existing AI/login functions, the full environment table, precedence, defaults, trusted-operation limit, generated-file safety, and advanced mapper separately; TCV-0010 requires and link-checks the guide in the packed artifact.
+- [x] ~~Update `docs/CONFIGURATION.md` and `docs/API_REFERENCE.md` with the exact object, environment catalogue, precedence, defaults, callbacks, errors, and current provider limits.~~  
+  Evidence: configuration now labels the manual object and mapper advanced and links the complete minimal guide; API reference leads with `defineHostConfig`, environment-only invocation, async result, and advanced mapper boundary; built-in provider limits remain explicit.
+- [ ] Add copy-ready JavaScript and TypeScript examples plus generated `.env.example`, and prove every shipped example type-checks or runs against the packed product.
+- [x] ~~Add digest-bound coverage documentation explaining what environment-only, host-object, callback, precedence, validation, secret, compatibility, and scaffold tests prove and do not prove.~~  
+  Evidence: TCV-0038 documents 54 host-config checks and exclusions; updated TCV-0004, TCV-0005, and TCV-0010 document CLI scaffolding/execution, public exports, and clean package consumption with current SHA-256 digests; engineering-record validation reports 38 records, 26 fully documented, 12 legacy backfills, 0 failures/skips.
+
+### D. Verification and Brisk proof
+
+- [x] ~~Add focused positive, missing-value, conflict, malformed-value, secret-safety, callback, backwards-compatibility, and no-overwrite tests.~~  
+  Evidence: TCV-0038 passes 54/54 configuration checks across 12 categories and TCV-0004 passes init/no-overwrite/preview/enabled/environment-only CLI paths; deliberately invalid inputs are rejected rather than counted as harness failures.
+- [x] ~~Build, run connected regressions, pack cleanly, install from Git-compatible package contents, and import/run the new public API without source fallback.~~  
+  Evidence: TypeScript build, host-config, contract, CLI, and engineering-record suites passed; TCV-0010 packed 131 files/1,083,127 bytes, checked 27 required paths and 41 links, installed into a clean project, imported and invoked installed `defineHostConfig`, and reported 0 errors. The complete connected `smoke:ci` rerun remains required before final gate closure and is not implied by this task.
+- [ ] Replace Brisk's custom host type-and-mapper assembly with minimal `defineHostConfig` while preserving runtime AI, short-lived authentication, trusted operations, security boundaries, and existing user work.
+- [ ] Start Brisk and prove preview configuration plus authorized execution wiring through the minimal path; record supplied settings, defaults, callbacks, results, failures, exclusions, and remaining limits.
+- [ ] Update capability, requirements, claims, regression, coverage, documentation, and progress records only after matching proof exists.
 
 ## Cross-Architecture Real-System Proof Programme
 
@@ -233,7 +313,7 @@ later tasks below.
 - [x] ~~Define "upgrade" and make Directus, Medusa, and n8n the default minimum real-architecture gate for every product-behavior change, while distinguishing documentation-only changes and refusing to turn an unavailable application into a pass.~~  
   Evidence: `docs/engineering/REAL_SYSTEM_CHANGE_GATE.md` defines affected changes, seven ordered gates, required reporting questions, blocked/not-executed semantics, current built/partial/missing depth, and the rule that readiness alone cannot approve compiler, adapter, execution, cleanup, security, or result-behavior upgrades.
 - [x] ~~Ship the cross-architecture explanation, dated proof log, and default upgrade gate in the actual npm package and verify that developers can install and follow their internal links.~~  
-  Evidence: `npm run pack:check` passed with 128 files, 1,057,947 unpacked bytes, all 26 required paths including the real-system depth, AI-pipeline, and world-class real-validation guides, 30 valid relative documentation links, clean tarball install, and 0 errors. The installed main API plus both public real-validation validators imported successfully; TCV-0010 and CLM-0013 retain the exact exclusions.
+  Evidence: the latest `npm run pack:check` passed with 129 files, 1,072,947 unpacked bytes, all 26 explicitly required paths plus the linked host-integration guide, 40 valid relative documentation links, clean tarball install, and 0 errors. The installed main API plus both public real-validation validators imported successfully; TCV-0010 and CLM-0013 retain the exact exclusions.
 - [ ] Build one executable behavior-upgrade command that clean-installs the packed product and runs the applicable positive, refusal, invalid, missing-information, timeout/cancellation, mutation, cleanup, and residual-state suites on Directus, Medusa, and n8n; it must fail on every unexecuted required application.  
   Gap: common readiness is executable, but the three packed-product business-scenario suites are still open below; until they exist, affected behavior upgrades remain explicitly not fully cross-application-tested.
 - [ ] Run a documented minimum scenario set on Directus, Medusa, and n8n with no vendor-specific universal compiler branches.
@@ -280,6 +360,41 @@ workflows/events/jobs, and the fraction actually planned and executed through
 - [ ] Report discovered, AI-proposed, accepted, rejected, compiled, executed, passed, failed, skipped, and cleaned counts separately for every application and surface type.
 - [ ] Add adversarial real-target cases where AI invents a route, field, permission, selector, state change, credential, or cleanup action and prove they cannot execute.
 - [ ] Repeat the complete AI-and-depth gate from a clean-installed packed product and update capability, requirements, claims, coverage, regression, proof-log, and progress records.
+
+### H2. Brisk (fourth real-application diagnostic)
+
+The product owner approved a fourth real application — the sibling `brisk`
+pub-sub platform at `C:\Users\u306076\Documents\azure-pubsub\brisk` — on
+2026-08-05 for early real-AI feedback, explicitly choosing this ahead of the
+still-open Phase 4.3 foundation work (mutation receipts, journaled cleanup,
+crash-safe recovery) that the dependency-safe critical path would otherwise
+require first. Everything in this subsection is diagnostic only: one identity,
+one path, no permission-boundary, UI, healing, drift, or load proof. It must
+never be read as application-support, cross-architecture, or release proof.
+
+- [x] ~~Start a local, isolated Brisk instance (Postgres/Kafka/RabbitMQ/Redis via Docker, schema pushed, seed data loaded, server running) without modifying any vendor-committed port or dependency version.~~
+  Evidence: Postgres was remapped to host port 25432 through a new untracked `docker/docker-compose.override.local.yml` (Compose `!override` merge) because the default 5432 was already bound by an unrelated container; `.env` `BRISK_DATABASE_URL` was updated to match and the original file was preserved as `.env.pre-brisk-aitesting.bak`. `prisma db push` and the seed script ran cleanly against the isolated database. `packages/server`'s own dependency on `brisk-aitesting@0.2.0` cannot resolve from the public registry (highest published version is 0.1.9); this was worked around for local install only with an `overrides:` entry in `pnpm-workspace.yaml` pointing at a locally packed `brisk-aitesting-0.2.0.tgz`, not by changing the declared dependency version. Both are local-lab-only files, not proposed product or vendor-source changes.
+Current packaging note (2026-08-06): the local packed-file workaround described
+in the historical startup evidence is no longer the active installation path.
+The product owner deprecated the public npm package. Brisk's declared dependency
+and lockfile now resolve the exact GitHub commit
+`dd672dcf96739e54511cbd1c1fad439c40a53f34`; no public npm package is used.
+
+- [x] ~~Record real defects discovered in Brisk's own setup path while getting it running, rather than silently working around them.~~
+  Evidence: (1) `pnpm-workspace.yaml`/`package.json` mismatch — Brisk's own `pnpm.overrides` (e.g. the `pino` pin) silently stop applying under pnpm 11, which now warns that `package.json`'s `pnpm` field is no longer read; (2) `db:seed` unconditionally runs `prisma migrate deploy` first, but the repository ships no `prisma/migrations` directory at all (it is a `db push`-only schema), so `pnpm db:seed` cannot succeed as written on a clean checkout — seeding only worked here by calling the seed script directly. Neither defect was fixed in Brisk's own source; both are reported here for the product owner to route to that codebase's own backlog.
+- [x] ~~Design and freeze one complex connected Brisk business journey using only real, curl-verified operations (not guessed from source): create channel, create topic, publish message, read message back, attempt an invalid topic create, then clean up.~~
+  Evidence: every operation was hand-verified against the running instance with `curl` first (channel create 201, topic create 201, publish 201, read 200, invalid topic create 400, topic delete 204, channel delete 204) before being encoded as an evidence-graph contract, so the AI is only ever offered operations proven to exist.
+- [x] ~~Ask the configured real AI provider to plan this journey against Brisk end to end, execute it, and report the exact result — including a first attempt that the deterministic compiler correctly refused.~~
+  Evidence: `smoke/run-real-ai-brisk.mjs` (`npm run smoke:real-ai-brisk`) is a new diagnostic script, modeled on the existing `run-real-ai-directus.mjs` pattern. The first run never called the AI model at all: `MISSING_CLEANUP_OPERATION` correctly stopped planning because the publish-message operation created durable state with no declared cleanup, and Brisk exposes no per-message delete endpoint. This was corrected honestly, not bypassed — the message's `cleanupOperationId` now points at the real topic-delete operation, because deleting a Brisk topic is the message's true and only lifecycle boundary in the live product. After that correction, three consecutive runs against the real MiniMax-configured provider all planned the same 5 evidenced operations, executed 1/1 logical journey with 0 failures/skips/errors, and passed cleanup; a direct follow-up `GET /api/channels` after every run confirmed 0 residual test-created channels.
+- [x] ~~Replace Brisk's temporary package-specific configuration assembly with the installed public `defineConfigFromHost` host-mapping entry point, while preserving Brisk-owned URLs, authentication, evidence, engines, security limits, and runtime-selected AI connection.~~
+  Evidence: on 2026-08-06 `packages/server/src/domains/testing-aitesting.ts` imported and called the installed GitHub package's actual `defineConfigFromHost` export (there is no `defineHostConfig` export in commit `dd672dcf96739e54511cbd1c1fad439c40a53f34`). Brisk server and root TypeScript checks passed. No provider or model name is fixed inside the host mapping; the provider object is obtained at run time from Brisk's organization configuration.
+- [x] ~~Restart Brisk and the Directus, Medusa, and n8n lab, then verify application responses rather than treating running processes or containers as readiness proof.~~
+  Evidence: on 2026-08-06 Brisk backend `/api/health`, frontend, and docs returned HTTP 200. The shared lab readiness report returned `ok: true`: Directus deliberately refused its anonymous health request with 403, accepted login with 200, and returned authenticated health 200; Medusa database was healthy and its application health returned 200; n8n readiness returned 200. This proves startup/readiness only, not business scenarios, AI quality, cleanup, stress, or application support.
+- [ ] Prove the Brisk host connection against every provider family Brisk offers, including native Anthropic, Gemini's compatible endpoint, Azure OpenAI deployment addressing, OpenAI, DeepSeek, and custom OpenAI-compatible servers; record request format, structured-output behavior, timeout, usage, refusal, and secret-redaction results without assuming that one compatible endpoint proves them all.
+- [ ] Run this same diagnostic from a clean-installed packed `brisk-aitesting` artifact rather than the working-tree build, matching the rigor already applied to Directus.
+- [ ] Design and execute negative/permission-boundary scenarios using a disposable least-privilege Brisk identity rather than the single seeded administrator this diagnostic reused for both setup and the AI-planned journey.
+- [ ] Extend the journey to Brisk's UI, subscriptions, publishers, and webhook surfaces; today only channels/topics/messages are covered.
+- [ ] Fold Brisk into the same shared readiness/manifest/proof-log machinery used for Directus, Medusa, and n8n if the product owner decides it should become a permanent fourth proof application rather than a one-off diagnostic.
 
 ## World-Class Real Validation and Stress Gate
 
@@ -993,7 +1108,8 @@ inside named adapters:
 - [ ] Route SDK calls through the shared application service.
 - [ ] Route CLI commands through the shared application service.
 - [ ] Route MCP tools through the shared application service.
-- [ ] Document embedded host integration.
+- [x] ~~Document embedded host integration.~~
+  Evidence: `docs/HOST_INTEGRATION.md` now defines the host boundary and gives the complete pinned-Git-install, host-owned type, explicit mapping, runtime-selected AI connector, authentication, trusted-operation evidence, preview/execution, result, cleanup, verification, mistake, and Brisk-reference path. README, configuration, and API-reference entry points link to it. `npm run pack:check` passed with the guide inside the 129-file clean-installed artifact, 40 internal Markdown links resolved, installed imports passed, and 0 errors. This documents the integration contract; it does not prove every host or provider family works.
 - [ ] Complete programmatic APIs.
 - [ ] Add CI reporters and stable exit semantics.
 - [ ] Add editor and agent integration examples.

@@ -654,6 +654,7 @@ flowchart TD
 | Guide | Use it when |
 |:------|:------------|
 | [Getting Started](./docs/GETTING_STARTED.md) | You want the fastest path from install to first run |
+| [Host Integration](./docs/HOST_INTEGRATION.md) | You want to embed brisk-aitesting into an existing product without duplicating its settings, authentication, or AI connection |
 | [Configuration](./docs/CONFIGURATION.md) | You need app, auth, AI, runtime, discovery, or host-config setup |
 | [API Reference](./docs/API_REFERENCE.md) | You are embedding Brisk through the SDK |
 | [Security](./docs/SECURITY.md) | You need to understand data flow, AI boundaries, artifacts, and network policy |
@@ -676,19 +677,19 @@ flowchart TD
 ### 🌟 npm Install
 
 ```bash
-npm install brisk-aitesting
+npm install "git+https://github.com/oshjain/brisk-aitesting.git#<reviewed-commit-sha>"
 ```
 
 For pnpm monorepos, install it in the backend package that will run discovery, AI planning, engines, and artifact writing:
 
 ```bash
-pnpm add brisk-aitesting --filter <your-backend-package>
+pnpm add "git+https://github.com/oshjain/brisk-aitesting.git#<reviewed-commit-sha>" --filter <your-backend-package>
 ```
 
 Example:
 
 ```bash
-pnpm add brisk-aitesting --filter @your-org/api
+pnpm add "git+https://github.com/oshjain/brisk-aitesting.git#<reviewed-commit-sha>" --filter @your-org/api
 ```
 
 Then create a config:
@@ -743,7 +744,7 @@ npm install github:oshjain/brisk-aitesting
 The default package is intentionally lightweight:
 
 ```bash
-npm install brisk-aitesting
+npm install "git+https://github.com/oshjain/brisk-aitesting.git#<reviewed-commit-sha>"
 ```
 
 That installs the core testing layer:
@@ -804,55 +805,19 @@ Specmatic can test any HTTP/OpenAPI provider. The app under test does not have t
 Create `brisk-aitesting.config.mjs`:
 
 ```js
-import { defineConfig } from 'brisk-aitesting';
+import { defineHostConfig } from 'brisk-aitesting';
 
-export default defineConfig({
+export default defineHostConfig({
   app: {
     name: 'My SaaS',
     baseUrl: 'http://localhost:3000',
     repoPath: '.',
   },
-  auth: { type: 'none' },
-  ai: {
-    provider: 'openai',
-    model: requiredEnv('BRISK_AITESTING_AI_MODEL'),
-    apiKeyEnv: 'BRISK_AITESTING_AI_API_KEY',
-    repairAttempts: 2,
-    maxTokens: 4096,
-    temperature: 0.1,
-  },
-  runtime: {
-    artifactsDir: '.brisk-aitesting/artifacts',
-    timeoutMs: 120000,
-    retries: 1,
-    headless: true,
-    dryRun: false,
-  },
-  discovery: {
-    includeRepo: true,
-    includeUi: true,
-    includeApi: true,
-    includeContracts: true,
-  },
-  security: {
-    networkPolicy: 'localhost-only',
-    allowedHosts: ['localhost', '127.0.0.1', '::1'],
-    redactSecrets: true,
-    strictMode: true,
-    allowFallbackTargets: false,
-    allowHeuristicWorkflowCapture: false,
-    uiHealing: 'safe',
-  },
 });
-
-function requiredEnv(name: string): string {
-  const value = process.env[name];
-  if (value === undefined || value.trim().length === 0) {
-    throw new Error(`${name} is required`);
-  }
-  return value;
-}
 ```
+
+Optional AI, auth, and execution values come from `.env.brisk-aitesting`.
+Preview is the default; real execution must be explicitly enabled.
 
 </details>
 
@@ -939,78 +904,60 @@ ai: {
 
 > 📝 **Note:** Provider-specific environment variables are compatibility aliases only. Product integrations should prefer `BRISK_AITESTING_*`.
 
-## 🔌 Host App Config Bridge
+## 🔌 Add It to Any Host Application
 
-Big SaaS products already have app URLs, auth, AI settings, and environment config. They should **not** duplicate everything just for testing.
+Normal integration does not require a custom type, mapper, engine list, or
+security configuration.
 
-<br />
+### Environment-only
 
-<table>
-  <tr>
-    <td width="50%" valign="top">
+Create `.env.brisk-aitesting`:
 
-### 🏠 Host App
-<sub>(your source of truth)</sub>
+```bash
+BRISK_AITESTING_APP_NAME=My Application
+BRISK_AITESTING_BASE_URL=http://localhost:3000
+BRISK_AITESTING_REPO_PATH=.
+BRISK_AITESTING_EXECUTION=preview
 
-```
-┌──────────────────┐
-│  productName     │
-│  urls.staging    │
-│  paths.repo      │
-│  testing.auth    │
-│  ai.provider     │
-│  ai.endpoint     │
-│  ai.model        │
-│  ai.apiKey       │
-│  ai.caCertPath   │
-└──────────────────┘
+BRISK_AITESTING_AI_PROVIDER=openai-compatible
+BRISK_AITESTING_AI_MODEL=my-model
+BRISK_AITESTING_AI_ENDPOINT=https://my-provider.example.com/v1
+BRISK_AITESTING_AI_API_KEY=your-secret
 ```
 
-    </td>
-    <td width="50%" valign="top">
+Then run:
 
-### 🔌 Adapter Plug
+```bash
+npx brisk-aitesting doctor
+npx brisk-aitesting run "Test login, dashboard, APIs, and permissions"
+```
 
-Use `defineConfigFromHost` to map existing host config into `brisk-aitesting`:
+### Ready host object
 
 ```ts
-import { defineConfigFromHost, mergeConfig } from 'brisk-aitesting';
+import { defineHostConfig } from 'brisk-aitesting';
 
-const testingConfig = defineConfigFromHost(
-  hostConfig,
-  (host) => ({
-    app: {
-      name: host.productName,
-      baseUrl: host.urls.staging,
-      repoPath: host.paths.repo,
-    },
-    auth: host.testing.auth,
-    ai: {
-      provider: host.ai.provider,
-      endpoint: host.ai.endpoint,
-      model: host.ai.model,
-      apiKey: host.ai.apiKey,
-      caCertPath: host.ai.caCertPath,
-    },
-  })
-);
-
-export default mergeConfig(testingConfig, {
-  runtime: {
-    artifactsDir: '.brisk-aitesting/artifacts',
-    timeoutMs: 120000,
-    retries: 1,
-    headless: true,
-    dryRun: false,
+export default defineHostConfig({
+  app: {
+    name: 'My Application',
+    baseUrl: 'http://localhost:3000',
   },
 });
 ```
 
-    </td>
-  </tr>
-</table>
+`defineHostConfig` reads optional AI/auth settings from the documented
+`BRISK_AITESTING_*` environment names and supplies safe discovery, browser,
+engine, artifact, and security defaults. Explicit object values win over the
+environment. Preview is the default; set `BRISK_AITESTING_EXECUTION=enabled`
+only when the target and cleanup path are ready for real changes.
 
-> 💡 **Think of it like an adapter plug:** the host app keeps its own source of truth, and `brisk-aitesting` receives only the values it needs.
+An existing host AI connection can be passed directly through its common
+`name` and `complete(request)` interface. An existing host can also provide one
+`createSession()` function for short-lived execution authentication.
+
+`defineConfigFromHost` remains available in the
+[advanced host guide](docs/HOST_INTEGRATION.md#advanced-mapping), but it is not
+required for normal onboarding.
 
 ## 🛡️ How AI Is Controlled
 

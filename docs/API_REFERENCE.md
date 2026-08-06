@@ -2,6 +2,28 @@
 
 This is the public SDK surface most host apps need.
 
+## defineHostConfig
+
+This is the recommended host entry point. It supplies safe defaults and reads
+missing optional values from documented `BRISK_AITESTING_*` settings.
+
+```ts
+import { createBriskAiTesting, defineHostConfig } from 'brisk-aitesting';
+
+const config = await defineHostConfig({
+  app: {
+    name: 'My application',
+    baseUrl: 'http://localhost:3000',
+  },
+});
+
+const tester = createBriskAiTesting(config);
+```
+
+Calling `await defineHostConfig()` with no object is the environment-only SDK
+path. Config files may export the returned promise directly because
+`loadConfig` and the CLI await it.
+
 ## createBriskAiTesting
 
 ```ts
@@ -15,6 +37,46 @@ const result = await tester.run({
   mode: 'automatic',
 });
 ```
+
+## defineConfigFromHost (Advanced)
+
+Use this only when an existing product intentionally needs a custom type and
+full mapping control. Normal hosts should use `defineHostConfig`.
+
+```ts
+import { createBriskAiTesting, defineConfigFromHost } from 'brisk-aitesting';
+
+const config = defineConfigFromHost(hostDefinition, (host) => ({
+  app: {
+    name: host.app.name,
+    baseUrl: host.app.baseUrl,
+    repoPath: host.app.repoPath,
+  },
+  auth: host.accessToken !== undefined
+    ? { type: 'bearer', token: host.accessToken }
+    : { type: 'none' },
+  aiProvider: host.aiProvider,
+  runtime: {
+    artifactsDir: '.brisk-aitesting/artifacts',
+    timeoutMs: host.run.timeoutMs,
+    retries: 0,
+    headless: true,
+    dryRun: host.run.previewOnly,
+  },
+}));
+
+const tester = createBriskAiTesting(config);
+```
+
+The function calls the supplied mapper and returns its result. It does not
+discover host configuration or operations, obtain authentication, select an AI
+provider, or authorize execution automatically. `createBriskAiTesting`
+normalizes and validates the returned configuration.
+
+The host owns the input type. Keep provider choice dynamic, pass only the
+information testing needs, and provide authoritative operation evidence before
+allowing AI-planned actions to execute. See the complete
+[Host Integration Guide](HOST_INTEGRATION.md).
 
 ## Run Input
 

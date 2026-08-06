@@ -6,6 +6,7 @@ import { dirname, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createBriskAiTesting } from './orchestrator.js';
 import { loadConfig } from './config.js';
+import { defineHostConfig } from './host-config.js';
 import { loadEnvFiles } from './env.js';
 import { loadOpenApiSummary } from './openapi.js';
 import { removePath } from './engines/shared.js';
@@ -43,15 +44,22 @@ try {
 async function init(args: readonly string[]): Promise<void> {
   const options = parseInitArgs(args);
   const configPath = options.configPath;
-  if (existsSync(configPath)) {
-    console.log(`${configPath} already exists`);
-    return;
-  }
-
+  const environmentExamplePath = resolve(dirname(resolve(configPath)), '.env.brisk-aitesting.example');
   await mkdir('.brisk-aitesting/artifacts', { recursive: true });
+  await mkdir(dirname(resolve(configPath)), { recursive: true });
   const observedSurface = await probeStarterSurface(options.baseUrl);
-  await writeFile(configPath, starterConfig(options, observedSurface), 'utf8');
-  console.log(`Created ${configPath}`);
+  if (!existsSync(configPath)) {
+    await writeFile(configPath, starterConfig(options, observedSurface), 'utf8');
+    console.log(`Created ${configPath}`);
+  } else {
+    console.log(`${configPath} already exists; left unchanged`);
+  }
+  if (!existsSync(environmentExamplePath)) {
+    await writeFile(environmentExamplePath, starterEnvironmentExample(options), 'utf8');
+    console.log(`Created ${environmentExamplePath}`);
+  } else {
+    console.log(`${environmentExamplePath} already exists; left unchanged`);
+  }
   console.log('Next: brisk-aitesting run --goal "Test login, dashboard, APIs, and permissions"');
 }
 
@@ -61,7 +69,9 @@ async function run(args: readonly string[]): Promise<number> {
   if (goal.length === 0) throw new UsageError('Please provide a test goal with --goal "<what to test>" or a positional goal.');
 
   await loadEnvFiles();
-  const config = await loadConfig(options.configPath);
+  const config = existsSync(options.configPath)
+    ? await loadConfig(options.configPath)
+    : await defineHostConfig();
   const tester = createBriskAiTesting(config);
   if (!options.quiet && !options.json) {
     tester.onEvent((event) => {
@@ -172,11 +182,19 @@ async function runDoctorChecks(configPath: string): Promise<readonly {
   });
   checks.push({
     name: 'Config file',
-    status: existsSync(configPath) ? 'passed' : 'warning',
-    message: existsSync(configPath) ? `Found ${configPath}.` : `No ${configPath}; run brisk-aitesting init or pass --config.`,
+    status: existsSync(configPath) || hasEnvironmentHost() ? 'passed' : 'warning',
+    message: existsSync(configPath)
+      ? `Found ${configPath}.`
+      : hasEnvironmentHost()
+      ? 'Using environment-only host settings.'
+      : `No ${configPath} and no complete environment-only host settings; run brisk-aitesting init or set BRISK_AITESTING_APP_NAME and BRISK_AITESTING_BASE_URL.`,
   });
   try {
-    const config = existsSync(configPath) ? await loadConfig(configPath) : undefined;
+    const config = existsSync(configPath)
+      ? await loadConfig(configPath)
+      : hasEnvironmentHost()
+      ? await defineHostConfig()
+      : undefined;
     checks.push({
       name: 'Base URL',
       status: config === undefined || config.app.baseUrl.startsWith('http') ? 'passed' : 'failed',
@@ -666,9 +684,9 @@ function starterConfig(
   options: { readonly appName: string; readonly baseUrl: string },
   observed: { readonly uiRoutes: readonly string[]; readonly apiRoutes: readonly { readonly method: string; readonly path: string }[] },
 ): string {
-  return `import { defineConfig } from 'brisk-aitesting';
+  return `import { defineHostConfig } from 'brisk-aitesting';
 
-export default defineConfig({
+export default defineHostConfig({
   app: {
     name: ${JSON.stringify(options.appName)},
     baseUrl: ${JSON.stringify(options.baseUrl)},
@@ -684,6 +702,31 @@ export default defineConfig({
   },
 });
 `;
+}
+
+function starterEnvironmentExample(options: { readonly appName: string; readonly baseUrl: string }): string {
+  return `# Copy this file to .env.brisk-aitesting and fill only what your host uses.
+# Never commit the copied file when it contains secrets.
+BRISK_AITESTING_APP_NAME=${options.appName}
+BRISK_AITESTING_BASE_URL=${options.baseUrl}
+BRISK_AITESTING_REPO_PATH=.
+BRISK_AITESTING_EXECUTION=preview
+
+# To use built-in AI, uncomment and complete this whole block.
+# BRISK_AITESTING_AI_PROVIDER=openai-compatible
+# BRISK_AITESTING_AI_MODEL=your-model
+# BRISK_AITESTING_AI_ENDPOINT=https://your-provider.example.com/v1
+# BRISK_AITESTING_AI_API_KEY=replace-me
+
+# Authentication defaults to none. For a protected test target, use bearer or credentials.
+# BRISK_AITESTING_AUTH_TYPE=bearer
+# BRISK_AITESTING_AUTH_TOKEN=replace-me
+`;
+}
+
+function hasEnvironmentHost(): boolean {
+  return (process.env.BRISK_AITESTING_APP_NAME ?? '').trim().length > 0
+    && (process.env.BRISK_AITESTING_BASE_URL ?? '').trim().length > 0;
 }
 
 async function probeStarterSurface(baseUrl: string): Promise<{

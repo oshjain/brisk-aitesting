@@ -28,6 +28,7 @@
     "CHANGELOG.md",
     "adapters/manifest.json",
     "docs/GETTING_STARTED.md",
+    "docs/HOST_INTEGRATION.md",
     "docs/CONFIGURATION.md",
     "docs/API_REFERENCE.md",
     "docs/SECURITY.md",
@@ -68,11 +69,13 @@
     "smoke:real-ai": "node smoke/run-real-ai-smoke.mjs",
     "smoke:real-ai-directus": "node smoke/run-real-ai-directus.mjs",
     "smoke:packed-real-ai-directus": "npm run build && node smoke/run-packed-real-ai-directus.mjs",
+    "smoke:real-ai-brisk": "node smoke/run-real-ai-brisk.mjs",
     "smoke:real-validation-contracts": "node smoke/run-real-validation-contracts.mjs",
     "smoke:reliability": "node smoke/run-reliability.mjs",
     "smoke:universal-compiler": "node smoke/run-universal-compiler.mjs",
     "smoke:semantic-workflow": "node smoke/run-semantic-workflow.mjs",
     "smoke:engineering-records": "node smoke/run-engineering-records.mjs",
+    "smoke:host-config": "node smoke/run-host-config.mjs",
     "smoke:pipeline-contracts": "node smoke/run-pipeline-contracts.mjs",
     "smoke:evidence-acquisition": "node smoke/run-evidence-acquisition.mjs",
     "smoke:evidence-provider-conformance": "node smoke/run-evidence-provider-conformance.mjs",
@@ -84,7 +87,7 @@
     "smoke:operation-lifecycle": "node smoke/run-operation-lifecycle.mjs",
     "smoke:real-system-lab": "node smoke/run-real-system-lab.mjs",
     "smoke:real-system-target-inventory": "node smoke/run-real-system-target-inventory.mjs",
-    "smoke:ci": "npm run smoke:engineering-records && npm run smoke:pipeline-contracts && npm run smoke:evidence-acquisition && npm run smoke:evidence-provider-conformance && npm run smoke:evidence-provider-security && npm run smoke:evidence-worker-security && npm run smoke:evidence-conflicts && npm run smoke:incremental-recompilation && npm run smoke:typed-value-flow && npm run smoke:operation-lifecycle && npm run smoke:contracts && npm run smoke:universal-compiler && npm run smoke:semantic-workflow && npm run smoke:engine-conformance && npm run smoke:plugin-conformance && npm run smoke:extension-conformance && npm run smoke:adapter-readiness && npm run smoke:reference-serious-saas && npm run smoke:reference-proof-apps && npm run smoke:pact && npm run smoke:golden-fixtures && npm run smoke:cli && npm run smoke:ai-fixtures && npm run smoke:reliability && npm run smoke && npm run pack:check",
+    "smoke:ci": "npm run smoke:engineering-records && npm run smoke:host-config && npm run smoke:pipeline-contracts && npm run smoke:evidence-acquisition && npm run smoke:evidence-provider-conformance && npm run smoke:evidence-provider-security && npm run smoke:evidence-worker-security && npm run smoke:evidence-conflicts && npm run smoke:incremental-recompilation && npm run smoke:typed-value-flow && npm run smoke:operation-lifecycle && npm run smoke:contracts && npm run smoke:universal-compiler && npm run smoke:semantic-workflow && npm run smoke:engine-conformance && npm run smoke:plugin-conformance && npm run smoke:extension-conformance && npm run smoke:adapter-readiness && npm run smoke:reference-serious-saas && npm run smoke:reference-proof-apps && npm run smoke:pact && npm run smoke:golden-fixtures && npm run smoke:cli && npm run smoke:ai-fixtures && npm run smoke:reliability && npm run smoke && npm run pack:check",
     "smoke:all": "npm run smoke:ci && npm run smoke:real-ai",
     "try:local": "npm run build && npm run smoke:cli && npm run smoke:reference-serious-saas",
     "benchmark": "npm run build && node smoke/run-benchmark.mjs",
@@ -95,7 +98,7 @@
     "clean:artifacts": "node dist/cli.js clean"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "peerDependencies": {
     "@playwright/test": ">=1.52.0"

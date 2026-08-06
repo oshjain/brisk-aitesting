@@ -44,8 +44,9 @@ export async function loadConfig(configPath = 'brisk-aitesting.config.mjs'): Pro
     const parsed = extension === '.json' ? JSON.parse(raw) as unknown : parseYaml(raw) as unknown;
     return normalizeConfig(assertUserConfig(parsed, absolute));
   }
-  const imported = await import(pathToFileURL(absolute).href) as { default?: UserConfig; config?: UserConfig };
-  const config = imported.default ?? imported.config;
+  const imported = await import(pathToFileURL(absolute).href) as { default?: UserConfig | Promise<UserConfig>; config?: UserConfig | Promise<UserConfig> };
+  const pendingConfig = imported.default ?? imported.config;
+  const config = pendingConfig === undefined ? undefined : await pendingConfig;
   if (config === undefined) {
     throw new Error(`No default config export found in ${absolute}`);
   }

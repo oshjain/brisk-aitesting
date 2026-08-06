@@ -9,7 +9,11 @@ export async function loadEnvFiles(options?: {
   const cwd = resolve(options?.cwd ?? process.cwd());
   const packageDir = options?.packageDir ?? resolve(cwd, 'packages/brisk-aitesting');
   const candidates = unique([
+    join(cwd, '.env.brisk-aitesting.local'),
+    join(cwd, '.env.brisk-aitesting'),
     join(cwd, '.env.local'),
+    join(packageDir, '.env.brisk-aitesting.local'),
+    join(packageDir, '.env.brisk-aitesting'),
     join(packageDir, '.env.local'),
   ]);
   const loaded: string[] = [];

@@ -45,6 +45,7 @@ const expectedRuntimeExports = [
   'createSchemaExample',
   'defineConfig',
   'defineConfigFromHost',
+  'defineHostConfig',
   'handoverJsonSchema',
   'loadConfig',
   'loadEnvFiles',

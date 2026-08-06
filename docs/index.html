@@ -3007,27 +3007,27 @@ tailwind.config = {
         </div>
         <p class="text-xs text-brisk-gray-500 mb-10">Examples include BigQuery, Cloud Storage, GitHub Actions, internal test portals, release approval workflows, incident-management systems, and host-owned dashboards. These are examples, not prebuilt integrations.</p>
 
-        <!-- Host config bridge -->
+        <!-- Zero-friction host config -->
         <h3 class="text-xl font-extrabold text-brisk-gray-950 mb-4 flex items-center gap-2">
           <span class="material-symbols-outlined text-brisk-purple-900 icon-fill">handshake</span>
-          Host application config bridge
+          Add it to any host application
         </h3>
         <div class="bg-white border border-brisk-gray-300 rounded-2xl p-6 sm:p-8">
           <div class="flex flex-col lg:flex-row items-center gap-4 lg:gap-8 mb-6">
             <div class="flex-1 bg-brisk-gray-50 rounded-xl p-4 text-center">
               <span class="material-symbols-outlined text-brisk-purple-900 text-3xl icon-fill">apps</span>
               <p class="font-extrabold mt-1 text-sm">Your host config</p>
-              <p class="text-xs text-brisk-gray-600">paths, ai, auth, runtime</p>
+              <p class="text-xs text-brisk-gray-600">app name and URL</p>
             </div>
             <div class="text-center">
               <div class="pill bg-brisk-yellow-600 text-brisk-gray-950 border-brisk-yellow-600">
-                <span class="material-symbols-outlined text-sm icon-fill">merge</span> defineConfigFromHost
+                <span class="material-symbols-outlined text-sm icon-fill">merge</span> defineHostConfig
               </div>
             </div>
             <div class="flex-1 bg-gradient-to-br from-brisk-purple-900 to-brisk-purple-950 text-white rounded-xl p-4 text-center">
               <span class="material-symbols-outlined text-brisk-yellow-400 text-3xl icon-fill">deployed_code</span>
               <p class="font-extrabold mt-1 text-sm">brisk-aitesting config</p>
-              <p class="text-xs text-white/70">merged &amp; ready</p>
+              <p class="text-xs text-white/70">safe defaults included</p>
             </div>
           </div>
           <details class="group">
@@ -3037,31 +3037,17 @@ tailwind.config = {
               </span>
               <span class="material-symbols-outlined chevron text-brisk-gray-600">expand_more</span>
             </summary>
-            <pre class="bg-brisk-gray-950 text-green-300 rounded-xl mt-3 p-4 text-xs font-mono overflow-x-auto leading-relaxed"><code>const testingConfig = defineConfigFromHost(
-  hostConfig,
-  (host) => ({
-    app: {
-      name: host.app.name,
-      baseUrl: host.app.baseUrl,
-      repoPath: host.paths.repo,
-    },
-    auth: host.testing.auth,
-    ai: {
-      provider: host.ai.provider,
-      model: host.ai.model,
-      apiKey: host.ai.apiKey,
-    },
-  })
-);
+            <pre class="bg-brisk-gray-950 text-green-300 rounded-xl mt-3 p-4 text-xs font-mono overflow-x-auto leading-relaxed"><code>import { defineHostConfig } from 'brisk-aitesting';
 
-export default mergeConfig(testingConfig, {
-  runtime: {
-    artifactsDir: '.brisk-aitesting/artifacts',
-    timeoutMs: 120000,
-    retries: 1,
-    headless: true,
+export default defineHostConfig({
+  app: {
+    name: 'My application',
+    baseUrl: 'http://localhost:3000',
   },
-});</code></pre>
+});
+
+// Optional AI/auth values come from documented
+// BRISK_AITESTING_* environment settings.</code></pre>
           </details>
         </div>
       </div>

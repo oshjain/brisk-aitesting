@@ -6,8 +6,8 @@ The rule is simple: your app gives Brisk configuration and a goal, Brisk returns
 
 ## Start here
 
-1. `brisk-aitesting.config.ts` shows a TypeScript config shape for SDK/host-app embedding.
-2. `host-config-bridge.ts` shows how an existing SaaS config can feed Brisk without duplicating settings.
+1. `brisk-aitesting.config.ts` shows the normal minimal host object with inferred types and safe defaults.
+2. `host-config-bridge.ts` shows the advanced compatibility mapper for an existing SaaS that intentionally needs full control.
 3. `sdk-basic.ts` shows the local SDK path.
 4. `cli-basic.md` shows the CLI path.
 

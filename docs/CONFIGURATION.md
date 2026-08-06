@@ -1,8 +1,33 @@
 # Configuration
 
-`brisk-aitesting` can be configured directly or mapped from a host app's existing config.
+Normal users should use `defineHostConfig` or environment-only setup. Manual
+internal configuration remains available for advanced integrations.
 
-## Main Config
+## Recommended Minimal Config
+
+```js
+import { defineHostConfig } from 'brisk-aitesting';
+
+export default defineHostConfig({
+  app: {
+    name: 'My SaaS',
+    baseUrl: 'http://localhost:3000',
+  },
+});
+```
+
+The same setup can be code-free:
+
+```bash
+BRISK_AITESTING_APP_NAME=My SaaS
+BRISK_AITESTING_BASE_URL=http://localhost:3000
+BRISK_AITESTING_EXECUTION=preview
+```
+
+The complete environment catalogue, precedence, defaults, AI callback, and
+short-lived authentication examples are in [Host Integration](HOST_INTEGRATION.md).
+
+## Advanced Manual Config
 
 The CLI creates `brisk-aitesting.config.mjs` by default. JSON, YAML, and YML config files are also supported for teams that prefer config without executable code.
 
@@ -135,7 +160,7 @@ Third-party adapters are local and opt-in.
 The default package install does not force heavy adapter runtimes into the host application:
 
 ```bash
-npm install brisk-aitesting
+npm install "git+https://github.com/oshjain/brisk-aitesting.git#<reviewed-commit-sha>"
 ```
 
 Install enhanced adapter runtimes only in the app/package that will run them:
@@ -158,9 +183,10 @@ pnpm add @pact-foundation/pact --filter <your-backend-package>
 
 Specmatic is loaded through the host-installed `specmatic` npm runtime and still needs Java available on the machine. Schemathesis is a Python runtime and should be installed outside npm.
 
-## Host Config Bridge
+## Advanced Host Mapper
 
-If your SaaS already has settings, map them instead of duplicating them:
+Most hosts should use `defineHostConfig`. If an enterprise host intentionally
+needs every internal setting, it may map its existing structure:
 
 ```ts
 import { defineConfigFromHost } from 'brisk-aitesting';
@@ -178,6 +204,16 @@ export default defineConfigFromHost(hostConfig, (host) => ({
   security: host.testing.security,
 }));
 ```
+
+The host must define the `hostConfig` shape in its own code. This mapper does
+not automatically discover provider settings, credentials, routes, selectors,
+permissions, or cleanup behavior. Configuration validation occurs when the
+mapped value is consumed by `createBriskAiTesting` or `loadConfig`.
+
+For the complete install-to-result path—including runtime-selected AI,
+authentication, trusted operation evidence, preview versus execution, cleanup,
+result handling, and verification—follow the
+[Host Integration Guide](HOST_INTEGRATION.md).
 
 ## Security Defaults
 
