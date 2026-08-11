@@ -238,6 +238,7 @@ const discoveredUiPlan = await discoveredUiPlanner.plan({
       { path: '/channels', source: 'repo' },
       { path: '/topics', source: 'repo' },
       { path: '/playground', source: 'repo' },
+      { path: '/playground/', source: 'runtime' },
     ],
     apiRoutes: [], contracts: [], warnings: [], discoveredAt: new Date(0).toISOString(),
   },
@@ -246,6 +247,33 @@ check('discoveredUi', discoveredUiPlan.scenarios.length === 4);
 check('discoveredUi', discoveredUiPlan.scenarios.every((scenario) => scenario.type === 'ui'));
 check('discoveredUi', discoveredUiPlan.scenarios.map((scenario) => scenario.target?.route).join(',') === '/dashboard,/channels,/topics,/playground');
 check('discoveredUi', discoveredUiPlan.scenarios.every((scenario) => scenario.target?.sourceOfTruth === 'observed'));
+
+let semanticRepairCalls = 0;
+const semanticRepairEvidence = createEvidenceGraph([
+  operation({ id: 'channel.list', adapterId: 'fixture', capability: 'api.http', name: 'List channels', action: 'list', resource: 'channel', sideEffect: 'read' }),
+  operation({ id: 'channel-topic.list', adapterId: 'fixture', capability: 'data', name: 'List channel topics', action: 'list', resource: 'channel', sideEffect: 'read' }),
+]);
+const ambiguousListIntent = intent([{ verb: 'list', resource: 'channel' }], 'List channel information');
+check('semanticRepair', compiler.compile(ambiguousListIntent, semanticRepairEvidence).status === 'ambiguous');
+const semanticRepairPlanner = new SemanticPlanner({
+  name: 'semantic-repair-fixture',
+  async complete() {
+    semanticRepairCalls += 1;
+    return { content: JSON.stringify(semanticRepairCalls === 1 ? ambiguousListIntent : intent([{ verb: 'list', resource: 'channel', capability: 'data' }], 'List channel information')) };
+  },
+}, [{
+  id: 'fixture', capabilities: ['api.http', 'data'],
+  lower({ operation: selected }) {
+    return [{ name: selected.name, type: 'api', objective: selected.name, target: { method: 'GET', path: `/${selected.id}`, sourceOfTruth: 'observed' }, expect: { status: 200 }, assertions: ['listed'], evidenceRequired: ['api'] }];
+  },
+}]);
+const semanticRepairPlan = await semanticRepairPlanner.plan({
+  config: { app: { name: 'repair fixture', env: 'test' }, planning: { repairAttempts: 1 }, runtime: { timeoutMs: 1000 } },
+  input: { goal: 'List channel information', scenarios: 1, scenarioCountPolicy: 'exact', evidenceGraph: semanticRepairEvidence },
+  runId: 'run_semantic_repair', discovery: { uiRoutes: [], apiRoutes: [], contracts: [], warnings: [], discoveredAt: new Date(0).toISOString() },
+});
+check('semanticRepair', semanticRepairCalls === 2);
+check('semanticRepair', semanticRepairPlan.scenarios[0]?.target?.path === '/channel-topic.list');
 
 const httpExpectationEvidence = createHttpEvidenceGraph([
   {

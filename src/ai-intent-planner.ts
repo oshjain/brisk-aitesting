@@ -97,6 +97,41 @@ export class AiIntentPlanner {
     }
     throw new Error(`AI intent remained invalid after ${maxRepairAttempts} repair attempt(s): ${lastError}`);
   }
+
+  async repairSemantic(
+    context: PlannerContext,
+    evidence: EvidenceGraph,
+    invalidIntent: IntentPlan,
+    diagnostics: readonly { readonly code: string; readonly message: string; readonly scenarioId?: string; readonly actionId?: string }[],
+    attempt: number,
+    maxAttempts: number,
+  ): Promise<IntentPlan> {
+    const user = JSON.stringify({
+      task: 'Repair business intent that is valid JSON but cannot compile unambiguously against the supplied application abilities.',
+      attempt,
+      maxAttempts,
+      rules: [
+        'Keep every requested area of coverage; do not silently remove a scenario or action.',
+        'For AMBIGUOUS_OPERATION, select one exact action/resource/capability combination from semanticVocabulary.operations.',
+        'For missing or ambiguous values, use values.<input>.fromActionId with the exact earlier action id and semantic type.',
+        'Do not invent an operation, input, output, route, selector, payload field, or status code.',
+      ],
+      diagnostics,
+      invalidIntent,
+      originalRequest: JSON.parse(intentUserPrompt(context, evidence)) as unknown,
+    });
+    if (containsObviousSecretLikeValue(user)) {
+      throw new Error('AI semantic repair prompt rejected because it contains a raw secret-like value. Pass a secret reference instead.');
+    }
+    const response = await this.provider.complete({
+      jsonSchemaName: 'brisk-aitesting.intent.v1',
+      jsonSchema: aiIntentOutputJsonSchema,
+      structuredOutput: 'json-schema',
+      system: [intentRepairSystemPrompt(), 'Fix compiler ambiguity and typed value relationships without reducing requested coverage.'].join('\n'),
+      user,
+    });
+    return parseIntent(response.content, context);
+  }
 }
 
 export function parseAiIntentForTesting(content: string, context: PlannerContext): IntentPlan {

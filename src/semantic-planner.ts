@@ -61,12 +61,27 @@ export class SemanticPlanner implements Planner {
 
   async plan(context: PlannerContext): Promise<TestPlan> {
     let evidence = await this.collectEvidence(context);
-    const intent = await this.intentPlanner.plan(context, evidence);
+    let intent = await this.intentPlanner.plan(context, evidence);
     let incremental = compileIntentIncrementally({ intent, evidence, compiler: this.compiler });
     let compilation = incremental.result;
     let compilationState = incremental.state;
     const acquisitionDiagnostics: CompilationResult['diagnostics'][number][] = [];
     const evidenceDecisions: AcquisitionRecompilationDecisionV1[] = [];
+    const semanticRepairAttempts = normalizeSemanticRepairAttempts(context.config.planning?.repairAttempts ?? context.config.ai?.repairAttempts);
+    for (let attempt = 1; compilation.status !== 'compiled' && attempt <= semanticRepairAttempts && hasAiRepairableDiagnostics(compilation); attempt += 1) {
+      try {
+        intent = await this.intentPlanner.repairSemantic(context, evidence, intent, compilation.diagnostics, attempt, semanticRepairAttempts);
+      } catch (error) {
+        acquisitionDiagnostics.push({
+          code: 'AI_SEMANTIC_REPAIR_INVALID',
+          message: error instanceof Error ? error.message : String(error),
+        });
+        continue;
+      }
+      incremental = compileIntentIncrementally({ intent, evidence, compiler: this.compiler });
+      compilation = incremental.result;
+      compilationState = incremental.state;
+    }
     const providers = context.config.evidenceProviders ?? [];
     const maxRounds = context.config.planning?.evidenceAcquisitionRounds ?? 2;
     const providerTimeoutMs = context.config.planning?.evidenceProviderTimeoutMs ?? Math.min(context.config.runtime.timeoutMs, 30_000);
@@ -309,6 +324,25 @@ function uniqueAdapters(adapters: readonly CapabilityAdapter[]): readonly Capabi
     byId.set(adapter.id, adapter);
   }
   return [...byId.values()];
+}
+
+function normalizeSemanticRepairAttempts(value: number | undefined): number {
+  if (value === undefined || !Number.isFinite(value)) return 1;
+  return Math.max(0, Math.min(5, Math.trunc(value)));
+}
+
+function hasAiRepairableDiagnostics(compilation: CompilationResult): boolean {
+  const repairable = new Set([
+    'AMBIGUOUS_OPERATION',
+    'NO_OPERATION_FOR_INTENT',
+    'MISSING_REQUIRED_VALUE',
+    'AMBIGUOUS_VALUE_PRODUCER',
+    'UNKNOWN_INTENT_VALUE_PRODUCER',
+    'AMBIGUOUS_INTENT_VALUE_PRODUCER',
+    'INCOMPATIBLE_VALUE_BINDING',
+    'UNPROVEN_EXPECTED_OUTCOME',
+  ]);
+  return compilation.diagnostics.some((diagnostic) => repairable.has(diagnostic.code));
 }
 
 function formatCompilationDiagnostics(compilation: CompilationResult): string {

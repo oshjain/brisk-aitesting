@@ -15,7 +15,9 @@ export class DiscoveredUiCapabilityAdapter implements CapabilityAdapter {
   readonly capabilities = ['web.ui'] as const;
 
   collect(context: Parameters<NonNullable<CapabilityAdapter['collect']>>[0]): EvidenceGraph {
-    const operations = context.discovery.uiRoutes.map((route): EvidenceOperation => ({
+    const routes = [...new Map(context.discovery.uiRoutes.map((route) => [canonicalRoute(route.path), route])).entries()]
+      .map(([path, route]) => ({ ...route, path }));
+    const operations = routes.map((route): EvidenceOperation => ({
       id: `ui.open.${safeRouteId(route.path)}`,
       adapterId: this.id,
       capability: 'web.ui',
@@ -81,4 +83,9 @@ function routeName(path: string): string {
 function safeRouteId(path: string): string {
   const value = path.replace(/[^A-Za-z0-9]+/g, '.').replace(/^\.+|\.+$/g, '');
   return value.length > 0 ? value : 'root';
+}
+
+function canonicalRoute(path: string): string {
+  const normalized = path.trim().replace(/\/+$/, '');
+  return normalized.length > 0 ? normalized : '/';
 }
