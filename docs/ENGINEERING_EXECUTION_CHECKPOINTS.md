@@ -6,7 +6,7 @@ Scope: complete product-engineering mandate approved by the product owner
 
 ## Overall Progress
 
-Task-count progress: **207 / 584 completed (35.4%)**
+Task-count progress: **209 / 584 completed (35.8%)**
 Progress: `███████░░░░░░░░░░░░░`
 
 This is a count of explicit checklist tasks, not an estimate of elapsed time,
@@ -191,8 +191,10 @@ of exposing its complete internal configuration.
   Evidence: TCV-0038 passes 54/54 configuration checks across 12 categories and TCV-0004 passes init/no-overwrite/preview/enabled/environment-only CLI paths; deliberately invalid inputs are rejected rather than counted as harness failures.
 - [x] ~~Build, run connected regressions, pack cleanly, install from Git-compatible package contents, and import/run the new public API without source fallback.~~  
   Evidence: TypeScript build, host-config, contract, CLI, and engineering-record suites passed; TCV-0010 packed 131 files/1,083,127 bytes, checked 27 required paths and 41 links, installed into a clean project, imported and invoked installed `defineHostConfig`, and reported 0 errors. The complete connected `smoke:ci` rerun remains required before final gate closure and is not implied by this task.
-- [ ] Replace Brisk's custom host type-and-mapper assembly with minimal `defineHostConfig` while preserving runtime AI, short-lived authentication, trusted operations, security boundaries, and existing user work.
-- [ ] Start Brisk and prove preview configuration plus authorized execution wiring through the minimal path; record supplied settings, defaults, callbacks, results, failures, exclusions, and remaining limits.
+- [x] ~~Replace Brisk's custom host type-and-mapper assembly with minimal `defineHostConfig` while preserving runtime AI, short-lived authentication, trusted operations, security boundaries, and existing user work.~~  
+  Evidence: Brisk installs Git commit `54c863338f70e09988d932d7a22b0bc38be3fb15`; `packages/server/src/domains/testing-aitesting.ts` now supplies the small host object and existing Brisk AI callback while `defineHostConfig` owns safe defaults. Brisk server type-checking and installed public export checks passed. Stable operation IDs were added to the host authority list so exact trusted evidence matches without allowing unknown mutations.
+- [x] ~~Start Brisk and prove preview configuration plus authorized execution wiring through the minimal path; record supplied settings, defaults, callbacks, results, failures, exclusions, and remaining limits.~~  
+  Evidence: `docs/engineering/BRISK_ZERO_FRICTION_HOST_PROOF.md` records database/certificate/provider/timeout/empty-warning/operation-ID failures and the accepted real-AI run `43db9b98-41de-45ec-9651-c909e6915166`: 25,573 ms generation, 4,204 AI tokens, one logical journey compiled to seven dependent operations, 1/1 passed, 0 failed/skipped, 752 ms execution, and cleanup operations included. Browser-click and broad-system proof remain explicitly excluded.
 - [ ] Update capability, requirements, claims, regression, coverage, documentation, and progress records only after matching proof exists.
 
 ## Cross-Architecture Real-System Proof Programme
