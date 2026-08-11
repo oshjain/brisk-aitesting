@@ -3,8 +3,10 @@ import { createServer } from 'node:http';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  AiIntentPlanner,
   BuiltinDiscoverer,
   BuiltinPlanValidator,
+  createEvidenceGraph,
   createBriskAiTesting,
   defineConfig,
   normalizeConfig,
@@ -231,6 +233,58 @@ try {
       }
     } catch (error) {
       if (fixture.accepted) errors.push(`${fixture.name}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  const emptyIntentEvidence = createEvidenceGraph([]);
+  const invalidEmptyActionsIntent = JSON.stringify({
+    scenarios: [{
+      id: 'empty_actions',
+      name: 'Empty actions',
+      objective: 'Must be repaired',
+      actions: [],
+      invariants: [],
+      evidenceRequired: [],
+      cleanup: 'automatic',
+    }],
+    warnings: [],
+  });
+  let recoveryCalls = 0;
+  const recoveringIntentPlanner = new AiIntentPlanner({
+    name: 'invalid-then-valid-intent-fixture',
+    async complete() {
+      recoveryCalls += 1;
+      return { content: recoveryCalls === 1 ? invalidEmptyActionsIntent : validIntent };
+    },
+  });
+  const repairedIntent = await recoveringIntentPlanner.plan({
+    ...context,
+    config: { ...context.config, planning: { ...context.config.planning, repairAttempts: 2 } },
+    input: { ...context.input, scenarios: 1, scenarioCountPolicy: 'exact' },
+  }, emptyIntentEvidence);
+  if (recoveryCalls !== 2 || repairedIntent.scenarios[0]?.actions.length !== 1) {
+    errors.push(`intent repair recovery: expected 2 provider calls and one repaired action, got calls=${recoveryCalls} intent=${JSON.stringify(repairedIntent)}`);
+  }
+
+  let exhaustionCalls = 0;
+  const exhaustingIntentPlanner = new AiIntentPlanner({
+    name: 'always-invalid-intent-fixture',
+    async complete() {
+      exhaustionCalls += 1;
+      return { content: invalidEmptyActionsIntent };
+    },
+  });
+  try {
+    await exhaustingIntentPlanner.plan({
+      ...context,
+      config: { ...context.config, planning: { ...context.config.planning, repairAttempts: 2 } },
+      input: { ...context.input, scenarios: 1, scenarioCountPolicy: 'exact' },
+    }, emptyIntentEvidence);
+    errors.push('intent repair exhaustion: expected bounded failure');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (exhaustionCalls !== 3 || !message.includes('after 2 repair attempt(s)') || !message.includes('actions must be a non-empty array')) {
+      errors.push(`intent repair exhaustion: expected 3 calls and actionable final error, got calls=${exhaustionCalls} message=${message}`);
     }
   }
 
@@ -474,6 +528,7 @@ try {
       status: 'passed',
       fixtures: fixtures.length,
       intentEnvelopeFixtures: intentEnvelopeFixtures.length,
+      intentRepairFixtures: 2,
       authorityIdentityFixtures: 2,
       contractFixtures: contractFixtures.length,
       semanticRun: semanticResult.summary,

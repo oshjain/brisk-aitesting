@@ -56,18 +56,31 @@ export class AiIntentPlanner {
   constructor(private readonly provider: AiPlannerProvider) {}
 
   async plan(context: PlannerContext, evidence: EvidenceGraph): Promise<IntentPlan> {
-    const userPrompt = intentUserPrompt(context, evidence);
-    if (containsObviousSecretLikeValue(userPrompt)) {
-      throw new Error('AI intent prompt rejected because it contains a raw secret-like value. Pass a secret reference instead.');
+    const maxRepairAttempts = normalizeRepairAttempts(context.config.planning?.repairAttempts ?? context.config.ai?.repairAttempts);
+    let invalidContent = '';
+    let lastError = 'AI intent was not accepted.';
+    for (let attempt = 0; attempt <= maxRepairAttempts; attempt += 1) {
+      const userPrompt = attempt === 0
+        ? intentUserPrompt(context, evidence)
+        : intentRepairUserPrompt(context, evidence, invalidContent, lastError, attempt, maxRepairAttempts);
+      if (containsObviousSecretLikeValue(userPrompt)) {
+        throw new Error('AI intent prompt rejected because it contains a raw secret-like value. Pass a secret reference instead.');
+      }
+      const response = await this.provider.complete({
+        jsonSchemaName: 'brisk-aitesting.intent.v1',
+        jsonSchema: aiIntentOutputJsonSchema,
+        structuredOutput: 'json-schema',
+        system: attempt === 0 ? intentSystemPrompt() : intentRepairSystemPrompt(),
+        user: userPrompt,
+      });
+      invalidContent = response.content;
+      try {
+        return parseIntent(response.content, context);
+      } catch (error) {
+        lastError = error instanceof Error ? error.message : String(error);
+      }
     }
-    const response = await this.provider.complete({
-      jsonSchemaName: 'brisk-aitesting.intent.v1',
-      jsonSchema: aiIntentOutputJsonSchema,
-      structuredOutput: 'json-schema',
-      system: intentSystemPrompt(),
-      user: userPrompt,
-    });
-    return parseIntent(response.content, context);
+    throw new Error(`AI intent remained invalid after ${maxRepairAttempts} repair attempt(s): ${lastError}`);
   }
 }
 
@@ -88,6 +101,17 @@ function intentSystemPrompt(): string {
     'Use the semantic capability and resource vocabulary supplied by the application evidence.',
     'Do not invent a capability or resource absent from the supplied vocabulary.',
     'When the requested scenario count policy is exact, return exactly that many scenarios.',
+  ].join('\n');
+}
+
+function intentRepairSystemPrompt(): string {
+  return [
+    intentSystemPrompt(),
+    'Repair the previous response using the supplied validation error.',
+    'Every scenario must contain at least one action.',
+    'Every action must contain at least one expected business outcome when the supplied vocabulary provides one.',
+    'Preserve valid scenarios and change only what the validation error requires.',
+    'Return the complete repaired JSON object, not a patch or explanation.',
   ].join('\n');
 }
 
@@ -133,6 +157,24 @@ function intentUserPrompt(context: PlannerContext, evidence: EvidenceGraph): str
       }],
       warnings: [],
     },
+  });
+}
+
+function intentRepairUserPrompt(
+  context: PlannerContext,
+  evidence: EvidenceGraph,
+  invalidContent: string,
+  validationError: string,
+  attempt: number,
+  maxAttempts: number,
+): string {
+  return JSON.stringify({
+    task: 'Repair the invalid protocol-neutral business intent.',
+    attempt,
+    maxAttempts,
+    validationError,
+    invalidResponse: invalidContent.slice(0, 200_000),
+    originalRequest: JSON.parse(intentUserPrompt(context, evidence)) as unknown,
   });
 }
 
@@ -236,6 +278,11 @@ function validateScenarioCount(count: number, context: PlannerContext): void {
   if (policy === 'exact' && count !== requested) throw new Error(`AI intent returned ${count} scenarios; exactly ${requested} were required.`);
   if (policy === 'at-least' && count < requested) throw new Error(`AI intent returned ${count} scenarios; at least ${requested} were required.`);
   if (policy === 'at-most' && count > requested) throw new Error(`AI intent returned ${count} scenarios; at most ${requested} were required.`);
+}
+
+function normalizeRepairAttempts(value: number | undefined): number {
+  if (value === undefined || !Number.isFinite(value)) return 1;
+  return Math.max(0, Math.min(5, Math.trunc(value)));
 }
 
 function requireString(value: unknown, path: string): string {
