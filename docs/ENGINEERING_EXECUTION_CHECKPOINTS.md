@@ -6,7 +6,7 @@ Scope: complete product-engineering mandate approved by the product owner
 
 ## Overall Progress
 
-Task-count progress: **209 / 584 completed (35.8%)**
+Task-count progress: **210 / 585 completed (35.9%)**
 Progress: `███████░░░░░░░░░░░░░`
 
 This is a count of explicit checklist tasks, not an estimate of elapsed time,
@@ -189,6 +189,8 @@ of exposing its complete internal configuration.
 
 - [x] ~~Add focused positive, missing-value, conflict, malformed-value, secret-safety, callback, backwards-compatibility, and no-overwrite tests.~~  
   Evidence: TCV-0038 passes 54/54 configuration checks across 12 categories and TCV-0004 passes init/no-overwrite/preview/enabled/environment-only CLI paths; deliberately invalid inputs are rejected rather than counted as harness failures.
+- [x] ~~Repair malformed semantic AI intent through the host's existing provider before failing generation, with a bounded attempt count and no locally invented business actions.~~  
+  Evidence: TCV-0002 proves empty-actions then valid recovery in two provider calls and an always-invalid provider stopping after two configured repairs/three total calls with the exact final error. Git-installed Brisk commit `004285d460728e4e1f12a6b0ae2977cd39c329ce` then accepted and executed the normal user-style real-AI run `57b380f0-28f6-44b9-a48d-9fff1f170c50`: seven linked operations, 1/1 passed, 0 failed/skipped, and cleanup included.
 - [x] ~~Build, run connected regressions, pack cleanly, install from Git-compatible package contents, and import/run the new public API without source fallback.~~  
   Evidence: TypeScript build, host-config, contract, CLI, and engineering-record suites passed; TCV-0010 packed 131 files/1,083,127 bytes, checked 27 required paths and 41 links, installed into a clean project, imported and invoked installed `defineHostConfig`, and reported 0 errors. The complete connected `smoke:ci` rerun remains required before final gate closure and is not implied by this task.
 - [x] ~~Replace Brisk's custom host type-and-mapper assembly with minimal `defineHostConfig` while preserving runtime AI, short-lived authentication, trusted operations, security boundaries, and existing user work.~~  
