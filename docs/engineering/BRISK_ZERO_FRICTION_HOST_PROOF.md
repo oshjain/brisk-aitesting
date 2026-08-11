@@ -52,6 +52,37 @@ One logical test does not mean one HTTP check. It means the user asked one
 connected business question and the product retained one verdict while keeping
 all seven dependent operations visible underneath it.
 
+## Normal-prompt reliability rerun
+
+On 2026-08-11 a user-visible failure reported
+`scenarios.0.actions must be a non-empty array`. Inspection found that semantic
+intent parsing had no provider-driven repair loop even though the host exposed
+three repair attempts. `AiIntentPlanner` now asks the same host provider to
+repair an invalid intent using the exact validation error, original semantic
+vocabulary, and bounded attempt count. It does not create missing actions
+locally.
+
+TCV-0002 proves both boundaries: invalid-empty-actions then valid recovery uses
+two provider calls; an always-invalid provider stops after two configured
+repairs (three total calls) with the original actions error.
+
+After Git commit `004285d460728e4e1f12a6b0ae2977cd39c329ce` was installed
+into Brisk and the app was restarted, a normal user-style prompt asked only to
+test channel, topic, subscription, message, successful outcomes, and cleanup.
+It did not provide routes, operation IDs, payload fields, or internal compiler
+instructions. Run `57b380f0-28f6-44b9-a48d-9fff1f170c50` produced:
+
+- 35,921 ms generation time;
+- 5,557 recorded AI tokens;
+- seven linked create/publish/delete operations;
+- one logical test, one passed, zero failed, zero skipped;
+- 1,187 ms execution time;
+- zero validation warnings; and
+- final status `passed`.
+
+Result page:
+`http://localhost:5173/testing/runs/57b380f0-28f6-44b9-a48d-9fff1f170c50`.
+
 ## Defects exposed before the pass
 
 The accepted result was not obtained by hiding earlier failures:
