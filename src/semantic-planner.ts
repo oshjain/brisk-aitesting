@@ -18,6 +18,7 @@ import {
   compileIntentIncrementally,
 } from './incremental-compilation.js';
 import { OpenApiCapabilityAdapter } from './openapi-capability-adapter.js';
+import { DiscoveredUiCapabilityAdapter } from './discovered-ui-capability-adapter.js';
 import { UniversalSemanticCompiler, evidenceOperationMatchesIntentAction } from './semantic-compiler.js';
 import { loweredWorkflowToTestPlan, WorkflowLowerer } from './workflow-lowering.js';
 import type {
@@ -49,9 +50,12 @@ export class SemanticPlanner implements Planner {
 
   constructor(provider: AiPlannerProvider, adapters: readonly CapabilityAdapter[] = []) {
     this.intentPlanner = new AiIntentPlanner(provider);
-    const configured = adapters.some((adapter) => adapter.id === 'openapi')
+    const withOpenApi = adapters.some((adapter) => adapter.id === 'openapi')
       ? adapters
       : [new OpenApiCapabilityAdapter(), ...adapters];
+    const configured = withOpenApi.some((adapter) => adapter.id === 'discovered-ui')
+      ? withOpenApi
+      : [new DiscoveredUiCapabilityAdapter(), ...withOpenApi];
     this.adapters = uniqueAdapters(configured);
   }
 

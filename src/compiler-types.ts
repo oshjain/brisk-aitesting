@@ -58,6 +58,10 @@ export interface IntentValue {
   readonly value?: unknown;
   readonly fixture?: string;
   readonly secretRef?: string;
+  /** References an earlier intent action in the same scenario. The compiler
+   * resolves the matching typed output and never asks AI to name a runtime
+   * capture path or executable step id. */
+  readonly fromActionId?: string;
 }
 
 export interface IntentAction {

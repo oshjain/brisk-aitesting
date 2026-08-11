@@ -136,6 +136,8 @@ export {
   OpenApiCapabilityAdapter,
 } from './openapi-capability-adapter.js';
 
+export { DiscoveredUiCapabilityAdapter } from './discovered-ui-capability-adapter.js';
+
 export {
   loweredWorkflowToTestPlan,
   WorkflowLoweringValidationError,

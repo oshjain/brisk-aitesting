@@ -17,7 +17,7 @@ const HTTP_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'head', '
 
 interface OpenApiBindingInput {
   readonly slotId: string;
-  readonly location: 'path' | 'query' | 'header' | 'body';
+  readonly location: 'path' | 'query' | 'header' | 'body' | 'expect.json';
   readonly name: string;
 }
 
@@ -36,6 +36,7 @@ interface OpenApiOperationBinding {
   readonly requestExample?: unknown;
   readonly successStatuses: readonly number[];
   readonly expectedJson?: Record<string, unknown>;
+  readonly unchanged?: readonly import('./types.js').ApiStateSnapshotExpectation[];
 }
 
 type JsonRecord = Record<string, unknown>;
@@ -69,6 +70,7 @@ export interface HttpOperationContract {
   readonly successStatuses: readonly number[];
   readonly requestExample?: unknown;
   readonly expectedJson?: Record<string, unknown>;
+  readonly unchanged?: readonly import('./types.js').ApiStateSnapshotExpectation[];
   readonly cleanupOperationId?: string;
   readonly authority: EvidenceAuthority;
   readonly source: string;
@@ -107,6 +109,7 @@ export class OpenApiCapabilityAdapter implements CapabilityAdapter {
     const headers: Record<string, string> = {};
     const query: Record<string, string | number | boolean> = {};
     const body = cloneValue(binding.requestExample) ?? (binding.inputs.some((input) => input.location === 'body') ? {} : undefined);
+    const expectedJson = (cloneValue(binding.expectedJson) ?? {}) as Record<string, unknown>;
 
     for (const input of binding.inputs) {
       const value = workflowBindings.get(input.slotId);
@@ -118,6 +121,8 @@ export class OpenApiCapabilityAdapter implements CapabilityAdapter {
         headers[input.name] = String(loweredValue);
       } else if (input.location === 'query') {
         if (typeof loweredValue === 'string' || typeof loweredValue === 'number' || typeof loweredValue === 'boolean') query[input.name] = loweredValue;
+      } else if (input.location === 'expect.json') {
+        expectedJson[input.name] = loweredValue;
       } else {
         setObjectPath(body, input.name, loweredValue);
       }
@@ -151,8 +156,11 @@ export class OpenApiCapabilityAdapter implements CapabilityAdapter {
             },
           }
         : {}),
-      expect: { status },
-      ...(binding.expectedJson !== undefined ? { expect: { status, json: binding.expectedJson } } : {}),
+      expect: {
+        status,
+        ...(Object.keys(expectedJson).length > 0 ? { json: expectedJson } : {}),
+        ...(binding.unchanged !== undefined ? { unchanged: binding.unchanged } : {}),
+      },
       assertions: params.step.expectedOutcomeIds.map((id) => params.operation.outcomes.find((outcome) => outcome.id === id)?.meaning ?? id),
       ...(captures.length > 0 ? { capture: captures } : {}),
       evidenceRequired: ['api', 'schema'],
@@ -270,6 +278,7 @@ export function createHttpEvidenceGraph(
         ...(contract.requestExample !== undefined ? { requestExample: contract.requestExample } : {}),
         successStatuses: contract.successStatuses,
         ...(contract.expectedJson !== undefined ? { expectedJson: contract.expectedJson } : {}),
+        ...(contract.unchanged !== undefined ? { unchanged: contract.unchanged } : {}),
       } satisfies OpenApiOperationBinding,
       ...(contract.cleanupOperationId !== undefined ? { cleanupOperationId: contract.cleanupOperationId } : {}),
     };

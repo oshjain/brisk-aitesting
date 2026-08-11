@@ -19,7 +19,8 @@ export class BuiltinApiEngine implements Engine {
     const variables = context.runState?.variables ?? {};
     const resolvedPath = resolveWorkflowPath(context.scenario.target?.path ?? '/', variables);
     const resolvedRequest = resolveWorkflowRequest(context.scenario.request, variables);
-    const unresolvedVariables = [...resolvedPath.unresolved, ...resolvedRequest.unresolved];
+    const resolvedExpectedJson = resolveWorkflowValue(context.scenario.expect?.json, variables);
+    const unresolvedVariables = [...resolvedPath.unresolved, ...resolvedRequest.unresolved, ...resolvedExpectedJson.unresolved];
     const url = apiUrl(context, resolvedPath.value, resolvedRequest.value?.query);
     const contractRoute = findContractRoute(context);
     const contractOperation = contractRoute === undefined ? undefined : await findContractOperation(contractRoute);
@@ -90,7 +91,7 @@ export class BuiltinApiEngine implements Engine {
         const contractStatusAssertion = assertContractStatus(response.status, contractRoute, context.scenario.expect?.status);
         if (contractStatusAssertion !== undefined) assertions.push(contractStatusAssertion);
         if (context.scenario.expect?.json !== undefined) {
-          assertions.push(...assertJsonShape(responseJson, context.scenario.expect.json));
+          assertions.push(...assertJsonShape(responseJson, resolvedExpectedJson.value as Record<string, unknown>));
         }
         if (context.scenario.expect?.contains !== undefined) {
           assertions.push({

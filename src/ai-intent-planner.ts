@@ -36,6 +36,21 @@ export const aiIntentOutputJsonSchema = {
                 capability: { enum: CAPABILITIES },
                 actor: { type: 'string', minLength: 1 },
                 phase: { enum: ['setup', 'test', 'verification'] },
+                values: {
+                  type: 'object',
+                  additionalProperties: {
+                    type: 'object',
+                    additionalProperties: false,
+                    required: ['semanticType'],
+                    properties: {
+                      semanticType: { type: 'string', minLength: 1 },
+                      value: {},
+                      fixture: { type: 'string', minLength: 1 },
+                      secretRef: { type: 'string', minLength: 1 },
+                      fromActionId: { type: 'string', minLength: 1 },
+                    },
+                  },
+                },
                 expectedOutcomes: { type: 'array', items: { type: 'string', minLength: 1 } },
               },
             },
@@ -95,6 +110,8 @@ function intentSystemPrompt(): string {
     'Describe what the user wants proven; never describe how an engine should execute it.',
     'Do not output URLs, routes, HTTP methods, selectors, queries, payload field names, status codes, capture paths, scripts, commands, broker addresses, or engine names.',
     'Use only semantic actions: a verb, a business resource, optional actor, and expected business outcomes.',
+    'When an action needs a value produced by one specific earlier action, set values.<input>.semanticType and values.<input>.fromActionId to that earlier action id.',
+    'Use fromActionId whenever more than one earlier action creates the same resource type; never leave that relationship ambiguous.',
     'For expectedOutcomes, copy only exact outcome ids supplied in the application evidence vocabulary.',
     'Use setup or verification phase only when the user explicitly asks for that role; otherwise omit phase and the compiler will use test.',
     'The deterministic compiler—not you—selects operations, constructs inputs, binds values, derives executable assertions, and plans cleanup.',
@@ -126,6 +143,18 @@ function intentUserPrompt(context: PlannerContext, evidence: EvidenceGraph): str
       resource: operation.resource,
       ids: operation.outcomes.map((outcome) => outcome.id),
     })),
+    operations: evidence.operations.map((operation) => ({
+      action: operation.action,
+      resource: operation.resource,
+      capability: operation.capability,
+      requiredInputs: operation.inputs.filter((input) => input.required).map((input) => ({
+        name: input.name,
+        semanticType: input.semanticType,
+        generatedWhenOmitted: input.generation !== undefined,
+      })),
+      outputs: operation.outputs.map((output) => ({ name: output.name, semanticType: output.semanticType })),
+      outcomeIds: operation.outcomes.map((outcome) => outcome.id),
+    })),
   };
   return JSON.stringify({
     goal: context.input.goal,
@@ -149,6 +178,9 @@ function intentUserPrompt(context: PlannerContext, evidence: EvidenceGraph): str
           verb: 'create',
           resource: 'known resource from semanticVocabulary',
           capability: vocabulary.capabilities[0],
+          values: {
+            parentId: { semanticType: 'known.id.type', fromActionId: 'earlier_action_id' },
+          },
           expectedOutcomes: [],
         }],
         invariants: ['business invariant'],
@@ -267,8 +299,27 @@ function parseAction(value: unknown, scenarioIndex: number, actionIndex: number)
       : ['setup', 'test', 'verification'].includes(String(value.phase))
         ? { phase: value.phase as 'setup' | 'test' | 'verification' }
         : (() => { throw new Error(`${path}.phase is invalid.`); })()),
+    ...(value.values === undefined ? {} : { values: parseIntentValues(value.values, `${path}.values`) }),
     expectedOutcomes: requireStringArray(value.expectedOutcomes, `${path}.expectedOutcomes`),
   };
+}
+
+function parseIntentValues(value: unknown, path: string): NonNullable<IntentPlan['scenarios'][number]['actions'][number]['values']> {
+  if (!isRecord(value)) throw new Error(`${path} must be an object.`);
+  const result: Record<string, { semanticType: string; value?: unknown; fixture?: string; secretRef?: string; fromActionId?: string }> = {};
+  for (const [key, raw] of Object.entries(value)) {
+    if (key.trim().length === 0 || !isRecord(raw)) throw new Error(`${path}.${key || '(blank)'} must be an object.`);
+    const selectors = ['value', 'fixture', 'secretRef', 'fromActionId'].filter((field) => Object.prototype.hasOwnProperty.call(raw, field));
+    if (selectors.length !== 1) throw new Error(`${path}.${key} must contain exactly one of value, fixture, secretRef, or fromActionId.`);
+    result[key] = {
+      semanticType: requireString(raw.semanticType, `${path}.${key}.semanticType`),
+      ...(Object.prototype.hasOwnProperty.call(raw, 'value') ? { value: raw.value } : {}),
+      ...(raw.fixture === undefined ? {} : { fixture: requireString(raw.fixture, `${path}.${key}.fixture`) }),
+      ...(raw.secretRef === undefined ? {} : { secretRef: requireString(raw.secretRef, `${path}.${key}.secretRef`) }),
+      ...(raw.fromActionId === undefined ? {} : { fromActionId: requireString(raw.fromActionId, `${path}.${key}.fromActionId`) }),
+    };
+  }
+  return result;
 }
 
 function validateScenarioCount(count: number, context: PlannerContext): void {

@@ -36,6 +36,7 @@ const VERB_ALIASES: Readonly<Record<string, readonly string[]>> = {
 
 interface AvailableOutput {
   readonly stepId: string;
+  readonly intentActionId: string;
   readonly slot: EvidenceValueSlot;
   readonly operation: EvidenceOperation;
 }
@@ -128,7 +129,7 @@ export class UniversalSemanticCompiler {
           sideEffect: selected.operation.sideEffect,
         };
         steps.push(step);
-        available.push(...selected.operation.outputs.map((slot) => ({ stepId, slot, operation: selected.operation })));
+        available.push(...selected.operation.outputs.map((slot) => ({ stepId, intentActionId: action.id, slot, operation: selected.operation })));
       }
 
       const allIntentActionsCompiled = steps.length === intentScenario.actions.length;
@@ -718,7 +719,7 @@ function bindInputs(
       });
       return undefined;
     }
-    const intentResolution = findIntentValue(action.values, input, operation);
+    const intentResolution = findIntentValue(action.values, input, operation, available);
     if (intentResolution.code !== undefined) {
       diagnostics.push({
         code: intentResolution.code,
@@ -768,6 +769,7 @@ function findIntentValue(
   values: IntentAction['values'],
   input: EvidenceValueSlot,
   operation: EvidenceOperation,
+  available: readonly AvailableOutput[],
 ): BindingResolution {
   if (values === undefined) return {};
   const aliases = new Set([input.id, input.name, input.semanticType]);
@@ -802,6 +804,33 @@ function findIntentValue(
       code: 'RAW_SECRET_VALUE_FORBIDDEN',
       reason: `The user supplied a raw secret-like value for ${input.name}; pass a secret reference instead.`,
     };
+  }
+  if (intentValue.fromActionId !== undefined) {
+    const producerCandidates = available.filter((entry) => (
+      entry.intentActionId === intentValue.fromActionId
+      && approvedTypeEdge(entry.slot.semanticType, input.semanticType, operation) !== undefined
+    ));
+    if (producerCandidates.length === 0) {
+      return {
+        code: 'UNKNOWN_INTENT_VALUE_PRODUCER',
+        reason: `The requested producer action ${intentValue.fromActionId} is not an earlier action with a compatible ${input.semanticType} output.`,
+      };
+    }
+    if (producerCandidates.length > 1) {
+      return {
+        code: 'AMBIGUOUS_INTENT_VALUE_PRODUCER',
+        reason: `Producer action ${intentValue.fromActionId} exposes more than one compatible output for ${input.name}.`,
+      };
+    }
+    const producer = producerCandidates[0]!;
+    const producerEdge = approvedTypeEdge(producer.slot.semanticType, input.semanticType, operation);
+    return { value: {
+      kind: 'output',
+      semanticType: producer.slot.semanticType,
+      stepId: producer.stepId,
+      outputSlotId: producer.slot.id,
+      ...(producerEdge?.conversion === undefined ? {} : { conversion: producerEdge.conversion }),
+    } };
   }
   const value = bindingFromIntentValue(intentValue, edge.conversion);
   return value === undefined ? {} : { value };

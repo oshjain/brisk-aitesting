@@ -1,9 +1,13 @@
 import assert from 'node:assert/strict';
 import {
   AiIntentPlanner,
+  SemanticPlanner,
+  HostHttpCapabilityAdapter,
+  WorkflowLowerer,
   UniversalSemanticCompiler,
   containsObviousSecretLikeValue,
   createEvidenceGraph,
+  createHttpEvidenceGraph,
   validateWorkflowInvariants,
 } from '../dist/index.js';
 
@@ -95,6 +99,56 @@ const ambiguousProducer = compiler.compile(intent([
 check('bindingRejections', ambiguousProducer.status === 'needs-evidence');
 check('bindingRejections', ambiguousProducer.diagnostics.some((entry) => entry.code === 'AMBIGUOUS_VALUE_PRODUCER'));
 
+const explicitProducer = compiler.compile(intent([
+  { verb: 'create', resource: 'customer' },
+  { verb: 'create', resource: 'customer' },
+  { verb: 'read', resource: 'customer', values: {
+    customerId: { semanticType: 'customer.id', fromActionId: 'action_2' },
+  } },
+]), createEvidenceGraph([
+  operation({ id: 'customer.create', adapterId: 'fixture', capability: 'custom.fixture', name: 'Create customer', action: 'create', resource: 'customer', sideEffect: 'create', outputs: [slot('customerId', 'customer.id', { required: false })] }),
+  operation({ id: 'customer.read', adapterId: 'fixture', capability: 'custom.fixture', name: 'Read customer', action: 'read', resource: 'customer', sideEffect: 'read', inputs: [slot('customerId', 'customer.id')] }),
+]));
+check('explicitProducer', explicitProducer.status === 'compiled', JSON.stringify(explicitProducer.diagnostics));
+check('explicitProducer', explicitProducer.workflow?.scenarios[0]?.steps[2]?.inputs[0]?.value.stepId === 'step_action_2_2');
+check('explicitProducer', explicitProducer.workflow?.scenarios[0]?.steps[2]?.dependsOn.includes('step_action_2_2') === true);
+
+const missingExplicitProducer = compiler.compile(intent([
+  { verb: 'create', resource: 'customer' },
+  { verb: 'read', resource: 'customer', values: {
+    customerId: { semanticType: 'customer.id', fromActionId: 'does_not_exist' },
+  } },
+]), createEvidenceGraph([
+  operation({ id: 'customer.create', adapterId: 'fixture', capability: 'custom.fixture', name: 'Create customer', action: 'create', resource: 'customer', sideEffect: 'create', outputs: [slot('customerId', 'customer.id', { required: false })] }),
+  operation({ id: 'customer.read', adapterId: 'fixture', capability: 'custom.fixture', name: 'Read customer', action: 'read', resource: 'customer', sideEffect: 'read', inputs: [slot('customerId', 'customer.id')] }),
+]));
+check('explicitProducer', missingExplicitProducer.diagnostics.some((entry) => entry.code === 'UNKNOWN_INTENT_VALUE_PRODUCER'));
+
+const forwardExplicitProducer = compiler.compile(intent([
+  { verb: 'read', resource: 'customer', values: {
+    customerId: { semanticType: 'customer.id', fromActionId: 'action_2' },
+  } },
+  { verb: 'create', resource: 'customer' },
+]), createEvidenceGraph([
+  operation({ id: 'customer.create', adapterId: 'fixture', capability: 'custom.fixture', name: 'Create customer', action: 'create', resource: 'customer', sideEffect: 'create', outputs: [slot('customerId', 'customer.id', { required: false })] }),
+  operation({ id: 'customer.read', adapterId: 'fixture', capability: 'custom.fixture', name: 'Read customer', action: 'read', resource: 'customer', sideEffect: 'read', inputs: [slot('customerId', 'customer.id')] }),
+]));
+check('explicitProducer', forwardExplicitProducer.diagnostics.some((entry) => entry.code === 'UNKNOWN_INTENT_VALUE_PRODUCER'));
+
+const ambiguousExplicitProducer = compiler.compile(intent([
+  { verb: 'create', resource: 'customer pair' },
+  { verb: 'read', resource: 'customer', values: {
+    customerId: { semanticType: 'customer.id', fromActionId: 'action_1' },
+  } },
+]), createEvidenceGraph([
+  operation({ id: 'customer-pair.create', adapterId: 'fixture', capability: 'custom.fixture', name: 'Create customer pair', action: 'create', resource: 'customer pair', sideEffect: 'create', outputs: [
+    slot('firstCustomerId', 'customer.id', { required: false }),
+    slot('secondCustomerId', 'customer.id', { required: false }),
+  ] }),
+  operation({ id: 'customer.read', adapterId: 'fixture', capability: 'custom.fixture', name: 'Read customer', action: 'read', resource: 'customer', sideEffect: 'read', inputs: [slot('customerId', 'customer.id')] }),
+]));
+check('explicitProducer', ambiguousExplicitProducer.diagnostics.some((entry) => entry.code === 'AMBIGUOUS_INTENT_VALUE_PRODUCER'));
+
 const rawSecret = 'sk-abcdefghijklmnop';
 const rawSecretResult = compiler.compile(intent([{ verb: 'read', resource: 'customer', values: { customerId: { semanticType: 'customer.id', value: rawSecret } } }]), createEvidenceGraph([conversionEvidence.operations[1]]));
 check('secretSafety', rawSecretResult.diagnostics.some((entry) => entry.code === 'RAW_SECRET_VALUE_FORBIDDEN'));
@@ -151,6 +205,81 @@ check('graphInvariants', validateWorkflowInvariants(unknownProducerWorkflow, sou
 const lateProducerWorkflow = structuredClone(sourceResult.workflow);
 lateProducerWorkflow.scenarios[0].steps[0].inputs = [{ inputSlotId: 'invented', value: { kind: 'output', semanticType: 'widget.id', stepId: lateProducerWorkflow.scenarios[0].steps[2].id, outputSlotId: 'widgetId' } }];
 check('graphInvariants', validateWorkflowInvariants(lateProducerWorkflow, sourceEvidence).some((entry) => entry.code === 'VALUE_PRODUCED_TOO_LATE' || entry.code === 'UNKNOWN_INPUT_SLOT'));
+
+const discoveredUiPlanner = new SemanticPlanner({
+  name: 'discovered-ui-fixture',
+  async complete() {
+    return { content: JSON.stringify({
+      scenarios: [{
+        id: 'ui_pages',
+        name: 'Core pages load',
+        objective: 'Prove dashboard, channels, topics, and playground pages load.',
+        actions: [
+          { id: 'open_dashboard', verb: 'open', resource: 'dashboard page', capability: 'web.ui', expectedOutcomes: ['page.loaded'] },
+          { id: 'open_channels', verb: 'open', resource: 'channels page', capability: 'web.ui', expectedOutcomes: ['page.loaded'] },
+          { id: 'open_topics', verb: 'open', resource: 'topics page', capability: 'web.ui', expectedOutcomes: ['page.loaded'] },
+          { id: 'open_playground', verb: 'open', resource: 'playground page', capability: 'web.ui', expectedOutcomes: ['page.loaded'] },
+        ],
+        invariants: [], evidenceRequired: ['observed pages'], cleanup: 'isolated',
+      }], warnings: [],
+    }) };
+  },
+});
+const discoveredUiPlan = await discoveredUiPlanner.plan({
+  config: {
+    app: { name: 'UI discovery fixture', baseUrl: 'http://127.0.0.1:5173', env: 'test' },
+    runtime: { artifactsDir: '.tmp', timeoutMs: 1000, retries: 0, headless: true, dryRun: true },
+  },
+  input: { goal: 'Open the four core pages', scenarios: 1, scenarioCountPolicy: 'exact' },
+  runId: 'run_discovered_ui',
+  discovery: {
+    uiRoutes: [
+      { path: '/dashboard', source: 'repo' },
+      { path: '/channels', source: 'repo' },
+      { path: '/topics', source: 'repo' },
+      { path: '/playground', source: 'repo' },
+    ],
+    apiRoutes: [], contracts: [], warnings: [], discoveredAt: new Date(0).toISOString(),
+  },
+});
+check('discoveredUi', discoveredUiPlan.scenarios.length === 4);
+check('discoveredUi', discoveredUiPlan.scenarios.every((scenario) => scenario.type === 'ui'));
+check('discoveredUi', discoveredUiPlan.scenarios.map((scenario) => scenario.target?.route).join(',') === '/dashboard,/channels,/topics,/playground');
+check('discoveredUi', discoveredUiPlan.scenarios.every((scenario) => scenario.target?.sourceOfTruth === 'observed'));
+
+const httpExpectationEvidence = createHttpEvidenceGraph([
+  {
+    operationId: 'widget.create', method: 'POST', path: '/api/widgets', name: 'Create widget', action: 'create', resource: 'widget', sideEffect: 'create',
+    inputs: [{ id: 'body.name', name: 'name', location: 'body', semanticType: 'widget.name', required: true, generation: { kind: 'unique-string', prefix: 'widget' } }],
+    outputs: [
+      { id: 'response.id', name: 'id', semanticType: 'widget.id', from: 'response.body', path: "$['id']" },
+      { id: 'response.name', name: 'name', semanticType: 'widget.name', from: 'response.body', path: "$['name']" },
+    ],
+    successStatuses: [201], authority: 'host', source: 'fixture',
+  },
+  {
+    operationId: 'widget.read', method: 'GET', path: '/api/widgets/:widgetId', name: 'Read widget', action: 'read', resource: 'widget', sideEffect: 'read',
+    inputs: [
+      { id: 'path.widgetId', name: 'widgetId', location: 'path', semanticType: 'widget.id', required: true },
+      { id: 'expect.name', name: 'name', location: 'expect.json', semanticType: 'widget.name', required: true },
+    ],
+    successStatuses: [200], unchanged: [{ target: { method: 'GET', path: '/api/widgets' } }], authority: 'host', source: 'fixture',
+  },
+]);
+const httpExpectationCompilation = compiler.compile(intent([
+  { id: 'create_widget', verb: 'create', resource: 'widget' },
+  { id: 'read_widget', verb: 'read', resource: 'widget', values: {
+    widgetId: { semanticType: 'widget.id', fromActionId: 'create_widget' },
+    name: { semanticType: 'widget.name', fromActionId: 'create_widget' },
+  } },
+]), httpExpectationEvidence);
+check('httpExpectation', httpExpectationCompilation.status === 'compiled', JSON.stringify(httpExpectationCompilation.diagnostics));
+const httpExpectationLowered = await new WorkflowLowerer([new HostHttpCapabilityAdapter()]).lower({
+  workflow: httpExpectationCompilation.workflow,
+  evidence: httpExpectationEvidence,
+});
+check('httpExpectation', httpExpectationLowered.scenarios[1]?.expect?.json?.name === '<widgetName>');
+check('httpExpectation', httpExpectationLowered.scenarios[1]?.expect?.unchanged?.[0]?.target.path === '/api/widgets');
 
 console.log(JSON.stringify({
   schemaVersion: 'brisk-aitesting.typed-value-flow-smoke.v1',

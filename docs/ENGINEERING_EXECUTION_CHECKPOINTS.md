@@ -6,7 +6,7 @@ Scope: complete product-engineering mandate approved by the product owner
 
 ## Overall Progress
 
-Task-count progress: **210 / 585 completed (35.9%)**
+Task-count progress: **213 / 593 completed (35.9%)**
 Progress: `███████░░░░░░░░░░░░░`
 
 This is a count of explicit checklist tasks, not an estimate of elapsed time,
@@ -197,6 +197,24 @@ of exposing its complete internal configuration.
   Evidence: Brisk installs Git commit `54c863338f70e09988d932d7a22b0bc38be3fb15`; `packages/server/src/domains/testing-aitesting.ts` now supplies the small host object and existing Brisk AI callback while `defineHostConfig` owns safe defaults. Brisk server type-checking and installed public export checks passed. Stable operation IDs were added to the host authority list so exact trusted evidence matches without allowing unknown mutations.
 - [x] ~~Start Brisk and prove preview configuration plus authorized execution wiring through the minimal path; record supplied settings, defaults, callbacks, results, failures, exclusions, and remaining limits.~~  
   Evidence: `docs/engineering/BRISK_ZERO_FRICTION_HOST_PROOF.md` records database/certificate/provider/timeout/empty-intent/operation-ID failures, bounded provider-driven intent repair, and two accepted real-AI runs. The normal user-style rerun `57b380f0-28f6-44b9-a48d-9fff1f170c50` supplied no routes or operation IDs: 35,921 ms generation, 5,557 AI tokens, one logical journey compiled to seven dependent operations, 1/1 passed, 0 failed/skipped, 1,187 ms execution, zero warnings, and cleanup included. Browser-click and broad-system proof remain explicitly excluded.
+
+### E. Deep connected-workflow recovery
+
+The authoritative acceptance request is the product owner's complete BRISK
+workflow prompt beginning `Run a deep BRISK workflow test across API, UI,
+auth...`. Passing a smaller substitute does not complete this checkpoint.
+
+- [x] ~~Retain and inspect both real failed attempts instead of treating the smaller seven-operation proof as sufficient.~~  
+  Evidence: runs `run_71445207-0640-49de-9ec8-5a24367e0ed8` and `run_1b80a10b-03fe-4945-bd39-b11f4d2038d0` preserve respectively the empty-action failure and the later ambiguous/missing dependent-ID failures for the exact deep prompt.
+- [x] ~~Add an explicit, validated way for AI intent to say which earlier action produced each dependent value when several channels, topics, messages, or subscriptions exist.~~  
+  Evidence: intent values now accept `fromActionId`; the compiler resolves only an earlier action's type-compatible output and records the resulting dependency without exposing runtime capture paths to AI.
+- [x] ~~Prove unique, missing, forward, incompatible, and ambiguous producer references without weakening the compiler's refusal to guess.~~  
+  Evidence: the typed-value-flow suite passes 50/50 checks, including six explicit-producer checks for correct second-producer selection, dependency recording, missing and future producer rejection, and ambiguous-output rejection. Incompatible typed edges remain covered by the existing rejection checks.
+- [ ] Expand the Brisk host evidence supplied to `brisk-aitesting` so the requested health, anonymous-auth, resource-read, message-read, subscription-read, negative-validation, monitoring, and cleanup checks are genuinely available.
+- [ ] Add a general discovered-UI-page evidence path so dashboard, channels, topics, and playground checks compile from observed pages and grounded controls rather than Brisk-only compiler rules.
+- [ ] Generate the exact unshortened acceptance prompt through Brisk's installed Git package and prove every requested available area appears in the accepted plan; list any unavailable request explicitly rather than silently omitting it.
+- [ ] Execute the accepted plan against the running Brisk application, retain per-check results and resource cleanup proof, and rerun it to expose nondeterministic AI or dependency failures.
+- [ ] Update coverage, claims, requirements, regression, host-integration documentation, and this progress count only from the retained exact-prompt proof.
 - [ ] Update capability, requirements, claims, regression, coverage, documentation, and progress records only after matching proof exists.
 
 ## Cross-Architecture Real-System Proof Programme
