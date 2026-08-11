@@ -210,6 +210,12 @@ try {
   });
   const intentEnvelopeFixtures = [
     { name: 'strict intent JSON', content: validIntent, accepted: true },
+    {
+      name: 'empty warning text is harmless and removed',
+      content: JSON.stringify({ ...JSON.parse(validIntent), warnings: ['', '  '] }),
+      accepted: true,
+      expectedWarnings: [],
+    },
     { name: 'one closed reasoning envelope then strict intent JSON', content: `<think>reasoning is not executable</think>\n${validIntent}`, accepted: true },
     { name: 'one closed reasoning envelope then one strict JSON fence', content: '<think>reasoning is not executable</think>\n```json\n' + validIntent + '\n```', accepted: true },
     { name: 'unterminated reasoning envelope', content: `<think>unfinished\n${validIntent}`, accepted: false },
@@ -218,8 +224,11 @@ try {
   ];
   for (const fixture of intentEnvelopeFixtures) {
     try {
-      parseAiIntentForTesting(fixture.content, { ...context, input: { ...context.input, scenarios: 1, scenarioCountPolicy: 'exact' } });
+      const intent = parseAiIntentForTesting(fixture.content, { ...context, input: { ...context.input, scenarios: 1, scenarioCountPolicy: 'exact' } });
       if (!fixture.accepted) errors.push(`${fixture.name}: expected rejection`);
+      if (fixture.expectedWarnings !== undefined && JSON.stringify(intent.warnings) !== JSON.stringify(fixture.expectedWarnings)) {
+        errors.push(`${fixture.name}: expected warnings ${JSON.stringify(fixture.expectedWarnings)}, got ${JSON.stringify(intent.warnings)}`);
+      }
     } catch (error) {
       if (fixture.accepted) errors.push(`${fixture.name}: ${error instanceof Error ? error.message : String(error)}`);
     }

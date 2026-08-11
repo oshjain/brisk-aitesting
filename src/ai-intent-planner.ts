@@ -147,7 +147,7 @@ function parseIntent(content: string, context: PlannerContext): IntentPlan {
     throw new Error('AI intent output must contain scenarios and warnings arrays.');
   }
   const scenarios = parsed.scenarios.map((scenario, index) => parseScenario(scenario, index));
-  const warnings = parsed.warnings.map((warning, index) => requireString(warning, `warnings.${index}`));
+  const warnings = normalizeWarnings(parsed.warnings);
   validateScenarioCount(scenarios.length, context);
   return {
     schemaVersion: 'brisk-aitesting.intent.v1',
@@ -155,6 +155,14 @@ function parseIntent(content: string, context: PlannerContext): IntentPlan {
     scenarios,
     warnings,
   };
+}
+
+function normalizeWarnings(value: readonly unknown[]): readonly string[] {
+  return value.flatMap((warning, index) => {
+    if (typeof warning !== 'string') throw new Error(`warnings.${index} must be a string.`);
+    const normalized = warning.trim();
+    return normalized.length === 0 ? [] : [normalized];
+  });
 }
 
 function structuredIntentJson(content: string): string {
